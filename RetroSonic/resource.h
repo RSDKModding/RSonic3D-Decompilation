@@ -1,0 +1,38 @@
+#ifndef RESOURCE_H
+#define RESOURCE_H
+
+#define IDR_MAINMENU 102
+
+#define IDM_GAME_RESET     40001
+#define IDM_GAME_QUIT      40006
+#define IDM_OPT_FULLSCREEN 40011
+#define IDM_SET_DISPLAY    40009
+#define IDM_ERASE_SAVE     40012
+#define IDM_HELP_ABOUT     40008
+
+#define IDD_ABOUTDLG  101
+#define IDD_COMEXEC   102
+#define IDD_DMSELECT  103
+#define IDD_ERASESAVE 104
+
+#define IDC_ABOUT_OK   1
+#define IDC_COMEXEC_OK 1
+
+#define IDC_DM_OK         1000
+#define IDC_DM_CANCEL     1001
+#define IDC_DM_RES_PROMPT -1
+#define IDC_DM_RESOLUTION 1020
+#define IDC_DM_WINDOW     1021
+#define IDC_DM_CENTER     1022
+#define IDC_DM_STRETCH    1023
+#define IDC_DM_2XSAI      1024
+
+#define IDC_ES_TAILS  1007
+#define IDC_ES_SONIC  1008
+#define IDC_ES_CANCEL 2
+#define IDC_ES_PROMPT -1
+
+#define IDR_ACCELERATORS 104
+#define IDI_MAINICON     101
+
+#endif // RESOURCE_H
