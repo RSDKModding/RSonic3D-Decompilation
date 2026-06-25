@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\coldet">
+      <UniqueIdentifier>{7113c524-0eed-43cd-8be8-370d99c3332a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -33,16 +36,13 @@
     <ClInclude Include="Reader.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Stage.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Math.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Misc.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ZoneTest.h">
+    <ClInclude Include="MainGame.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="TitleScreen.hpp">
@@ -53,6 +53,36 @@
     </ClInclude>
     <ClInclude Include="Player.hpp">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\coldet\src\bitmatrix.h">
+      <Filter>Source Files\coldet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\coldet\src\box.h">
+      <Filter>Source Files\coldet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\coldet\src\cdmath3d.h">
+      <Filter>Source Files\coldet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\coldet\src\coldet.h">
+      <Filter>Source Files\coldet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\coldet\src\coldetimpl.h">
+      <Filter>Source Files\coldet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\coldet\src\multi_impl.h">
+      <Filter>Source Files\coldet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\coldet\src\multiobject.h">
+      <Filter>Source Files\coldet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\coldet\src\mytritri.h">
+      <Filter>Source Files\coldet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\coldet\src\sweep_prune.h">
+      <Filter>Source Files\coldet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\coldet\src\sysdep.h">
+      <Filter>Source Files\coldet</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -74,16 +104,13 @@
     <ClCompile Include="Reader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Stage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Math.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Misc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ZoneTest.cpp">
+    <ClCompile Include="MainGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TitleScreen.cpp">
@@ -94,6 +121,33 @@
     </ClCompile>
     <ClCompile Include="Player.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\coldet\src\tritri.c">
+      <Filter>Source Files\coldet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\coldet\src\box.cpp">
+      <Filter>Source Files\coldet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\coldet\src\box_bld.cpp">
+      <Filter>Source Files\coldet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\coldet\src\cdmath3d.cpp">
+      <Filter>Source Files\coldet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\coldet\src\coldet.cpp">
+      <Filter>Source Files\coldet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\coldet\src\coldet_bld.cpp">
+      <Filter>Source Files\coldet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\coldet\src\multiobject.cpp">
+      <Filter>Source Files\coldet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\coldet\src\mytritri.cpp">
+      <Filter>Source Files\coldet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\coldet\src\sysdep.cpp">
+      <Filter>Source Files\coldet</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

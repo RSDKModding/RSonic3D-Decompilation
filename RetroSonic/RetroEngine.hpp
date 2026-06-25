@@ -48,12 +48,11 @@ typedef unsigned int uint;
 #include "Input.hpp"
 #include "Math.hpp"
 #include "Drawing.hpp"
-#include "Stage.h"
 #include "Text.hpp"
 
 #include "Misc.h"
 
-#include "ZoneTest.h"
+#include "MainGame.hpp"
 #include "TitleScreen.hpp"
 
 extern double dbl_4DA278;

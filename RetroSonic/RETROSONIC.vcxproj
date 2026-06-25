@@ -157,6 +157,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\dependencies\coldet\src\bitmatrix.h" />
+    <ClInclude Include="..\dependencies\coldet\src\box.h" />
+    <ClInclude Include="..\dependencies\coldet\src\cdmath3d.h" />
+    <ClInclude Include="..\dependencies\coldet\src\coldet.h" />
+    <ClInclude Include="..\dependencies\coldet\src\coldetimpl.h" />
+    <ClInclude Include="..\dependencies\coldet\src\multiobject.h" />
+    <ClInclude Include="..\dependencies\coldet\src\multi_impl.h" />
+    <ClInclude Include="..\dependencies\coldet\src\mytritri.h" />
+    <ClInclude Include="..\dependencies\coldet\src\sweep_prune.h" />
+    <ClInclude Include="..\dependencies\coldet\src\sysdep.h" />
     <ClInclude Include="Player.hpp" />
     <ClInclude Include="Collision.hpp" />
     <ClInclude Include="RetroEngine.hpp" />
@@ -166,12 +176,20 @@
     <ClInclude Include="Misc.h" />
     <ClInclude Include="Drawing.hpp" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Stage.h" />
     <ClInclude Include="Text.hpp" />
-    <ClInclude Include="ZoneTest.h" />
+    <ClInclude Include="MainGame.hpp" />
     <ClInclude Include="TitleScreen.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\dependencies\coldet\src\box.cpp" />
+    <ClCompile Include="..\dependencies\coldet\src\box_bld.cpp" />
+    <ClCompile Include="..\dependencies\coldet\src\cdmath3d.cpp" />
+    <ClCompile Include="..\dependencies\coldet\src\coldet.cpp" />
+    <ClCompile Include="..\dependencies\coldet\src\coldet_bld.cpp" />
+    <ClCompile Include="..\dependencies\coldet\src\multiobject.cpp" />
+    <ClCompile Include="..\dependencies\coldet\src\mytritri.cpp" />
+    <ClCompile Include="..\dependencies\coldet\src\sysdep.cpp" />
+    <ClCompile Include="..\dependencies\coldet\src\tritri.c" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Collision.cpp" />
     <ClCompile Include="RetroEngine.cpp" />
@@ -181,9 +199,8 @@
     <ClCompile Include="Math.cpp" />
     <ClCompile Include="Misc.cpp" />
     <ClCompile Include="Drawing.cpp" />
-    <ClCompile Include="Stage.cpp" />
     <ClCompile Include="Text.cpp" />
-    <ClCompile Include="ZoneTest.cpp" />
+    <ClCompile Include="MainGame.cpp" />
     <ClCompile Include="TitleScreen.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -191,11 +208,6 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Rsonic3D.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\dependencies\coldet\libcoldet\libcoldet.vcxproj">
-      <Project>{9e3328fa-38c2-4ab3-b83b-a1af824b90a6}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

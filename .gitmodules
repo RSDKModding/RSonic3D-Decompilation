@@ -1,0 +1,3 @@
+[submodule "dependencies/coldet"]
+	path = dependencies/coldet
+	url = https://github.com/amirgeva/coldet
