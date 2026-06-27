@@ -8,7 +8,7 @@ IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
     int bmHeight        = FreeImage_GetHeight(fBitmap);
 
     D3DDEVICEDESC7 pDesc;
-    if (dx7Device->GetCaps(&pDesc) < 0)
+    if (D3DDevice->GetCaps(&pDesc) < 0)
         return 0;
 
     DDSURFACEDESC2 surfaceDesc;
@@ -71,7 +71,7 @@ IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
     surfaceDesc.dwWidth  = bmWidth;
     surfaceDesc.dwHeight = bmHeight;
 
-    if (IsEqualGUID(pDesc.deviceGUID, IID_IDirect3DHALDevice) || IsEqualGUID(pDesc.deviceGUID, IID_IDirect3DTnLHalDevice))
+    if (pDesc.deviceGUID == IID_IDirect3DHALDevice || pDesc.deviceGUID == IID_IDirect3DTnLHalDevice)
         surfaceDesc.ddsCaps.dwCaps2 = 16;
     else
         surfaceDesc.ddsCaps.dwCaps |= DDSCAPS_TEXTURE;
@@ -88,22 +88,22 @@ IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
             surfaceDesc.dwHeight = surfaceDesc.dwWidth;
     }
 
-    retryTextureEnum = FALSE;
-    dx7Device->EnumTextureFormats(lpEnumTextureFormats, &surfaceDesc.ddpfPixelFormat);
+    TexFmtSearchType = TEXTURE_FMT_32BIT;
+    D3DDevice->EnumTextureFormats(TextureSearchCallback, &surfaceDesc.ddpfPixelFormat);
     if (!surfaceDesc.ddpfPixelFormat.dwRGBBitCount) {
-        retryTextureEnum = TRUE;
-        dx7Device->EnumTextureFormats(lpEnumTextureFormats, &surfaceDesc.ddpfPixelFormat);
+        TexFmtSearchType = TEXTURE_FMT_16BIT_ALPHA;
+        D3DDevice->EnumTextureFormats(TextureSearchCallback, &surfaceDesc.ddpfPixelFormat);
         if (!surfaceDesc.ddpfPixelFormat.dwRGBBitCount)
             return 0;
     }
 
     IDirectDrawSurface7 *ppRenderTarget;
-    dx7Device->GetRenderTarget(&ppRenderTarget);
-    ppRenderTarget->GetDDInterface((LPVOID *)&dd);
+    D3DDevice->GetRenderTarget(&ppRenderTarget);
+    ppRenderTarget->GetDDInterface((LPVOID *)&DDraw);
     ppRenderTarget->Release();
 
     LPDIRECTDRAWSURFACE7 s;
-    if (dd->CreateSurface(&surfaceDesc, &s, 0) < 0)
+    if (DDraw->CreateSurface(&surfaceDesc, &s, 0) < 0)
         return 0;
 
     DDSURFACEDESC2 lockDesc;
@@ -128,7 +128,7 @@ IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
                           DIB_RGB_COLORS, SRCCOPY);
             surfacePtr->ReleaseDC(hdc);
 
-            if (retryTextureEnum == 1) {
+            if (TexFmtSearchType == TEXTURE_FMT_16BIT_ALPHA) {
                 surfacePtr->Lock(0, &lockDesc, DDLOCK_WAIT, 0);
                 DWORD pitch = lockDesc.lPitch;
                 BYTE *dst   = (BYTE *)lockDesc.lpSurface;
@@ -164,7 +164,7 @@ IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
                       DIB_RGB_COLORS, SRCCOPY);
         s->ReleaseDC(hdc);
 
-        if (retryTextureEnum == 1) {
+        if (TexFmtSearchType == TEXTURE_FMT_16BIT_ALPHA) {
             s->Lock(0, &lockDesc, DDLOCK_WAIT, 0);
             DWORD pitch = lockDesc.lPitch;
             BYTE *dst   = (BYTE *)lockDesc.lpSurface;

@@ -19,16 +19,16 @@ extern D3DMATRIX matrix_4C9C90;
 extern D3DMATRIX matView;
 extern LPDIRECTDRAWSURFACE7 surfaceList[10];
 
-extern LPDIRECTDRAW7 dd;
+extern LPDIRECTDRAW7 DDraw;
 extern HRESULT ddState;
 extern LPDIRECTDRAWSURFACE7 surface_4C9D3C;
 extern LPDIRECTDRAWSURFACE7 surface_439D40;
 extern LPDIRECTDRAWSURFACE7 surface_4C9D44;
-extern IDirect3DDevice7 *dx7Device;
+extern IDirect3DDevice7 *D3DDevice;
 extern IDirect3D7 *d3d;
 
 extern char *StrRenderFailError;
-extern char retryTextureEnum;
+extern TextureFormatSearchType TexFmtSearchType;
 
 extern char WindowMode;
 extern int32_t dword_41F0C4;
@@ -44,10 +44,6 @@ BOOL InitScreen();
 void UpdateWindowRect(HWND hWnd);
 void ResetWindow(HWND hWnd);
 
-LPDIRECTDRAWSURFACE7 CreateBMPSurfaceFromHandle(IDirect3DDevice7 *device, HANDLE handle);
-HRESULT CALLBACK lpEnumTextureFormats(LPDDPIXELFORMAT pddpf, LPVOID pContext);
-HRESULT CALLBACK ldUnknownCallback(LPDDPIXELFORMAT pddpf, LPVOID pContext);
-
 HRESULT BeginScene();
 HRESULT EndScene();
 
@@ -58,7 +54,6 @@ HRESULT Render_ClearScreen(D3DCOLOR color);
 
 void SetFade(float a1, float a2, float a3, float a4);
 void FlipScreen();
-void LoadBitmapToSurface(LPCSTR name, int32_t id);
 void ReleaseSurfaceID(uint8_t id);
 
 HRESULT RefreshSurfaces(HWND hWnd);

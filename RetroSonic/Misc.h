@@ -2,7 +2,6 @@
 #define R_MISC_H
 
 void LoadCharacterSurface(LPCSTR lpString2, char id);
-LPDIRECTDRAWSURFACE7 sub_409C15(IDirect3DDevice7 *device, LPCSTR name);
 
 void SonicModel_405A18(int32_t frameID);
 void SonicModel_405B7B(int32_t frameID);
@@ -25,6 +24,7 @@ void MultiplyMatrix_4C9B90_4C9BD0();
 enum ObjectID {
     OBJECT_ID_RING,
     OBJECT_ID_SPRING,
+    OBJECT_ID_RING_SPARKLE,
 };
 
 void DrawModelShadow(float x, float y, float z, float p_4, float a5, float a6, float a7);

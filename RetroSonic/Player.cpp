@@ -75,12 +75,12 @@ void ProcessPlayerInput()
 
             if (MGameInput.control == 1) {
                 a4 = Player[0].position.y + 1.8;
-                InitObjectUnknown(4, 0, Player[0].position.x, a4, Player[0].position.z);
+                CreateObject(4, 0, Player[0].position.x, a4, Player[0].position.z);
             }
 
             if (MGameInput.X == 1) {
                 a4a = Player[0].position.y + 4.0;
-                InitObjectUnknown(1, 0, Player[0].position.x, a4a, Player[0].position.z);
+                CreateObject(1, 0, Player[0].position.x, a4a, Player[0].position.z);
             }
         }
         else {

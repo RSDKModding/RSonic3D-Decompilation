@@ -1,7 +1,7 @@
 #pragma once
 #include "RetroEngine.hpp"
 
-struct StageObject {
+struct Object {
     uint8_t field_0;
     uint8_t field_1;
     Vector3D position;
@@ -28,7 +28,7 @@ extern int8_t Seconds;
 extern int8_t Minutes;
 extern int32_t data_4DA264;
 
-extern int32_t dword_41F47C;
+extern int32_t TempObjectPos;
 extern int32_t dword_41F480;
 
 extern float_t data_4C9F68;
@@ -39,7 +39,7 @@ extern float_t data_4C9F78;
 extern int32_t data_4C9F7C;
 
 extern int32_t ObjectLoop;
-extern StageObject LevelObjects[1100];
+extern Object LevelObjects[1100];
 
 extern char byte_420510[12];
 
@@ -85,8 +85,8 @@ void ProcessDebugMode();
 void ProcessObjects();
 void PauseCheck();
 void sub_40F707();
-void InitObjectUnknown(char a1, char a2, float x, float y, float z);
+void CreateObject(char a1, char a2, float x, float y, float z);
 void DrawMainGameGfx();
-void DrawStageObjects();
+void DrawObjects();
 void DrawWorldSurface();
 void Unknown_40823B(float x, float y, float z, float a4, float a5, float a6, float a7);

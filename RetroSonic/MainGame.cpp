@@ -13,8 +13,8 @@ int8_t Seconds;
 int8_t Minutes;
 int32_t data_4DA264;
 
-int32_t dword_41F47C = 232;
-int32_t dword_41F480 = 1;
+int32_t TempObjectPos = 232;
+int32_t dword_41F480  = 1;
 
 float_t data_4C9F68;
 float_t data_4C9F6C;
@@ -24,7 +24,7 @@ float_t data_4C9F78;
 int32_t data_4C9F7C;
 
 int32_t ObjectLoop;
-StageObject LevelObjects[1100];
+Object LevelObjects[1100];
 
 char byte_420510[12];
 
@@ -261,25 +261,25 @@ void sub_40F707()
     data_4DA256 = 0;
 }
 
-void InitObjectUnknown(char a1, char a2, float x, float y, float z)
+void CreateObject(char a1, char a2, float x, float y, float z)
 {
-    if (LevelObjects[dword_41F47C].field_0) {
-        if (++dword_41F47C > 1099)
-            dword_41F47C = 1000;
+    if (LevelObjects[TempObjectPos].field_0 != 0) {
+        if (++TempObjectPos >= 1100)
+            TempObjectPos = 1000;
     }
 
-    LevelObjects[dword_41F47C].field_0    = a1;
-    LevelObjects[dword_41F47C].field_34   = 1;
-    LevelObjects[dword_41F47C].field_1    = a2;
-    LevelObjects[dword_41F47C].position.x = x;
-    LevelObjects[dword_41F47C].position.y = y;
-    LevelObjects[dword_41F47C].position.z = z;
-    LevelObjects[dword_41F47C].field_1C   = 0;
-    LevelObjects[dword_41F47C].field_20   = 0;
-    LevelObjects[dword_41F47C].field_24   = 0;
-    LevelObjects[dword_41F47C].field_28   = 0;
-    LevelObjects[dword_41F47C].field_2C   = 0;
-    LevelObjects[dword_41F47C].field_30   = 0;
+    LevelObjects[TempObjectPos].field_0    = a1;
+    LevelObjects[TempObjectPos].field_34   = 1;
+    LevelObjects[TempObjectPos].field_1    = a2;
+    LevelObjects[TempObjectPos].position.x = x;
+    LevelObjects[TempObjectPos].position.y = y;
+    LevelObjects[TempObjectPos].position.z = z;
+    LevelObjects[TempObjectPos].field_1C   = 0;
+    LevelObjects[TempObjectPos].field_20   = 0;
+    LevelObjects[TempObjectPos].field_24   = 0;
+    LevelObjects[TempObjectPos].field_28   = 0;
+    LevelObjects[TempObjectPos].field_2C   = 0;
+    LevelObjects[TempObjectPos].field_30   = 0;
 }
 
 void DrawMainGameGfx()
@@ -312,11 +312,11 @@ void DrawMainGameGfx()
         DrawModelSonic(Player[0].position.x, Player[0].position.y, Player[0].position.z, v4);
     }
 
-    DrawStageObjects();
+    DrawObjects();
     EndScene();
 }
 
-void DrawStageObjects()
+void DrawObjects()
 {
     for (ObjectLoop = 0; ObjectLoop < 1100; ++ObjectLoop) {
         if (LevelObjects[ObjectLoop].field_34 > 0) {
@@ -331,23 +331,23 @@ void DrawStageObjects()
                 case 3:
                     switch (LevelObjects[ObjectLoop].field_1C >> 2) {
                         case 0:
-                            DrawObjectModelID(2, LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y,
-                                              LevelObjects[ObjectLoop].position.z, 0.0, 0.0, 0.0);
+                            DrawObjectModelID(OBJECT_ID_RING_SPARKLE, LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y,
+                                              LevelObjects[ObjectLoop].position.z, 0.0, 0.0, 0.0f);
                             break;
 
                         case 1:
-                            DrawObjectModelID(2, LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y,
-                                              LevelObjects[ObjectLoop].position.z, 0.0, 0.0, 1.5700001);
+                            DrawObjectModelID(OBJECT_ID_RING_SPARKLE, LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y,
+                                              LevelObjects[ObjectLoop].position.z, 0.0, 0.0, 1.5700001f);
                             break;
 
                         case 2:
-                            DrawObjectModelID(2, LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y,
+                            DrawObjectModelID(OBJECT_ID_RING_SPARKLE, LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y,
                                               LevelObjects[ObjectLoop].position.z, 0.0f, 0.0f, RETRO_PI);
                             break;
 
                         case 3:
-                            DrawObjectModelID(2, LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y,
-                                              LevelObjects[ObjectLoop].position.z, 0.0f, 0.0f, RETRO_PI + 1.5700001);
+                            DrawObjectModelID(OBJECT_ID_RING_SPARKLE, LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y,
+                                              LevelObjects[ObjectLoop].position.z, 0.0f, 0.0f, RETRO_PI + 1.5700001f);
                             break;
 
                         default: continue;
@@ -402,26 +402,26 @@ void DrawWorldSurface()
     if (v8 > levelLMF.variable_3)
         v8 = levelLMF.variable_3;
 
-    dx7Device->SetMaterial(&material_420520);
-    dx7Device->SetRenderState(D3DRENDERSTATE_LIGHTING, 0);
-    dx7Device->SetRenderState(D3DRENDERSTATE_ZENABLE, 0);
-    dx7Device->SetTexture(0, surfaceTestZoneBG);
+    D3DDevice->SetMaterial(&material_420520);
+    D3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, 0);
+    D3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, 0);
+    D3DDevice->SetTexture(0, surfaceTestZoneBG);
 
     Matrix_40893B(vector_4C9D74.x, vector_4C9D74.y, vector_4C9D74.z);
 
-    dx7Device->SetTransform(D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
-    dx7Device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, (0x002 | 0x010 | 0x100), backgroundTMF.vertices, backgroundTMF.numVertices,
+    D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
+    D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, (0x002 | 0x010 | 0x100), backgroundTMF.vertices, backgroundTMF.numVertices,
                                     backgroundTMF.indices, backgroundTMF.numIndices, 0);
 
-    dx7Device->SetRenderState(D3DRENDERSTATE_ZENABLE, 1);
-    dx7Device->SetTransform(D3DTRANSFORMSTATE_WORLD, &matWorld);
-    dx7Device->SetTexture(0, levelSurfaceList[levelLMF.surfaceID[0]]);
+    D3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, 1);
+    D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matWorld);
+    D3DDevice->SetTexture(0, levelSurfaceList[levelLMF.surfaceID[0]]);
 
     uint8_t v7 = levelLMF.surfaceID[0];
     for (i = 0; i < levelLMF.surfaceCount; ++i) {
         if (v7 != levelLMF.surfaceID[i]) {
             v7 = levelLMF.surfaceID[i];
-            dx7Device->SetTexture(0, levelSurfaceList[v7]);
+            D3DDevice->SetTexture(0, levelSurfaceList[v7]);
         }
 
         v10 = levelLMF.variable_2 * v9 + v13 + i * levelLMF.variable_3 * levelLMF.variable_2;
@@ -455,9 +455,9 @@ void DrawWorldSurface()
                         }
                     }
 
-                    dx7Device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, (0x002 | 0x020 | 0x040 | 0x080 | 0x100), levelLMF.drawList[v10].vertices,
-                                                      levelLMF.drawList[v10].vertexCount, levelLMF.drawList[v10].indexes,
-                                                      levelLMF.drawList[v10].indexCount, 0);
+                    D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, (0x002 | 0x020 | 0x040 | 0x080 | 0x100), levelLMF.drawList[v10].vertices,
+                                                    levelLMF.drawList[v10].vertexCount, levelLMF.drawList[v10].indexes,
+                                                    levelLMF.drawList[v10].indexCount, 0);
                 }
                 ++v10;
             }
@@ -465,7 +465,7 @@ void DrawWorldSurface()
         }
     }
 
-    dx7Device->SetRenderState(D3DRENDERSTATE_LIGHTING, 1);
+    D3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, 1);
 }
 
 void Unknown_40823B(float x, float y, float z, float a4, float a5, float a6, float a7)
@@ -519,5 +519,5 @@ void Unknown_40823B(float x, float y, float z, float a4, float a5, float a6, flo
     Vector3D v7 = Vector3D(vector_4C9D74.x, vector_4C9D74.y, vector_4C9D74.z);
     Matrix_40398C(&matView, &v7, &v8, &v11);
 
-    IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_VIEW, &matView);
+    IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_VIEW, &matView);
 }

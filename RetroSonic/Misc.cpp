@@ -2,33 +2,17 @@
 
 void LoadCharacterSurface(LPCSTR lpString2, char id)
 {
-    LPSTR name[8];
+    char name[64];
+    lstrcpyA(name, "Data/Characters/");
+    lstrcatA(name, lpString2);
 
-    lstrcpyA(name[0], "Data/Characters/");
-    lstrcatA(name[0], lpString2);
-
-    if (surfaceCharacters[id])
+    if (surfaceCharacters[id] != NULL)
         surfaceCharacters[id]->Release();
 
-    surfaceCharacters[id] = sub_409C15(dx7Device, name[0]);
+    surfaceCharacters[id] = CreateTexture(D3DDevice, name);
 
     if (!id)
-        LoadBitmapToSurface(name[0], 0);
-}
-
-LPDIRECTDRAWSURFACE7 sub_409C15(IDirect3DDevice7 *device, LPCSTR name)
-{
-    HMODULE v2;                  // eax
-    LPDIRECTDRAWSURFACE7 result; // eax
-    HANDLE h;                    // [esp+0h] [ebp-4h]
-
-    v2 = GetModuleHandleA(0);
-    h  = LoadImageA(v2, name, 0, 0, 0, 0x2000u);
-    if (h || (h = LoadImageA(0, name, 0, 0, 0, 0x2010u)) != 0)
-        result = CreateBMPSurfaceFromHandle(device, h);
-    else
-        result = 0;
-    return result;
+        DDLoadBitmap(name, 0);
 }
 
 void SonicModel_405A18(int32_t frameID)
@@ -57,9 +41,9 @@ void SonicModel_405B7B(int32_t frameID)
         v1                        = sonicAni.frames[frameID].vertexIDs[i];
         sonicTMF.vertices[v1].rhw = matSonicMdl.m[0][0] * sonicTMF2.vertices[v1].rhw + matSonicMdl.m[1][0] * *(float *)&sonicTMF2.vertices[v1].color
                                     + matSonicMdl.m[2][0] * *(float *)&sonicTMF2.vertices[v1].specular + matSonicMdl.m[3][0];
-        *(float *)&sonicTMF.vertices[v1].color    = matSonicMdl.m[0][1] * sonicTMF2.vertices[v1].rhw
-                                                    + matSonicMdl.m[1][1] * *(float *)&sonicTMF2.vertices[v1].color
-                                                    + matSonicMdl.m[2][1] * *(float *)&sonicTMF2.vertices[v1].specular + matSonicMdl.m[3][1];
+        *(float *)&sonicTMF.vertices[v1].color = matSonicMdl.m[0][1] * sonicTMF2.vertices[v1].rhw
+                                                 + matSonicMdl.m[1][1] * *(float *)&sonicTMF2.vertices[v1].color
+                                                 + matSonicMdl.m[2][1] * *(float *)&sonicTMF2.vertices[v1].specular + matSonicMdl.m[3][1];
         *(float *)&sonicTMF.vertices[v1].specular = matSonicMdl.m[0][2] * sonicTMF2.vertices[v1].rhw
                                                     + matSonicMdl.m[1][2] * *(float *)&sonicTMF2.vertices[v1].color
                                                     + matSonicMdl.m[2][2] * *(float *)&sonicTMF2.vertices[v1].specular + matSonicMdl.m[3][2];
@@ -305,7 +289,7 @@ void Matrix_408779(float a1)
     matrixBackgroundTransform.m[1][2] = sin(a1);
     matrixBackgroundTransform.m[2][1] = -sin(a1);
     matrixBackgroundTransform.m[2][2] = cos(a1);
-    IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
+    IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
 }
 
 void Matrix_40880F(float a1)
@@ -315,7 +299,7 @@ void Matrix_40880F(float a1)
     matrixBackgroundTransform.m[0][2] = -sin(a1);
     matrixBackgroundTransform.m[2][0] = sin(a1);
     matrixBackgroundTransform.m[2][2] = cos(a1);
-    IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
+    IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
 }
 
 void Matrix_4088A5(float a1)
@@ -325,7 +309,7 @@ void Matrix_4088A5(float a1)
     matrixBackgroundTransform.m[0][1] = sin(a1);
     matrixBackgroundTransform.m[1][0] = -sin(a1);
     matrixBackgroundTransform.m[1][1] = cos(a1);
-    IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
+    IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
 }
 
 void Matrix_40893B(int a1, int a2, int a3)
@@ -335,7 +319,7 @@ void Matrix_40893B(int a1, int a2, int a3)
     matrixBackgroundTransform.m[3][1] = a2;
     matrixBackgroundTransform.m[3][2] = a3;
     matrixBackgroundTransform.m[3][3] = 1.0;
-    IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
+    IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
 }
 
 void MatrixRotateX_4C9DB0(float value)
@@ -374,8 +358,6 @@ void Matrix_408B0B(float a1, float a2, float a3)
     matrixBackgroundTransform.m[3][3] = 1.0f;
 }
 
-
-
 void MultiplyMatrix_4C9B90_4C9BD0() { MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform); }
 
 //
@@ -389,8 +371,8 @@ void DrawModelShadow(float x, float y, float z, float p_4, float a5, float a6, f
 
 void DrawModelSonic(float x, float y, float z, float rotation)
 {
-    IDirect3DDevice7_SetTexture(dx7Device, 0, surfaceSonic);
-    IDirect3DDevice7_SetRenderState(dx7Device, D3DRENDERSTATE_SPECULARENABLE, TRUE);
+    IDirect3DDevice7_SetTexture(D3DDevice, 0, surfaceSonic);
+    IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_SPECULARENABLE, TRUE);
     memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl));
 
     if (sonicAni.field_BFAA == 4) {
@@ -399,8 +381,8 @@ void DrawModelSonic(float x, float y, float z, float rotation)
             MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
             Matrix_408B0B(x, y, z);
             MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-            IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
-            IDirect3DDevice7_DrawIndexedPrimitive(dx7Device, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, ballTMF.vertices, ballTMF.numVertices,
+            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
+            IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, ballTMF.vertices, ballTMF.numVertices,
                                                   ballTMF.indices, ballTMF.numIndices, 0);
         }
         else {
@@ -415,21 +397,21 @@ void DrawModelSonic(float x, float y, float z, float rotation)
             Matrix_408B0B(x, y, z);
             MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
 
-            IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
-            IDirect3DDevice7_DrawIndexedPrimitive(dx7Device, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, sonicTMF.vertices, sonicTMF.numVertices,
+            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
+            IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, sonicTMF.vertices, sonicTMF.numVertices,
                                                   sonicTMF.indices, sonicTMF.numIndices, 0);
             material_420520.diffuse.a = 0.25f;
-            IDirect3DDevice7_SetMaterial(dx7Device, &material_420520);
+            IDirect3DDevice7_SetMaterial(D3DDevice, &material_420520);
             memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl));
             Matrix_40880F(rotation);
             MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
             Matrix_408B0B(x, y, z);
             MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-            IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
-            IDirect3DDevice7_DrawIndexedPrimitive(dx7Device, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, ballTMF.vertices, ballTMF.numVertices,
+            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
+            IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, ballTMF.vertices, ballTMF.numVertices,
                                                   ballTMF.indices, ballTMF.numIndices, 0);
             material_420520.diffuse.a = 1.0f;
-            IDirect3DDevice7_SetMaterial(dx7Device, &material_420520);
+            IDirect3DDevice7_SetMaterial(D3DDevice, &material_420520);
         }
     }
     else {
@@ -441,13 +423,13 @@ void DrawModelSonic(float x, float y, float z, float rotation)
         MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
         Matrix_408B0B(x, y, z);
         MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-        IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
+        IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
 
-        IDirect3DDevice7_DrawIndexedPrimitive(dx7Device, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, sonicTMF.vertices, sonicTMF.numVertices, sonicTMF.indices,
+        IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, sonicTMF.vertices, sonicTMF.numVertices, sonicTMF.indices,
                                               sonicTMF.numIndices, 0);
     }
 
-    IDirect3DDevice7_SetRenderState(dx7Device, D3DRENDERSTATE_SPECULARENABLE, FALSE);
+    IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_SPECULARENABLE, FALSE);
     DrawModelShadow(x, y, z, -30.0f, 2.5f, 3.0f, rotation);
 }
 
@@ -474,25 +456,20 @@ void DrawObjectModelID(int object, float x, float y, float z, float ry, float rx
 
     switch (object) {
         case 0:
-            IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
-            IDirect3DDevice7_SetTexture(dx7Device, 0, stageObjectTextures[object]);
-            IDirect3DDevice7_SetTextureStageState(dx7Device, 0, D3DTSS_TEXCOORDINDEX, 196608);
-            IDirect3DDevice7_DrawIndexedPrimitive(dx7Device, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, stageObjectModel[object].vertices,
-                                                  stageObjectModel[object].numVertices, stageObjectModel[object].indices,
-                                                  stageObjectModel[object].numIndices, 0);
-            IDirect3DDevice7_SetTextureStageState(dx7Device, 0, D3DTSS_TEXCOORDINDEX, 0);
+            D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
+            D3DDevice->SetTexture(0, stageObjectTextures[object]);
+            D3DDevice->SetTextureStageState(0, D3DTSS_TEXCOORDINDEX, 196608);
+            D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, (0x002 | 0x010 | 0x100), stageObjectModel[object].vertices,
+                                            stageObjectModel[object].numVertices, stageObjectModel[object].indices,
+                                            stageObjectModel[object].numIndices, 0);
+            D3DDevice->SetTextureStageState(0, D3DTSS_TEXCOORDINDEX, 0);
             break;
 
         case 2: {
-            D3DVECTOR position_0(-2.0, 2.0, 0.0);
-            D3DVECTOR position_1(2.0, 2.0, 0.0);
-            D3DVECTOR position_2(-2.0, -2.0, 0.0);
-            D3DVECTOR position_3(2.0, -2.0, 0.0);
-
-            vertices[0] = D3DLVERTEX(position_0, NAN, 0.0f, 0.050000001f, 0.050000001f);
-            vertices[1] = D3DLVERTEX(position_1, NAN, 0.0f, 0.99000001f, 0.050000001f);
-            vertices[2] = D3DLVERTEX(position_2, NAN, 0.0f, 0.050000001f, 0.99000001f);
-            vertices[3] = D3DLVERTEX(position_3, NAN, 0.0f, 0.99000001f, 0.99000001f);
+            vertices[0] = D3DLVERTEX({ -2.0f, 2.0f, 0.0f }, 0xFFFFFFFF, 0, 0.05f, 0.05f);
+            vertices[1] = D3DLVERTEX({ 2.0f, 2.0f, 0.0f }, 0xFFFFFFFF, 0, 0.99f, 0.05f);
+            vertices[2] = D3DLVERTEX({ -2.0f, -2.0f, 0.0f }, 0xFFFFFFFF, 0, 0.05f, 0.99f);
+            vertices[3] = D3DLVERTEX({ 2.0f, -2.0f, 0.0f }, 0xFFFFFFFF, 0, 0.99f, 0.99f);
 
             memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl));
             MatrixRotateZ_4C9DB0(rz);
@@ -501,20 +478,20 @@ void DrawObjectModelID(int object, float x, float y, float z, float ry, float rx
             Matrix_408B0B(x, y, z);
             MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
 
-            IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
-            IDirect3DDevice7_SetTexture(dx7Device, 0, sparkleTexture);
-            IDirect3DDevice7_SetRenderState(dx7Device, D3DRENDERSTATE_LIGHTING, 0);
-            IDirect3DDevice7_DrawIndexedPrimitive(dx7Device, D3DPT_TRIANGLELIST, D3DFVF_LVERTEX, vertices, 4, indices, 6, 0);
-            IDirect3DDevice7_SetRenderState(dx7Device, D3DRENDERSTATE_LIGHTING, 1);
+            D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
+            D3DDevice->SetTexture(0, sparkleTexture);
+            D3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, 0);
+            D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, (0x002 | 0x020 | 0x040 | 0x080 | 0x100), vertices, 4, indices, 6, 0);
+            D3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, 1);
             break;
         }
 
         default:
-            IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
-            IDirect3DDevice7_SetTexture(dx7Device, 0, stageObjectTextures[object]);
-            IDirect3DDevice7_DrawIndexedPrimitive(dx7Device, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, stageObjectModel[object].vertices,
-                                                  stageObjectModel[object].numVertices, stageObjectModel[object].indices,
-                                                  stageObjectModel[object].numIndices, 0);
+            D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
+            D3DDevice->SetTexture(0, stageObjectTextures[object]);
+            D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, (0x002 | 0x010 | 0x100), stageObjectModel[object].vertices,
+                                            stageObjectModel[object].numVertices, stageObjectModel[object].indices,
+                                            stageObjectModel[object].numIndices, 0);
             break;
     }
 }
@@ -597,10 +574,10 @@ void DrawText_1(const char *chars, int32_t strLength, int32_t xOffset, int32_t y
     int32_t numVertices = 4 * strLength;
     int32_t numIndices  = 6 * strLength;
 
-    IDirect3DDevice7_BeginScene(dx7Device);
-    IDirect3DDevice7_SetTexture(dx7Device, 0, surfaceMText);
-    IDirect3DDevice7_DrawIndexedPrimitive(dx7Device, D3DPT_TRIANGLELIST, D3DFVF_LVERTEX, vertices, numVertices, indices, numIndices, 0);
-    IDirect3DDevice7_EndScene(dx7Device);
+    IDirect3DDevice7_BeginScene(D3DDevice);
+    IDirect3DDevice7_SetTexture(D3DDevice, 0, surfaceMText);
+    IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_LVERTEX, vertices, numVertices, indices, numIndices, 0);
+    IDirect3DDevice7_EndScene(D3DDevice);
 }
 
 void DrawText_2(const char *chars, int32_t length, int32_t xOffset, int32_t yOffset)
@@ -654,10 +631,10 @@ void DrawText_2(const char *chars, int32_t length, int32_t xOffset, int32_t yOff
     int32_t numVertices = 4 * length;
     int32_t numIndices  = 6 * length;
 
-    IDirect3DDevice7_BeginScene(dx7Device);
-    IDirect3DDevice7_SetTexture(dx7Device, 0, surfaceMText);
-    IDirect3DDevice7_DrawIndexedPrimitive(dx7Device, D3DPT_TRIANGLELIST, D3DFVF_LVERTEX, vertices, numVertices, indices, numIndices, 0);
-    IDirect3DDevice7_EndScene(dx7Device);
+    IDirect3DDevice7_BeginScene(D3DDevice);
+    IDirect3DDevice7_SetTexture(D3DDevice, 0, surfaceMText);
+    IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_LVERTEX, vertices, numVertices, indices, numIndices, 0);
+    IDirect3DDevice7_EndScene(D3DDevice);
 }
 
 void DrawText_3(const char *chars, int32_t length, int32_t xOffset, int32_t yOffset, int32_t a5, uint8_t a6, uint8_t a7)
@@ -727,9 +704,9 @@ void DrawText_3(const char *chars, int32_t length, int32_t xOffset, int32_t yOff
         int32_t numVertices = 4 * length;
         int32_t numIndices  = 6 * length;
 
-        IDirect3DDevice7_BeginScene(dx7Device);
-        IDirect3DDevice7_SetTexture(dx7Device, 0, surfaceMText);
-        IDirect3DDevice7_DrawIndexedPrimitive(dx7Device, D3DPT_TRIANGLELIST, D3DFVF_LVERTEX, vertices, numVertices, indices, numIndices, 0);
-        IDirect3DDevice7_EndScene(dx7Device);
+        IDirect3DDevice7_BeginScene(D3DDevice);
+        IDirect3DDevice7_SetTexture(D3DDevice, 0, surfaceMText);
+        IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_LVERTEX, vertices, numVertices, indices, numIndices, 0);
+        IDirect3DDevice7_EndScene(D3DDevice);
     }
 }

@@ -16,6 +16,9 @@
     <Filter Include="Source Files\coldet">
       <UniqueIdentifier>{7113c524-0eed-43cd-8be8-370d99c3332a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\DX7">
+      <UniqueIdentifier>{b141ee56-b19c-4869-be55-5b29cb32468c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -84,6 +87,12 @@
     <ClInclude Include="..\dependencies\coldet\src\sysdep.h">
       <Filter>Source Files\coldet</Filter>
     </ClInclude>
+    <ClInclude Include="DX7\texture.h">
+      <Filter>Source Files\DX7</Filter>
+    </ClInclude>
+    <ClInclude Include="DX7\ddutil.h">
+      <Filter>Source Files\DX7</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -148,6 +157,12 @@
     </ClCompile>
     <ClCompile Include="..\dependencies\coldet\src\sysdep.cpp">
       <Filter>Source Files\coldet</Filter>
+    </ClCompile>
+    <ClCompile Include="DX7\texture.cpp">
+      <Filter>Source Files\DX7</Filter>
+    </ClCompile>
+    <ClCompile Include="DX7\ddutil.cpp">
+      <Filter>Source Files\DX7</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

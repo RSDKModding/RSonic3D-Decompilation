@@ -25,8 +25,8 @@ float data_4C9D68;
 float data_4C9D6C;
 float data_4C9D70;
 Vector3D vector_4C9D74;
-int32_t data_4C9D80;
-uint8_t data_4C9D84;
+int32_t SupportsZBufferFmt;
+uint8_t D3DDeviceType;
 int32_t QuitMessage = EXIT_FAILURE;
 BOOL HasGameStarted;
 

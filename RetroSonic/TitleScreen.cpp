@@ -536,27 +536,27 @@ void DrawTitleScr(char type)
 {
     switch (type) {
         case 0:
-            IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_WORLD, &matWorld);
-            IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_VIEW, &matWorld);
-            IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_PROJECTION, &matWorld);
+            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matWorld);
+            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_VIEW, &matWorld);
+            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_PROJECTION, &matWorld);
 
-            IDirect3DDevice7_SetRenderState(dx7Device, D3DRENDERSTATE_ZENABLE, FALSE);
-            IDirect3DDevice7_SetRenderState(dx7Device, D3DRENDERSTATE_LIGHTING, FALSE);
-            IDirect3DDevice7_SetRenderState(dx7Device, D3DRENDERSTATE_SPECULARENABLE, FALSE);
+            IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_ZENABLE, FALSE);
+            IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_LIGHTING, FALSE);
+            IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_SPECULARENABLE, FALSE);
             break;
 
         case 1:
-            IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_WORLD, &matWorld);
-            IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_VIEW, &matView);
-            IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_PROJECTION, &matProject);
+            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matWorld);
+            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_VIEW, &matView);
+            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_PROJECTION, &matProject);
 
-            IDirect3DDevice7_SetRenderState(dx7Device, D3DRENDERSTATE_ZENABLE, TRUE);
-            IDirect3DDevice7_SetRenderState(dx7Device, D3DRENDERSTATE_LIGHTING, TRUE);
-            IDirect3DDevice7_SetRenderState(dx7Device, D3DRENDERSTATE_SPECULARENABLE, FALSE);
+            IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_ZENABLE, TRUE);
+            IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_LIGHTING, TRUE);
+            IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_SPECULARENABLE, FALSE);
             break;
 
-        case 2: IDirect3DDevice7_SetRenderState(dx7Device, D3DRENDERSTATE_ZENABLE, FALSE); break;
-        case 3: IDirect3DDevice7_SetRenderState(dx7Device, D3DRENDERSTATE_ZENABLE, TRUE); break;
+        case 2: IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_ZENABLE, FALSE); break;
+        case 3: IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_ZENABLE, TRUE); break;
 
         default: break;
     }

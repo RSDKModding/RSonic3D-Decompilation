@@ -14,17 +14,17 @@ D3DMATRIX matrix_4C9C90;
 D3DMATRIX matView;
 LPDIRECTDRAWSURFACE7 surfaceList[10];
 
-LPDIRECTDRAW7 dd;
+LPDIRECTDRAW7 DDraw;
 HRESULT ddState = S_FALSE;
 
 LPDIRECTDRAWSURFACE7 surface_4C9D3C;
 LPDIRECTDRAWSURFACE7 surface_439D40;
 LPDIRECTDRAWSURFACE7 surface_4C9D44;
-IDirect3DDevice7 *dx7Device;
+IDirect3DDevice7 *D3DDevice;
 IDirect3D7 *d3d;
 
 char *StrRenderFailError;
-char retryTextureEnum;
+TextureFormatSearchType TexFmtSearchType;
 
 char WindowMode      = 1;
 int32_t dword_41F0C4 = 1;
@@ -35,7 +35,7 @@ sbyte ColourDepth;
 
 BOOL TryInitDirectDraw(HWND hWnd)
 {
-    ddState = DirectDrawCreateEx(NULL, (LPVOID *)&dd, IID_IDirectDraw7, NULL);
+    ddState = DirectDrawCreateEx(NULL, (LPVOID *)&DDraw, IID_IDirectDraw7, NULL);
     if (ddState) {
         StrRenderFailError = (char *)"DirectDrawCreate FAILED";
         return FALSE;
@@ -59,7 +59,7 @@ BOOL InitDrawSurface(HWND hWnd)
     DDBLTFX bltFx_2;
 
     if (WindowMode == 1) {
-        r = dd->SetCooperativeLevel(hWnd, 8);
+        r = DDraw->SetCooperativeLevel(hWnd, 8);
         UpdateWindowRect(hWnd);
 
         memset(&surfaceDesc_1, 0, sizeof(surfaceDesc_1));
@@ -67,8 +67,8 @@ BOOL InitDrawSurface(HWND hWnd)
         surfaceDesc_1.dwFlags        = 1;
         surfaceDesc_1.ddsCaps.dwCaps = 8704;
 
-        r = dd->CreateSurface(&surfaceDesc_1, &surface_4C9D3C, NULL);
-        r = dd->CreateClipper(0, &ddclipper, 0);
+        r = DDraw->CreateSurface(&surfaceDesc_1, &surface_4C9D3C, NULL);
+        r = DDraw->CreateClipper(0, &ddclipper, 0);
 
         ddclipper->SetHWnd(0, hWnd);
         surface_4C9D3C->SetClipper(ddclipper);
@@ -83,11 +83,11 @@ BOOL InitDrawSurface(HWND hWnd)
         surfaceDesc_2.dwWidth        = 640;
         surfaceDesc_2.dwHeight       = 480;
 
-        r = dd->CreateSurface(&surfaceDesc_2, &surface_439D40, NULL);
+        r = DDraw->CreateSurface(&surfaceDesc_2, &surface_439D40, NULL);
     }
     else {
-        r = dd->SetCooperativeLevel(hWnd, 17);
-        r = dd->SetDisplayMode(ResX, ResY, 32, 0, 0);
+        r = DDraw->SetCooperativeLevel(hWnd, 17);
+        r = DDraw->SetDisplayMode(ResX, ResY, 32, 0, 0);
 
         memset(&surfaceDesc_1, 0, sizeof(surfaceDesc_1));
         surfaceDesc_1.dwSize            = 124;
@@ -95,7 +95,7 @@ BOOL InitDrawSurface(HWND hWnd)
         surfaceDesc_1.ddsCaps.dwCaps    = 8728;
         surfaceDesc_1.dwBackBufferCount = 1;
 
-        r = dd->CreateSurface(&surfaceDesc_1, &surface_4C9D3C, 0);
+        r = DDraw->CreateSurface(&surfaceDesc_1, &surface_4C9D3C, 0);
 
         caps.dwCaps  = 4;
         caps.dwCaps2 = 0;
@@ -111,7 +111,7 @@ BOOL InitDrawSurface(HWND hWnd)
         surface_439D40->Blt(0, 0, 0, 16778240, &bltFx_1);
     }
 
-    dd->GetDisplayMode(&surfaceDesc_1);
+    DDraw->GetDisplayMode(&surfaceDesc_1);
 
     if (surfaceDesc_1.ddpfPixelFormat.dwRGBBitCount == 24 || surfaceDesc_1.ddpfPixelFormat.dwRGBBitCount == 8) {
         MessageBoxA(hWnd, "This Colour Depth is not suitable for Retro-Sonic. Please use either 16bit or 32bit colour mode", "Colour Depth", 0x10);
@@ -135,8 +135,8 @@ BOOL InitDrawSurface(HWND hWnd)
 
 BOOL InitScreen()
 {
-    data_4C9D80 = 0;
-    if (dd->QueryInterface(IID_IDirect3D7, (LPVOID *)&d3d) < 0)
+    SupportsZBufferFmt = false;
+    if (DDraw->QueryInterface(IID_IDirect3D7, (LPVOID *)&d3d) < 0)
         return FALSE;
 
     DDPIXELFORMAT fmt;
@@ -145,22 +145,19 @@ BOOL InitScreen()
     fmt.dwSize  = 32;
     fmt.dwFlags = 1024;
 
-    d3d->EnumZBufferFormats(IID_IDirect3DTnLHalDevice, ldUnknownCallback, &fmt);
-
-    if (data_4C9D80 == 1) {
-        data_4C9D84 = 1;
+    d3d->EnumZBufferFormats(IID_IDirect3DTnLHalDevice, EnumZBufferFormatsCallback, &fmt);
+    if (SupportsZBufferFmt == true) {
+        D3DDeviceType = D3D_DEVICE_TNL_HAL;
     }
     else {
-        d3d->EnumZBufferFormats(IID_IDirect3DHALDevice, ldUnknownCallback, &fmt);
-
-        if (data_4C9D80 == 1) {
-            data_4C9D84 = 2;
+        d3d->EnumZBufferFormats(IID_IDirect3DHALDevice, EnumZBufferFormatsCallback, &fmt);
+        if (SupportsZBufferFmt == true) {
+            D3DDeviceType = D3D_DEVICE_HAL;
         }
         else {
-            d3d->EnumZBufferFormats(IID_IDirect3DRGBDevice, ldUnknownCallback, &fmt);
-
-            if (data_4C9D80 == 1)
-                data_4C9D84 = 3;
+            d3d->EnumZBufferFormats(IID_IDirect3DRGBDevice, EnumZBufferFormatsCallback, &fmt);
+            if (SupportsZBufferFmt == true)
+                D3DDeviceType = D3D_DEVICE_RGB;
         }
     }
 
@@ -170,7 +167,7 @@ BOOL InitScreen()
     ddSurfaceDesc.dwSize  = 124;
     ddSurfaceDesc.dwFlags = 4103;
 
-    if (data_4C9D84 <= -3)
+    if (D3DDeviceType <= -3)
         ddSurfaceDesc.ddsCaps.dwCaps = 133120;
     else
         ddSurfaceDesc.ddsCaps.dwCaps = 147456;
@@ -185,12 +182,12 @@ BOOL InitScreen()
     }
 
     memcpy(&ddSurfaceDesc.ddpfPixelFormat, &fmt, sizeof(ddSurfaceDesc.ddpfPixelFormat));
-    if (!dd->CreateSurface(&ddSurfaceDesc, &surface_4C9D44, 0))
+    if (!DDraw->CreateSurface(&ddSurfaceDesc, &surface_4C9D44, 0))
         surface_439D40->AddAttachedSurface(surface_4C9D44);
 
-    if (d3d->CreateDevice(IID_IDirect3DTnLHalDevice, surface_439D40, &dx7Device)) {
-        if (d3d->CreateDevice(IID_IDirect3DHALDevice, surface_439D40, &dx7Device)) {
-            if (d3d->CreateDevice(IID_IDirect3DRGBDevice, surface_439D40, &dx7Device)) {
+    if (d3d->CreateDevice(IID_IDirect3DTnLHalDevice, surface_439D40, &D3DDevice)) {
+        if (d3d->CreateDevice(IID_IDirect3DHALDevice, surface_439D40, &D3DDevice)) {
+            if (d3d->CreateDevice(IID_IDirect3DRGBDevice, surface_439D40, &D3DDevice)) {
                 return 0;
             }
             dword_41F0C4 = 0;
@@ -219,17 +216,17 @@ BOOL InitScreen()
     pViewport.dvMinZ = 0.0;
     pViewport.dvMaxZ = 1.0;
 
-    if (dx7Device->SetViewport(&pViewport))
+    if (D3DDevice->SetViewport(&pViewport))
         return FALSE;
 
     IdentityMatrix(&matWorld);
 
     D3DMATRIX mTemp;
     memcpy(&mTemp, &matWorld, sizeof(mTemp));
-    dx7Device->SetTransform(D3DTRANSFORMSTATE_WORLD, &mTemp);
+    D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &mTemp);
 
     memcpy(&matView, &matWorld, sizeof(matView));
-    dx7Device->SetTransform(D3DTRANSFORMSTATE_VIEW, &matView);
+    D3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, &matView);
 
     memset(&matProject, 0, sizeof(matProject));
     MatrixPerspective(&matProject, TO_RADIAN(45.0f), 0.75f, 1.0f, 1000.0f);
@@ -251,8 +248,8 @@ BOOL InitScreen()
     d3dLight.dcvSpecular.g = 1.0f;
     d3dLight.dcvSpecular.b = 1.0f;
 
-    dx7Device->SetLight(0, &d3dLight);
-    dx7Device->LightEnable(0, TRUE);
+    D3DDevice->SetLight(0, &d3dLight);
+    D3DDevice->LightEnable(0, TRUE);
 
     material_420520.dcvAmbient.r  = 1.0f;
     material_420520.dcvAmbient.g  = 1.0f;
@@ -265,15 +262,15 @@ BOOL InitScreen()
     material_420520.dcvSpecular.a = 0.25f;
     material_420520.power         = 80.0f;
 
-    dx7Device->SetTransform(D3DTRANSFORMSTATE_PROJECTION, &matProject);
-    dx7Device->SetRenderState(D3DRENDERSTATE_DITHERENABLE, 1);
+    D3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, &matProject);
+    D3DDevice->SetRenderState(D3DRENDERSTATE_DITHERENABLE, 1);
 
-    dx7Device->SetTextureStageState(0, D3DTSS_MINFILTER, D3DTOP_SELECTARG1);
-    dx7Device->SetTextureStageState(0, D3DTSS_MAGFILTER, D3DTOP_SELECTARG1);
-    dx7Device->SetTextureStageState(0, D3DTSS_MIPFILTER, D3DTOP_SELECTARG1);
+    D3DDevice->SetTextureStageState(0, D3DTSS_MINFILTER, D3DTOP_SELECTARG1);
+    D3DDevice->SetTextureStageState(0, D3DTSS_MAGFILTER, D3DTOP_SELECTARG1);
+    D3DDevice->SetTextureStageState(0, D3DTSS_MIPFILTER, D3DTOP_SELECTARG1);
 
-    dx7Device->SetRenderState(D3DRENDERSTATE_ZENABLE, TRUE);
-    dx7Device->SetRenderState(D3DRENDERSTATE_LIGHTING, TRUE);
+    D3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, TRUE);
+    D3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, TRUE);
 
     surfaceTestZoneBG = Load_PNG_File("Data/Levels/TestZone/BG.png", 0);
     surfaceSonic      = Load_PNG_File("Data/Characters/Sonic.png", 0);
@@ -284,20 +281,20 @@ BOOL InitScreen()
     float_42042C = 4.0f;
     float_420430 = 4.0f;
 
-    dx7Device->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-    dx7Device->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTOP_SELECTARG1);
-    dx7Device->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTOP_DISABLE);
+    D3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+    D3DDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTOP_SELECTARG1);
+    D3DDevice->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTOP_DISABLE);
 
-    dx7Device->SetRenderState(D3DRENDERSTATE_ALPHATESTENABLE, 1);
-    dx7Device->SetRenderState(D3DRENDERSTATE_ALPHAREF, 0);
-    dx7Device->SetRenderState(D3DRENDERSTATE_ALPHAFUNC, 7);
-    dx7Device->SetRenderState(D3DRENDERSTATE_SRCBLEND, 5);
-    dx7Device->SetRenderState(D3DRENDERSTATE_DESTBLEND, 6);
-    dx7Device->SetRenderState(D3DRENDERSTATE_ALPHABLENDENABLE, 1);
-    dx7Device->SetRenderState(D3DRENDERSTATE_DESTBLEND, 6);
+    D3DDevice->SetRenderState(D3DRENDERSTATE_ALPHATESTENABLE, 1);
+    D3DDevice->SetRenderState(D3DRENDERSTATE_ALPHAREF, 0);
+    D3DDevice->SetRenderState(D3DRENDERSTATE_ALPHAFUNC, 7);
+    D3DDevice->SetRenderState(D3DRENDERSTATE_SRCBLEND, 5);
+    D3DDevice->SetRenderState(D3DRENDERSTATE_DESTBLEND, 6);
+    D3DDevice->SetRenderState(D3DRENDERSTATE_ALPHABLENDENABLE, 1);
+    D3DDevice->SetRenderState(D3DRENDERSTATE_DESTBLEND, 6);
 
     if (!dword_41F0C4)
-        dx7Device->SetRenderState(D3DRENDERSTATE_TEXTUREPERSPECTIVE, 0);
+        D3DDevice->SetRenderState(D3DRENDERSTATE_TEXTUREPERSPECTIVE, 0);
 
     return TRUE;
 }
@@ -320,154 +317,31 @@ void ResetWindow(HWND hWnd)
     ddState = RefreshSurfaces(hWnd);
 }
 
-LPDIRECTDRAWSURFACE7 CreateBMPSurfaceFromHandle(IDirect3DDevice7 *device, HANDLE handle)
-{
-    D3DDEVICEDESC7 pDesc;
-    if (IDirect3DDevice7_GetCaps(device, &pDesc) < 0)
-        return 0;
+HRESULT BeginScene() { return IDirect3DDevice7_BeginScene(D3DDevice); }
 
-    BITMAP bmp;
-    GetObjectA(handle, 24, &bmp);
-
-    LONG bmpWidth  = bmp.bmWidth;
-    LONG bmpHeight = bmp.bmHeight;
-
-    DDSURFACEDESC2 surfaceDesc;
-    memset(&surfaceDesc, 0, sizeof(surfaceDesc));
-    surfaceDesc.dwSize         = 124;
-    surfaceDesc.dwFlags        = 1052679;
-    surfaceDesc.ddsCaps.dwCaps = 4096;
-    surfaceDesc.dwWidth        = bmp.bmWidth;
-    surfaceDesc.dwHeight       = bmp.bmHeight;
-
-    if (IsEqualGUID(pDesc.deviceGUID, IID_IDirect3DHALDevice))
-        surfaceDesc.ddsCaps.dwCaps2 = 16;
-    else if (IsEqualGUID(pDesc.deviceGUID, IID_IDirect3DTnLHalDevice))
-        surfaceDesc.ddsCaps.dwCaps2 = 16;
-    else
-        surfaceDesc.ddsCaps.dwCaps |= 2048;
-
-    if (pDesc.dpcTriCaps.dwTextureCaps & 2) {
-        for (surfaceDesc.dwWidth = 1; bmpWidth > surfaceDesc.dwWidth; surfaceDesc.dwWidth *= 2);
-        for (surfaceDesc.dwHeight = 1; bmpHeight > surfaceDesc.dwHeight; surfaceDesc.dwHeight *= 2);
-    }
-
-    if (pDesc.dpcTriCaps.dwTextureCaps & 32) {
-        if (surfaceDesc.dwWidth <= surfaceDesc.dwHeight)
-            surfaceDesc.dwWidth = surfaceDesc.dwHeight;
-        else
-            surfaceDesc.dwHeight = surfaceDesc.dwWidth;
-    }
-
-    retryTextureEnum = FALSE;
-    IDirect3DDevice7_EnumTextureFormats(device, lpEnumTextureFormats, &surfaceDesc.ddpfPixelFormat);
-
-    if (!surfaceDesc.ddpfPixelFormat.dwRGBBitCount) {
-        retryTextureEnum = TRUE;
-        IDirect3DDevice7_EnumTextureFormats(device, lpEnumTextureFormats, &surfaceDesc.ddpfPixelFormat);
-
-        if (!surfaceDesc.ddpfPixelFormat.dwRGBBitCount)
-            return FALSE;
-    }
-
-    IDirectDrawSurface7 *ppRenderTarget;
-    IDirect3DDevice7_GetRenderTarget(device, &ppRenderTarget);
-
-    ppRenderTarget->GetDDInterface((LPVOID *)&dd);
-    ppRenderTarget->Release();
-
-    IDirectDrawSurface7 *ddSurface;
-    if (dd->CreateSurface(&surfaceDesc, &ddSurface, 0) >= 0) {
-        dd->Release();
-
-        HDC hdc = CreateCompatibleDC(0);
-        if (hdc) {
-            SelectObject(hdc, handle);
-
-            HDC ddHDC;
-            if (ddSurface->GetDC(&ddHDC) >= 0) {
-                BitBlt(ddHDC, 0, 0, bmp.bmWidth, bmp.bmHeight, hdc, 0, 0, 0xCC0020);
-                ddSurface->ReleaseDC(ddHDC);
-            }
-
-            DeleteDC(hdc);
-            return ddSurface;
-        }
-
-        ddSurface->Release();
-        return FALSE;
-    }
-
-    dd->Release();
-    return FALSE;
-}
-
-HRESULT CALLBACK lpEnumTextureFormats(LPDDPIXELFORMAT pddpf, LPVOID pContext)
-{
-    char result; // al
-
-    if ((pddpf->dwFlags & 0xE0000) != 0)
-        return 1;
-    if (pddpf->dwFourCC)
-        return 1;
-    result = retryTextureEnum;
-    if (!retryTextureEnum) {
-        if ((pddpf->dwFlags & 1) == 0 || pddpf->dwRGBBitCount != 32)
-            return 1;
-        goto LABEL_10;
-    }
-    if (retryTextureEnum == 1) {
-        if ((pddpf->dwFlags & 1) == 0 || pddpf->dwRGBBitCount != 16)
-            return 1;
-        if (pddpf->dwRGBAlphaBitMask != 1 && pddpf->dwRGBAlphaBitMask != 0x8000)
-            return 1;
-    LABEL_10:
-        memcpy(pContext, pddpf, 0x20u);
-        result = 0;
-    }
-    return result;
-}
-
-HRESULT CALLBACK ldUnknownCallback(LPDDPIXELFORMAT pddpf, LPVOID pContext)
-{
-    LPDDPIXELFORMAT fmt = (LPDDPIXELFORMAT)pContext;
-
-    if (!pddpf || !fmt)
-        return DDENUMRET_CANCEL;
-
-    if (pddpf->dwFlags != fmt->dwFlags || pddpf->dwRGBBitCount != 24)
-        return D3DENUMRET_OK;
-
-    memcpy(fmt, pddpf, sizeof(DDPIXELFORMAT));
-    data_4C9D80 = 1;
-    return DDENUMRET_CANCEL;
-}
-
-HRESULT BeginScene() { return IDirect3DDevice7_BeginScene(dx7Device); }
-
-HRESULT EndScene() { return IDirect3DDevice7_EndScene(dx7Device); }
+HRESULT EndScene() { return IDirect3DDevice7_EndScene(D3DDevice); }
 
 void DrawTitleModel(char type)
 {
-    IDirect3DDevice7_SetMaterial(dx7Device, &material_420520);
+    IDirect3DDevice7_SetMaterial(D3DDevice, &material_420520);
 
     if (type == 1) {
-        IDirect3DDevice7_SetTexture(dx7Device, 0, surface3DLogo);
-        IDirect3DDevice7_DrawIndexedPrimitive(dx7Device, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, logoTMF.vertices, logoTMF.numVertices, logoTMF.indices,
+        IDirect3DDevice7_SetTexture(D3DDevice, 0, surface3DLogo);
+        IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, logoTMF.vertices, logoTMF.numVertices, logoTMF.indices,
                                               logoTMF.numIndices, 0);
     }
     else if (type == 0) {
-        IDirect3DDevice7_SetTexture(dx7Device, 0, surfaceTestZoneBG);
-        IDirect3DDevice7_DrawIndexedPrimitive(dx7Device, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, backgroundTMF.vertices, backgroundTMF.numVertices,
+        IDirect3DDevice7_SetTexture(D3DDevice, 0, surfaceTestZoneBG);
+        IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, backgroundTMF.vertices, backgroundTMF.numVertices,
                                               backgroundTMF.indices, backgroundTMF.numIndices, 0);
     }
 }
 
 void CopyMatrix_4C9B90_4C9C50() { memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl)); }
 
-void SonicMat_WorldTransform() { IDirect3DDevice7_SetTransform(dx7Device, D3DTRANSFORMSTATE_WORLD, &matSonicMdl); }
+void SonicMat_WorldTransform() { IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matSonicMdl); }
 
-HRESULT Render_ClearScreen(D3DCOLOR color) { return IDirect3DDevice7_Clear(dx7Device, 0, 0, 3, color, 1.0f, 0); }
+HRESULT Render_ClearScreen(D3DCOLOR color) { return IDirect3DDevice7_Clear(D3DDevice, 0, 0, 3, color, 1.0f, 0); }
 
 void SetFade(float a1, float a2, float a3, float a4)
 {
@@ -495,10 +369,10 @@ void SetFade(float a1, float a2, float a3, float a4)
     vertices[2] = D3DLVERTEX(position_2, color, 0.0f, 1.0f, 0.0f);
     vertices[3] = D3DLVERTEX(position_3, color, 0.0f, 1.0f, 0.0f);
 
-    IDirect3DDevice7_BeginScene(dx7Device);
-    IDirect3DDevice7_SetTexture(dx7Device, 0, NULL);
-    IDirect3DDevice7_DrawIndexedPrimitive(dx7Device, D3DPT_TRIANGLELIST, D3DFVF_LVERTEX, vertices, 4, indices, 6, 0);
-    IDirect3DDevice7_EndScene(dx7Device);
+    IDirect3DDevice7_BeginScene(D3DDevice);
+    IDirect3DDevice7_SetTexture(D3DDevice, 0, NULL);
+    IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_LVERTEX, vertices, 4, indices, 6, 0);
+    IDirect3DDevice7_EndScene(D3DDevice);
 }
 
 void FlipScreen()
@@ -507,38 +381,6 @@ void FlipScreen()
         IDirectDrawSurface7_Blt(surface_4C9D3C, &windowBounds, surface_439D40, 0, 0x1000000, 0);
     else if (WindowMode == 0)
         IDirectDrawSurface7_Flip(surface_4C9D3C, 0, 1);
-}
-
-void LoadBitmapToSurface(LPCSTR name, int32_t id)
-{
-    HANDLE h = LoadImageA(0, name, 0, 0, 0, 0x50);
-
-    BITMAP bmp;
-    GetObjectA(h, 24, &bmp);
-
-    LONG bmpWidth  = bmp.bmWidth;
-    LONG bmpHeight = bmp.bmHeight;
-
-    DDSURFACEDESC2 surfaceDesc;
-    memset(&surfaceDesc, 0, sizeof(surfaceDesc));
-    surfaceDesc.dwSize         = 124;
-    surfaceDesc.dwFlags        = 7;
-    surfaceDesc.ddsCaps.dwCaps = 64;
-    surfaceDesc.dwWidth        = bmp.bmWidth;
-    surfaceDesc.dwHeight       = bmp.bmHeight;
-
-    dd->CreateSurface(&surfaceDesc, &surfaceList[id], 0);
-
-    HDC hdc;
-    surfaceList[id]->GetDC(&hdc);
-
-    HDC hdcSrc = CreateCompatibleDC(hdc);
-    SelectObject(hdcSrc, h);
-    BitBlt(hdc, 0, 0, bmpWidth, bmpHeight, hdcSrc, 0, 0, 0xCC0020);
-
-    surfaceList[id]->ReleaseDC(hdc);
-    DeleteDC(hdcSrc);
-    DeleteObject(h);
 }
 
 void ReleaseSurfaceID(uint8_t id)
@@ -551,7 +393,7 @@ void ReleaseSurfaceID(uint8_t id)
 
 HRESULT RefreshSurfaces(HWND hWnd)
 {
-    dd->SetCooperativeLevel(hWnd, 8);
+    DDraw->SetCooperativeLevel(hWnd, 8);
 
     for (int32_t i = 0; i < 5; ++i) {
         if (surfaceCharacters[i]) {
@@ -645,9 +487,9 @@ void ReleaseModelSurfaces()
         surface_4C9D44 = NULL;
     }
 
-    if (dx7Device) {
-        IDirect3DDevice7_Release(dx7Device);
-        dx7Device = NULL;
+    if (D3DDevice) {
+        IDirect3DDevice7_Release(D3DDevice);
+        D3DDevice = NULL;
     }
 
     if (d3d) {
@@ -664,9 +506,9 @@ void ReleaseGraphicsAPI()
         ReleaseSurfaceID(i);
     }
 
-    if (dd != NULL) {
-        IDirectDraw7_Release(dd);
-        dd = NULL;
+    if (DDraw != NULL) {
+        IDirectDraw7_Release(DDraw);
+        DDraw = NULL;
     }
 
     if (surface_439D40 != NULL) {

@@ -41,6 +41,10 @@ typedef unsigned int uint;
 // ENGINE INCLUDES
 // ============================
 
+#include "DX7/ddutil.h"
+#include "DX7/enums.h"
+#include "DX7/texture.h"
+
 #include "Player.hpp"
 #include "Collision.hpp"
 #include "Drawing.hpp"
@@ -80,8 +84,8 @@ extern float data_4C9D68;
 extern float data_4C9D6C;
 extern float data_4C9D70;
 extern Vector3D vector_4C9D74;
-extern int32_t data_4C9D80;
-extern uint8_t data_4C9D84;
+extern int32_t SupportsZBufferFmt;
+extern uint8_t D3DDeviceType;
 extern int32_t QuitMessage;
 extern BOOL HasGameStarted;
 
