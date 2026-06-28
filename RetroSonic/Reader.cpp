@@ -1,5 +1,23 @@
 #include "RetroEngine.hpp"
 
+LevelDirectoryEntry *LDirectory;
+
+void LoadFile(FileInfo *file, const char *path)
+{
+    FILE *handle = fopen(path, "rb");
+    fseek(handle, 0, 2);
+
+    file->size = ftell(handle);
+    file->data = new byte[file->size + 1];
+    fseek(handle, 0, 0);
+
+    for (int i = 0; i < file->size; ++i) {
+        fread(&file->data[i], 1, 1, handle);
+    }
+
+    fclose(handle);
+}
+
 IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
 {
     FIBITMAP *fBitmap   = FreeImage_Load(FIF_PNG, path);
@@ -190,7 +208,7 @@ IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
     return s;
 }
 
-void Load_LMF_File(LMF *lmf, const char *path)
+void LoadLevelModel(LMF *lmf, const char *path)
 {
     FILE *stream = fopen(path, "rb");
     LMF temp;
@@ -263,6 +281,115 @@ void Load_LMF_File(LMF *lmf, const char *path)
     memcpy(lmf, &temp, sizeof(LMF));
 }
 
+void SetLevelDirectory(const char *text, byte length, int index)
+{
+    for (int i = 0; i < length; ++i) {
+        LDirectory[index - 1].levelName[i] = text[i];
+    }
+
+    LDirectory[index - 1].levelNameLen = length;
+}
+
+void SetActNumber(const char *text, byte length, int index)
+{
+    for (int i = 0; i < length; ++i) {
+        LDirectory[index - 1].actNum[i] = text[i];
+    }
+
+    LDirectory[index - 1].actNumLen = length;
+}
+
+void AllocateDirectories(int size) { LDirectory = new LevelDirectoryEntry[size + 1]; }
+
+void LoadDirectoryFile(FileInfo *file, int id, const char *fileName, int fileNameLen)
+{
+    char path[0x20];
+    StrCopy(path, "Data/Levels/");
+
+    int r = 12; // "Data/Levels/" length
+    for (int i = 0; i < LDirectory[id].levelNameLen; ++i) {
+        path[r++] = LDirectory[id].levelName[i];
+    }
+
+    for (int i = 0; i < fileNameLen; ++i) {
+        path[r++] = fileName[i];
+    }
+
+    path[r] = '\0';
+
+    LoadFile(file, fileName);
+}
+
+void LoadDirectoryActFile(FileInfo *file, int id, const char *fileName, int fileNameLen)
+{
+    char path[0x20];
+    StrCopy(path, "Data/Levels/");
+
+    char act[0x08];
+    strcpy(act, "/Act");
+
+    int r = 12; // "Data/Levels/" length
+    for (int i = 0; i < LDirectory[id].levelNameLen; ++i) {
+        path[r++] = LDirectory[id].levelName[i];
+    }
+
+    for (int i = 0; i < 4; ++i) {
+        path[r++] = act[i];
+    }
+
+    for (int i = 0; i < LDirectory[id].actNumLen; ++i) {
+        path[r++] = LDirectory[id].actNum[i];
+    }
+
+    for (int i = 0; i < fileNameLen; ++i) {
+        path[r++] = fileName[i];
+    }
+
+    path[r] = '\0';
+
+    LoadFile(file, fileName);
+}
+
+void LoadDirectoryGraphic(int id, const char *fileName, int fileNameLen)
+{
+    char path[0x20];
+    StrCopy(path, "Data/Levels/");
+
+    int r = 12; // "Data/Levels/" length
+    for (int i = 0; i < LDirectory[id].levelNameLen; ++i) {
+        path[r++] = LDirectory[id].levelName[i];
+    }
+
+    for (int i = 0; i < fileNameLen; ++i) {
+        path[r++] = fileName[i];
+    }
+
+    path[r] = '\0';
+
+    // No LoadZoneTiles :C
+}
+
+void CreateDirectories()
+{
+    memcpy(&LDirectory[0], "R1", 2);
+    LDirectory[0].levelNameLen = 2;
+
+    memcpy(&LDirectory[1], "R1", 2);
+    LDirectory[1].levelNameLen = 2;
+
+    memcpy(&LDirectory[2], "R1", 2);
+    LDirectory[2].levelNameLen = 2;
+
+    memcpy(&LDirectory[3], "R2", 2);
+    LDirectory[3].levelNameLen = 2;
+
+    memcpy(&LDirectory[4], "R2", 2);
+    LDirectory[4].levelNameLen = 2;
+
+    memcpy(&LDirectory[5], "R2", 2);
+    LDirectory[5].levelNameLen = 2;
+}
+
 void Load_TMF_File(TMF *tmf, const char *path)
 {
     TMF model;
@@ -272,16 +399,16 @@ void Load_TMF_File(TMF *tmf, const char *path)
 
     fread(&model.numVertices, 2, 1, stream);
 
-    model.vertices = new D3DTLVERTEX[model.numVertices + 1];
+    model.vertices = new D3DVERTEX[model.numVertices + 1];
     if (model.vertices != nullptr)
-        memset(model.vertices, 0, sizeof(D3DTLVERTEX));
+        memset(model.vertices, 0, sizeof(D3DVERTEX));
 
-    D3DTLVERTEX vert;
+    D3DVERTEX vert;
     int32_t readPos;
 
     for (int32_t i = 0; i < model.numVertices; ++i) {
-        for (int32_t m = 0; m < 8; ++m) fread(&vert.sx + m, sizeof(D3DVALUE), 1, stream);
-        memcpy(&model.vertices[i], &vert, sizeof(D3DTLVERTEX));
+        for (int32_t m = 0; m < 8; ++m) fread(&vert.x + m, sizeof(D3DVALUE), 1, stream);
+        memcpy(&model.vertices[i], &vert, sizeof(D3DVERTEX));
     }
 
     fread(&readPos, 1, 1, stream);
@@ -374,21 +501,71 @@ void Load_ANI_File(Animation *animationPtr, const char *path)
     memcpy(animationPtr, &animation, sizeof(Animation));
 }
 
-void LoadFile(FileInfo *file, const char *path)
+#if 0
+int *__cdecl TODO_READER_FUNC_401A87(int *a1, char *FileName)
 {
-    FILE *stream = fopen(path, "rb");
-    fseek(stream, 0, 2);
+  int v3; // [esp+Ch] [ebp-BFD0h]
+  int v4; // [esp+Ch] [ebp-BFD0h]
+  int v5; // [esp+10h] [ebp-BFCCh] BYREF
+  int j; // [esp+14h] [ebp-BFC8h]
+  int i; // [esp+18h] [ebp-BFC4h]
+  FILE *Stream; // [esp+1Ch] [ebp-BFC0h]
+  int Buffer; // [esp+20h] [ebp-BFBCh] BYREF
+  R3D::Animation v10; // [esp+24h] [ebp-BFB8h] BYREF
+  int v11; // [esp+BFD8h] [ebp-4h] BYREF
 
-    int len = ftell(stream);
-
-    FileInfo *alloc = new FileInfo[len + 1];
-
-    fseek(stream, 0, 0);
-
-    for (int i = 0; i < len; ++i) {
-        fread(alloc + i, 1, 1, stream);
+  Stream = fopen(FileName, "rb");
+  fseek(Stream, 0, 0);
+  fread(&Buffer, 1u, 1u, Stream);
+  v3 = Buffer;
+  fread(&v11, 2u, 1u, Stream);
+  for ( i = 0; i < v3; ++i )
+  {
+    fread(&Buffer, 1u, 1u, Stream);
+    v5 = Buffer;
+    for ( j = 0; j < v5; ++j )
+      fread(&Buffer, 1u, 1u, Stream);
+    fread(&v10.frames[i].field_8, 4u, 1u, Stream);
+    fread(&v10.frames[i].field_8.y, 4u, 1u, Stream);
+    fread(&v10.frames[i].field_8.z, 4u, 1u, Stream);
+    fread(&v5, 2u, 1u, Stream);
+    v10.frames[i].count = v5;
+    for ( j = 0; j < v10.frames[i].count; ++j )
+    {
+      fread(&v5, 2u, 1u, Stream);
+      v10.frames[i].field_0[j] = v5;
     }
-
-    fclose(stream);
-    memcpy(file, alloc, sizeof(FileInfo));
+    for ( j = 0; j < v11; ++j )
+    {
+      fread(&v5, 2u, 1u, Stream);
+      v10.frames[i].rotX[j] = v5 * (3.1415927 / 180.0);
+      fread(&v5, 2u, 1u, Stream);
+      v10.frames[i].rotY[j] = v5 * (3.1415927 / 180.0);
+      fread(&v5, 2u, 1u, Stream);
+      v10.frames[i].rotZ[j] = v5 * (3.1415927 / 180.0);
+    }
+  }
+  fread(&v5, 2u, 1u, Stream);
+  v10.field_BFA8 = v5;
+  v10.frameIDs = operator new(v5);
+  for ( i = 0; i < v10.field_BFA8; ++i )
+    fread(&v10.frameIDs[i], 1u, 1u, Stream);
+  fread(&Buffer, 1u, 1u, Stream);
+  v4 = Buffer;
+  for ( i = 0; i < v4; ++i )
+  {
+    fread(&Buffer, 1u, 1u, Stream);
+    v5 = Buffer;
+    for ( j = 0; j < v5; ++j )
+      fread(&Buffer, 1u, 1u, Stream);
+    fread(&v10.array_AB90[i].field_201, 1u, 1u, Stream);
+    fread(&v10.array_AB90[i].field_200, 1u, 1u, Stream);
+    fread(&v10.array_AB90[i], 1u, 1u, Stream);
+    for ( j = 0; j < v10.array_AB90[i].count; ++j )
+      fread(&v10.array_AB90[i].array_2[j], 2u, 1u, Stream);
+  }
+  fclose(Stream);
+  qmemcpy(a1, &v10, 0xBFB4u);
+  return a1;
 }
+#endif

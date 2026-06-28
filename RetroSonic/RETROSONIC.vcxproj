@@ -88,7 +88,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_STDLIB;_DEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>C:\dx7sdk\Include/;$(SOLUTIONDIR)RetroSonic/;$(SOLUTIONDIR)dependencies/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -106,7 +106,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_STDLIB;NDEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>C:\dx7sdk\Include/;$(SOLUTIONDIR)RetroSonic/;$(SOLUTIONDIR)dependencies/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -124,7 +124,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_STDLIB;_DEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>C:\dx7sdk\Include/;$(SOLUTIONDIR)RetroSonic/;$(SOLUTIONDIR)dependencies/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -142,7 +142,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_STDLIB;NDEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>C:\dx7sdk\Include/;$(SOLUTIONDIR)RetroSonic/;$(SOLUTIONDIR)dependencies/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -168,6 +168,7 @@
     <ClInclude Include="..\dependencies\coldet\src\sweep_prune.h" />
     <ClInclude Include="..\dependencies\coldet\src\sysdep.h" />
     <ClInclude Include="DX7\ddutil.h" />
+    <ClInclude Include="DX7\enums.h" />
     <ClInclude Include="DX7\texture.h" />
     <ClInclude Include="Player.hpp" />
     <ClInclude Include="Collision.hpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="Misc.h" />
     <ClInclude Include="Drawing.hpp" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="String.hpp" />
     <ClInclude Include="Text.hpp" />
     <ClInclude Include="MainGame.hpp" />
     <ClInclude Include="TitleScreen.hpp" />
@@ -203,6 +205,7 @@
     <ClCompile Include="Math.cpp" />
     <ClCompile Include="Misc.cpp" />
     <ClCompile Include="Drawing.cpp" />
+    <ClCompile Include="String.cpp" />
     <ClCompile Include="Text.cpp" />
     <ClCompile Include="MainGame.cpp" />
     <ClCompile Include="TitleScreen.cpp" />

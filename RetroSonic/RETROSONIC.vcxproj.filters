@@ -93,6 +93,12 @@
     <ClInclude Include="DX7\ddutil.h">
       <Filter>Source Files\DX7</Filter>
     </ClInclude>
+    <ClInclude Include="DX7\enums.h">
+      <Filter>Source Files\DX7</Filter>
+    </ClInclude>
+    <ClInclude Include="String.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -163,6 +169,9 @@
     </ClCompile>
     <ClCompile Include="DX7\ddutil.cpp">
       <Filter>Source Files\DX7</Filter>
+    </ClCompile>
+    <ClCompile Include="String.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

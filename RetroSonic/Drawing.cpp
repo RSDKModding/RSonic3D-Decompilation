@@ -327,13 +327,13 @@ void DrawTitleModel(char type)
 
     if (type == 1) {
         IDirect3DDevice7_SetTexture(D3DDevice, 0, surface3DLogo);
-        IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, logoTMF.vertices, logoTMF.numVertices, logoTMF.indices,
-                                              logoTMF.numIndices, 0);
+        IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, LogoMdl.vertices, LogoMdl.numVertices, LogoMdl.indices,
+                                              LogoMdl.numIndices, 0);
     }
     else if (type == 0) {
         IDirect3DDevice7_SetTexture(D3DDevice, 0, surfaceTestZoneBG);
-        IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, backgroundTMF.vertices, backgroundTMF.numVertices,
-                                              backgroundTMF.indices, backgroundTMF.numIndices, 0);
+        IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, BackgroundMdl.vertices, BackgroundMdl.numVertices,
+                                              BackgroundMdl.indices, BackgroundMdl.numIndices, 0);
     }
 }
 

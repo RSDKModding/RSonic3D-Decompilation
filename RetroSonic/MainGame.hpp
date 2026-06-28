@@ -64,13 +64,13 @@ extern LPDIRECTDRAWSURFACE7 unk_420500;
 
 extern D3DMATERIAL7 material_420520;
 
-extern TMF stageObjectModel[2];
-extern TMF logoTMF;
-extern TMF backgroundTMF;
-extern TMF sonicTMF2;
-extern TMF sonicTMF;
-extern TMF ballTMF;
-extern Animation sonicAni;
+extern TMF StageObjMdl[2];
+extern TMF LogoMdl;
+extern TMF BackgroundMdl;
+extern TMF SonicBaseMdl;
+extern TMF SonicMdl;
+extern TMF BallMdl;
+extern Animation SonicAni;
 
 extern D3DMATRIX matrix_47A790[100][36];
 extern D3DMATRIX array_42C590[100][36];

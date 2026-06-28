@@ -33,18 +33,23 @@ extern int32_t DebugEnabled;
 extern int32_t DebugMode;
 extern uint8_t DebugCode[12];
 
+void ResetTitleScreen();
 void ProcessTitleScreen();
-void CodeCheck();
-void SetMenuSelMode(TextMenu *menu, int32_t p_1);
-TextMenu LoadCharacterMenu();
-TextMenu LoadZoneMenu();
-void DrawGameMenu(TextMenu p_0, int32_t p_1, uint8_t p_2);
-void DrawScrollingMenu(TextMenu p_0, int32_t p_1, int32_t p_2, int32_t p_3, int32_t p_4, int32_t p_5);
-void DrawTitleScr(char a1);
 void TitleScrMovement();
+void DrawTitleScr(sbyte type);
+void DrawGameMenu(TextMenu TextMenu, int x, int y);
+void DrawScrollingMenu(TextMenu TextMenu, int x, int y, int clipT, int clipB, int scrollPos);
+void LoadCharacterMenu(TextMenu *menu);
+void SetCharacters(int row);
+void LoadZoneMenu(TextMenu *menu);
+
+
+void SetMenuSelMode(TextMenu *menu, int id);
+
 void Zone_TitleScreen_4127E6();
 void Zone_TitleScreen_4128A3();
 void Zone_TitleScreen_4128CF();
-void DrawMenuBackground();
 void Zone_TitleScreen_4129E4();
-void ResetTitleScreen();
+
+void CodeCheck();
+void DrawMenuBackground();

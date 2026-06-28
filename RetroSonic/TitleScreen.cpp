@@ -33,6 +33,14 @@ int DebugMode     = TRUE;
 
 uint8_t DebugCode[12] = { 2, 2, 3, 3, 0, 1, 0, 1, 4, 0, 0, 0 };
 
+void ResetTitleScreen()
+{
+    TitleScreenMode = 0;
+    TtlTime         = 0;
+    SAnimation      = 0;
+    TAnimation      = 0;
+}
+
 void ProcessTitleScreen()
 {
     switch (TitleScreenMode) {
@@ -82,9 +90,9 @@ void ProcessTitleScreen()
                     SetGameText("WALKING", &TitleMenu, 2, 7);
                 }
 
-                TitleMenu.field_C  = 2;
-                TitleMenu.field_D  = 1;
-                TitleMenu.field_10 = 0;
+                TitleMenu.alignment      = MENU_ALIGN_CENTER;
+                TitleMenu.selectionCount = 1;
+                TitleMenu.selection1     = 0;
                 SetFade(1.0f, 1.0f, 1.0f, 0.89999998f);
             }
             else {
@@ -134,27 +142,27 @@ void ProcessTitleScreen()
             if (3.1415927f + 3.1415927f < data_4DA3A8)
                 data_4DA3A8 = 0.0f;
 
-            SonicModel_405CE2(TitleMenu.field_10 + 2, data_4DA3A8);
+            SonicModel_405CE2(TitleMenu.selection1 + 2, data_4DA3A8);
 
             CheckKeyPress(&TitleInput, INPUT_LEFT, INPUT_LCONTROL);
 
-            if (TitleInput.down == TRUE && TitleMenu.field_10 < TitleMenu.rowCount - 1)
-                TitleMenu.field_10++;
+            if (TitleInput.down == TRUE && TitleMenu.selection1 < TitleMenu.rowCount - 1)
+                TitleMenu.selection1++;
 
-            if (TitleInput.up == TRUE && TitleMenu.field_10 > 0)
-                TitleMenu.field_10--;
+            if (TitleInput.up == TRUE && TitleMenu.selection1 > 0)
+                TitleMenu.selection1--;
 
             if (TitleInput.start == TRUE) {
-                switch (TitleMenu.field_10) {
+                switch (TitleMenu.selection1) {
                     case 0:
-                        TitleMenu       = LoadCharacterMenu();
+                        LoadCharacterMenu(&TitleMenu);
                         TitleScreenMode = 3;
                         break;
 
                     case 1: TitleScreenMode = 5; break;
 
                     case 2:
-                        TitleMenu       = LoadCharacterMenu();
+                        LoadCharacterMenu(&TitleMenu);
                         TitleScreenMode = 3;
                         break;
 
@@ -185,11 +193,11 @@ void ProcessTitleScreen()
                             SetGameText(" ", &TitleMenu, 10, 1);
                             SetGameText("eEXITe", &TitleMenu, 11, 6);
 
-                            TitleMenu.field_C  = 2;
-                            TitleMenu.field_D  = 2;
-                            TitleMenu.field_10 = 0;
-                            TitleMenu.field_14 = 3;
-                            TitleScreenMode    = 6;
+                            TitleMenu.alignment      = MENU_ALIGN_CENTER;
+                            TitleMenu.selectionCount = 2;
+                            TitleMenu.selection1     = 0;
+                            TitleMenu.selection2     = 3;
+                            TitleScreenMode          = 6;
                         }
                         break;
 
@@ -207,14 +215,14 @@ void ProcessTitleScreen()
 
             CheckKeyPress(&TitleInput, INPUT_UP, INPUT_LCONTROL);
 
-            if (TitleInput.down == TRUE && TitleMenu.field_10 < TitleMenu.rowCount - 1)
-                TitleMenu.field_10++;
+            if (TitleInput.down == TRUE && TitleMenu.selection1 < TitleMenu.rowCount - 1)
+                TitleMenu.selection1++;
 
-            if (TitleInput.up == TRUE && TitleMenu.field_10 > 0)
-                TitleMenu.field_10--;
+            if (TitleInput.up == TRUE && TitleMenu.selection1 > 0)
+                TitleMenu.selection1--;
 
             if (TitleInput.start == TRUE) {
-                TitleMenu       = LoadZoneMenu();
+                LoadZoneMenu(&TitleMenu);
                 TitleScreenMode = 4;
             }
 
@@ -228,11 +236,11 @@ void ProcessTitleScreen()
 
             CheckKeyPress(&TitleInput, INPUT_UP, INPUT_LCONTROL);
 
-            if (TitleInput.down == TRUE && TitleMenu.field_10 < TitleMenu.rowCount - 1)
-                ++TitleMenu.field_10;
+            if (TitleInput.down == TRUE && TitleMenu.selection1 < TitleMenu.rowCount - 1)
+                ++TitleMenu.selection1;
 
-            if (TitleInput.up == TRUE && TitleMenu.field_10 > 0)
-                --TitleMenu.field_10;
+            if (TitleInput.up == TRUE && TitleMenu.selection1 > 0)
+                --TitleMenu.selection1;
 
             if (TitleInput.start == TRUE) {
                 TitleScreenMode = 4;
@@ -249,14 +257,14 @@ void ProcessTitleScreen()
 
             CheckKeyPress(&TitleInput, INPUT_LEFT, INPUT_LSHIFT);
 
-            if (TitleInput.down == TRUE && TitleMenu.field_14 < TitleMenu.rowCount - 1)
-                TitleMenu.field_14 += 2;
+            if (TitleInput.down == TRUE && TitleMenu.selection2 < TitleMenu.rowCount - 1)
+                TitleMenu.selection2 += 2;
 
-            if (TitleInput.up == TRUE && TitleMenu.field_14 > 3)
-                TitleMenu.field_14 -= 2;
+            if (TitleInput.up == TRUE && TitleMenu.selection2 > 3)
+                TitleMenu.selection2 -= 2;
 
             if (TitleInput.left == TRUE) {
-                switch (TitleMenu.field_14) {
+                switch (TitleMenu.selection2) {
                     case 3:
                         if (AllStages) {
                             AllStages = FALSE;
@@ -299,7 +307,7 @@ void ProcessTitleScreen()
             }
 
             if (TitleInput.right == TRUE) {
-                switch (TitleMenu.field_14) {
+                switch (TitleMenu.selection2) {
                     case 3:
                         if (AllStages) {
                             AllStages                    = 0;
@@ -349,7 +357,7 @@ void ProcessTitleScreen()
             }
 
             if (TitleInput.start == TRUE) {
-                if (TitleMenu.field_14 == 11)
+                if (TitleMenu.selection2 == 11)
                     TitleScreenMode = 0;
             }
 
@@ -361,6 +369,399 @@ void ProcessTitleScreen()
 
     FlipScreen();
 }
+
+void TitleScrMovement()
+{
+    if (TtlTime > 30 && SonX < 160.0f) {
+        SXspeed     = SXspeed + 0.0099999998f;
+        SYspeed     = SYspeed + 0.02f;
+        SonX        = SonX + SXspeed;
+        SonY        = SonY + SYspeed;
+        data_41F59C = SYspeed * 0.5f + data_41F59C;
+    }
+
+    if (SonX > 160.0f && TailsX > 78.0f) {
+        TXspeed = TXspeed - 0.0099999998f;
+        TYspeed = TYspeed + 0.02f;
+        TailsX  = TailsX + TXspeed;
+        TailsY  = TailsY + TYspeed;
+    }
+
+    if (TtlTime > 30 && SonX > 160.0f && SAnimation < 9)
+        ++SAnimation;
+
+    if (TtlTime > 30 && TailsX < 78.0f && TAnimation < 11)
+        ++TAnimation;
+}
+
+void DrawTitleScr(sbyte type)
+{
+    switch (type) {
+        case 0:
+            D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matWorld);
+            D3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, &matWorld);
+            D3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, &matWorld);
+
+            D3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, false);
+            D3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, false);
+            D3DDevice->SetRenderState(D3DRENDERSTATE_SPECULARENABLE, false);
+            break;
+
+        case 1:
+            D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matWorld);
+            D3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, &matView);
+            D3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, &matProject);
+
+            D3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, true);
+            D3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, true);
+            D3DDevice->SetRenderState(D3DRENDERSTATE_SPECULARENABLE, false);
+            break;
+
+        case 2: D3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, false); break;
+        case 3: D3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, true); break;
+
+        default: break;
+    }
+}
+
+void DrawGameMenu(TextMenu TextMenu, int x, int y)
+{
+    for (int i = 0; i < TextMenu.rowCount; ++i) {
+        TextMenuEntry *entry = &TextMenu.labels[i];
+
+        int xdraw = x;
+        int ydraw = (10 * i) + y;
+
+        switch (TextMenu.alignment) {
+            case MENU_ALIGN_RIGHT: xdraw -= (10 * entry->length) / 1; break;
+            case MENU_ALIGN_CENTER: xdraw -= (10 * entry->length) / 2; break;
+            default: break;
+        }
+
+        switch (TextMenu.selectionCount) {
+            case 1:
+                if (i == TextMenu.selection1)
+                    DrawMenuText(entry->text, entry->length, xdraw, ydraw, 8);
+
+                else
+                    DrawMenuText(entry->text, entry->length, xdraw, ydraw, 0);
+                break;
+
+            case 2:
+                if (i == TextMenu.selection1 || i == TextMenu.selection2)
+                    DrawMenuText(entry->text, entry->length, xdraw, ydraw, 8);
+                else
+                    DrawMenuText(entry->text, entry->length, xdraw, ydraw, 0);
+                break;
+
+            case 3:
+                if (TextMenu.alignment == MENU_ALIGN_LEFT) {
+                    if (i == TextMenu.selection1)
+                        DrawMenuText(entry->text, entry->length, xdraw, ydraw, 8);
+
+                    if (i != TextMenu.selection1 && i == TextMenu.selection2)
+                        DrawText_2(entry->text, entry->length, xdraw, ydraw);
+                }
+                break;
+
+            default: break;
+        }
+    }
+}
+
+void DrawScrollingMenu(TextMenu TextMenu, int x, int y, int clipT, int clipB, int scrollPos)
+{
+    for (int i = 0; i < TextMenu.rowCount; ++i) {
+        TextMenuEntry *entry = &TextMenu.labels[i];
+
+        int drawX = x;
+        int drawY = scrollPos + (10 * i) + y;
+
+        switch (TextMenu.alignment) {
+            case MENU_ALIGN_RIGHT: drawX -= (10 * entry->length) / 1; break;
+            case MENU_ALIGN_CENTER: drawX -= (10 * entry->length) / 2; break;
+            default: break;
+        }
+
+        int alphaStrengthT = 0;
+        int alphaStrengthB = 0;
+
+        if (drawY < clipT)
+            alphaStrengthT = clipT - drawY;
+
+        if (drawY > clipB + 8)
+            alphaStrengthB = drawY - (clipB + 8);
+
+        switch (TextMenu.selectionCount) {
+            case 1:
+                if (i == TextMenu.selection1) {
+                    if (drawY < clipT || drawY > clipB + 8)
+                        DrawText_3(entry->text, entry->length, drawX, drawY, 8, alphaStrengthT, alphaStrengthB);
+                    else
+                        DrawMenuText(entry->text, entry->length, drawX, drawY, 8);
+                }
+                else {
+                    if (drawY < clipT || drawY > clipB + 8)
+                        DrawText_3(entry->text, entry->length, drawX, drawY, 0, alphaStrengthT, alphaStrengthB);
+                    else
+                        DrawMenuText(entry->text, entry->length, drawX, drawY, 0);
+                }
+                break;
+
+            case 2:
+                if (i == TextMenu.selection1 || i == TextMenu.selection2) {
+                    if (drawY < clipT || drawY > clipB + 8)
+                        DrawText_3(entry->text, entry->length, drawX, drawY, 8, alphaStrengthT, alphaStrengthB);
+                    else
+                        DrawMenuText(entry->text, entry->length, drawX, drawY, 8);
+                }
+                else {
+                    if (drawY < clipT || drawY > clipB + 8)
+                        DrawText_3(entry->text, entry->length, drawX, drawY, 0, alphaStrengthT, alphaStrengthB);
+                    else
+                        DrawMenuText(entry->text, entry->length, drawX, drawY, 0);
+                }
+                break;
+
+            case 3:
+                if (i == TextMenu.selection1) {
+                    if (drawY < clipT || drawY > clipB + 8)
+                        DrawText_3(entry->text, entry->length, drawX, drawY, 8, alphaStrengthT, alphaStrengthB);
+                    else
+                        DrawMenuText(entry->text, entry->length, drawX, drawY, 8);
+                }
+                else if (i != TextMenu.selection2) {
+                    if (drawY < clipT || drawY > clipB + 8)
+                        DrawText_3(entry->text, entry->length, drawX, drawY, 0, alphaStrengthT, alphaStrengthB);
+                    else
+                        DrawMenuText(entry->text, entry->length, drawX, drawY, 0);
+                }
+
+                if (i != TextMenu.selection1 && i == TextMenu.selection2)
+                    DrawText_2(entry->text, entry->length, drawX, drawY);
+                break;
+
+            default: break;
+        }
+    }
+}
+
+void LoadCharacterMenu(TextMenu *menu)
+{
+    FileInfo file;
+    LoadFile(&file, "Data/Title/Characters.mdf");
+
+    int rowCount = 0;
+    for (int i = 0; i < file.size; ++i) {
+        if (file.data[i] == '\n')
+            rowCount++;
+    }
+
+    TextMeDo("ZONES", menu, rowCount, 0, 5);
+    AllocateDirectories(rowCount);
+
+    char text[0x20];
+    int textLen = 0;
+
+    int menuRow = 0;
+    int rowType = 0;
+
+    for (int i = 0; i < file.size; ++i) {
+        if (file.data[i] == '^') {
+            text[textLen] = '\0';
+
+            switch (rowType) {
+                case 0:
+                    SetGameText(text, menu, menuRow, textLen);
+                    textLen = 0;
+                    rowType++;
+                    break;
+
+                case 1:
+                    textLen = 0;
+                    rowType++;
+                    break;
+
+                case 2:
+                    textLen = 0;
+                    rowType++;
+                    break;
+
+                case 3:
+                    textLen = 0;
+                    rowType++;
+                    break;
+
+                default: break;
+            }
+        }
+        else if (file.data[i] != '\r' && file.data[i] != '\n') {
+            text[textLen] = file.data[i];
+            textLen++;
+        }
+
+        if (file.data[i] == '\r') {
+            menuRow++;
+            rowType = 0;
+            textLen = 0;
+        }
+    }
+
+    menu->alignment      = MENU_ALIGN_LEFT;
+    menu->selectionCount = 1;
+    menu->selection1     = 0;
+    menu->selection2     = 0;
+}
+
+void SetCharacters(int row)
+{
+    FileInfo file;
+    LoadFile(&file, "Data/Title/Characters.mdf");
+
+    char text[0x20];
+    int textLen = 0;
+
+    int menuRow = 0;
+    int rowType = 0;
+
+    bool unknown;
+
+    for (int i = 0; i < file.size; ++i) {
+        if (file.data[i] == '^') {
+            switch (rowType) {
+                case 0:
+                    textLen = 0;
+                    ++rowType;
+                    break;
+
+                case 1:
+                    unknown = text[0] == '2';
+                    textLen = 0;
+                    ++rowType;
+                    break;
+
+                case 2:
+                    if (menuRow == row)
+                        text[textLen] = '\0';
+
+                    textLen = 0;
+                    ++rowType;
+                    break;
+
+                case 3:
+                    if (unknown && menuRow == row)
+                        text[textLen] = '\0';
+
+                    textLen = 0;
+                    ++rowType;
+                    break;
+
+                default: break;
+            }
+        }
+        else if (file.data[i] != '\r' && file.data[i] != '\n') {
+            text[textLen++] = file.data[i];
+        }
+
+        if (file.data[i] == '\r') {
+            ++menuRow;
+            rowType = 0;
+            textLen = 0;
+        }
+    }
+
+    delete file.data;
+}
+
+void LoadZoneMenu(TextMenu *menu)
+{
+    FileInfo file;
+    LoadFile(&file, "Data/Title/Zones.mdf");
+
+    int rowCount = 0;
+    for (int i = 0; i < file.size; ++i) {
+        if (file.data[i] == '\n')
+            rowCount++;
+    }
+
+    TextMeDo("ZONES", menu, rowCount, 0, 5);
+    AllocateDirectories(rowCount);
+
+    char text[0x20];
+    int textLen = 0;
+
+    int menuRow = 0;
+    int rowType = 0;
+
+    for (int i = 0; i < file.size; ++i) {
+        if (file.data[i] == '^') {
+            text[textLen] = '\0';
+
+            switch (rowType) {
+                case 0: SetGameText(text, menu, menuRow, textLen); break;
+                case 1: SetLevelDirectory(text, textLen, menuRow); break;
+                case 2: SetActNumber(text, textLen, menuRow); break;
+
+                case 3:
+                    if (text[0] == '1')
+                        SetMenuSelMode(menu, menuRow);
+                    break;
+
+                default: break;
+            }
+
+            textLen = 0;
+            rowType++;
+        }
+        else if (file.data[i] != '\r' && file.data[i] != '\n') {
+            if (textLen < 0x20 - 1) {
+                text[textLen] = file.data[i];
+                textLen++;
+            }
+        }
+
+        if (file.data[i] == '\r') {
+            menuRow++;
+            rowType = 0;
+            textLen = 0;
+        }
+    }
+
+    menu->alignment      = MENU_ALIGN_RIGHT;
+    menu->selectionCount = 3;
+    menu->selection1     = 0;
+    menu->selection2     = 0;
+}
+
+void SetMenuSelMode(TextMenu *menu, int id) { menu->selMode[id] = 1; }
+
+void Zone_TitleScreen_4127E6()
+{
+    Render_ClearScreen(0x000000);
+
+    data_4DA320 += 0.0049999999f;
+    if (3.1415927 + 3.1415927 < data_4DA320)
+        data_4DA320 = 0.0f;
+
+    DrawTitleScr(2);
+    CopyMatrix_4C9B90_4C9C50();
+    MatrixRotateY_4C9DB0(data_4DA320);
+    MultiplyMatrix_4C9B90_4C9BD0();
+    Matrix_408B0B(0.0f, 0.0f, 20.0f);
+    MultiplyMatrix_4C9B90_4C9BD0();
+    SonicMat_WorldTransform();
+    DrawTitleModel(0);
+    DrawTitleScr(3);
+    CopyMatrix_4C9B90_4C9C50();
+    Matrix_408B0B(0.0f, 0.0f, data_41F59C);
+    MultiplyMatrix_4C9B90_4C9BD0();
+    SonicMat_WorldTransform();
+    DrawTitleModel(1);
+}
+
+void Zone_TitleScreen_4128A3() { DrawGameMenu(TitleMenu, 160, 184); }
+void Zone_TitleScreen_4128CF() { DrawGameMenu(TitleMenu, 150, 48); }
+void Zone_TitleScreen_4129E4() { DrawGameMenu(TitleMenu, 160, 20); }
 
 void CodeCheck()
 {
@@ -404,216 +805,20 @@ void CodeCheck()
     }
 }
 
-void SetMenuSelMode(TextMenu *menu, int32_t id) { menu->selMode[id] = 1; }
-
-TextMenu LoadCharacterMenu()
-{
-    // TODO
-    return {};
-}
-
-TextMenu LoadZoneMenu()
-{
-    // TODO
-    return {};
-}
-
-// TODO: MOVE
-void DrawGameMenu(TextMenu textMenu, int32_t a7, uint8_t a8)
-{
-    int i;  // [esp+10h] [ebp-8h]
-    int j;  // [esp+10h] [ebp-8h]
-    int k;  // [esp+10h] [ebp-8h]
-    int v6; // [esp+14h] [ebp-4h]
-    int v7; // [esp+14h] [ebp-4h]
-
-    switch (textMenu.field_C) {
-        case 0u:
-            for (i = 0;; ++i) {
-                if (i >= textMenu.rowCount)
-                    return;
-                if (textMenu.field_D == 1)
-                    break;
-                if (textMenu.field_D == 2) {
-                    if (i == textMenu.field_14 || i == textMenu.field_10) {
-                    LABEL_13:
-                        DrawText_1(textMenu.labels[i].text, textMenu.labels[i].length, a7, 10 * i + a8, 8);
-                        continue;
-                    }
-                    goto LABEL_16;
-                }
-                if (textMenu.field_D == 3) {
-                    if (i == textMenu.field_10)
-                        DrawText_1(textMenu.labels[i].text, textMenu.labels[i].length, a7, 10 * i + a8, 8);
-                    if (i == textMenu.field_14 && i != textMenu.field_10)
-                        DrawText_2(textMenu.labels[i].text, textMenu.labels[i].length, a7, 10 * i + a8);
-                }
-            LABEL_6:;
-            }
-            if (i == textMenu.field_10)
-                goto LABEL_13;
-        LABEL_16:
-            DrawText_1(textMenu.labels[i].text, textMenu.labels[i].length, a7, 10 * i + a8, 0);
-            goto LABEL_6;
-        case 1u:
-            for (j = 0;; ++j) {
-                if (j >= textMenu.rowCount)
-                    return;
-                v6 = a7 - 10 * textMenu.labels[j].length;
-                if (textMenu.field_D == 1)
-                    break;
-                if (textMenu.field_D == 2) {
-                    if (j == textMenu.field_14 || j == textMenu.field_10) {
-                    LABEL_31:
-                        DrawText_1(textMenu.labels[j].text, textMenu.labels[j].length, v6, 10 * j + a8, 8);
-                        continue;
-                    }
-                    goto LABEL_34;
-                }
-            LABEL_25:;
-            }
-            if (j == textMenu.field_10)
-                goto LABEL_31;
-        LABEL_34:
-            DrawText_1(textMenu.labels[j].text, textMenu.labels[j].length, v6, 10 * j + a8, 0);
-            goto LABEL_25;
-        case 2u:
-            for (k = 0;; ++k) {
-                if (k >= textMenu.rowCount)
-                    return;
-                v7 = a7 - 10 * ((signed int)textMenu.labels[k].length / 2);
-                if (textMenu.field_D == 1)
-                    break;
-                if (textMenu.field_D == 2) {
-                    if (k == textMenu.field_14 || k == textMenu.field_10) {
-                    LABEL_43:
-                        DrawText_1(textMenu.labels[k].text, textMenu.labels[k].length, v7, 10 * k + a8, 8);
-                        continue;
-                    }
-                    goto LABEL_46;
-                }
-            LABEL_37:;
-            }
-            if (k == textMenu.field_10)
-                goto LABEL_43;
-        LABEL_46:
-            DrawText_1(textMenu.labels[k].text, textMenu.labels[k].length, v7, 10 * k + a8, 0);
-            goto LABEL_37;
-    }
-}
-
-// TODO: MOVE
-void DrawScrollingMenu(TextMenu p_0, int32_t p_1, int32_t p_2, int32_t p_3, int32_t p_4, int32_t p_5)
-{
-    //
-}
-
-void TitleScrMovement()
-{
-    if (TtlTime > 30 && SonX < 160.0f) {
-        SXspeed     = SXspeed + 0.0099999998f;
-        SYspeed     = SYspeed + 0.02f;
-        SonX        = SonX + SXspeed;
-        SonY        = SonY + SYspeed;
-        data_41F59C = SYspeed * 0.5f + data_41F59C;
-    }
-
-    if (SonX > 160.0f && TailsX > 78.0f) {
-        TXspeed = TXspeed - 0.0099999998f;
-        TYspeed = TYspeed + 0.02f;
-        TailsX  = TailsX + TXspeed;
-        TailsY  = TailsY + TYspeed;
-    }
-
-    if (TtlTime > 30 && SonX > 160.0f && SAnimation < 9)
-        ++SAnimation;
-
-    if (TtlTime > 30 && TailsX < 78.0f && TAnimation < 11)
-        ++TAnimation;
-}
-
-void DrawTitleScr(char type)
-{
-    switch (type) {
-        case 0:
-            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matWorld);
-            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_VIEW, &matWorld);
-            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_PROJECTION, &matWorld);
-
-            IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_ZENABLE, FALSE);
-            IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_LIGHTING, FALSE);
-            IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_SPECULARENABLE, FALSE);
-            break;
-
-        case 1:
-            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matWorld);
-            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_VIEW, &matView);
-            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_PROJECTION, &matProject);
-
-            IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_ZENABLE, TRUE);
-            IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_LIGHTING, TRUE);
-            IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_SPECULARENABLE, FALSE);
-            break;
-
-        case 2: IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_ZENABLE, FALSE); break;
-        case 3: IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_ZENABLE, TRUE); break;
-
-        default: break;
-    }
-}
-
-void Zone_TitleScreen_4127E6()
-{
-    Render_ClearScreen(0x000000);
-
-    data_4DA320 += 0.0049999999f;
-    if (3.1415927 + 3.1415927 < data_4DA320)
-        data_4DA320 = 0.0f;
-
-    DrawTitleScr(2);
-    CopyMatrix_4C9B90_4C9C50();
-    MatrixRotateY_4C9DB0(data_4DA320);
-    MultiplyMatrix_4C9B90_4C9BD0();
-    Matrix_408B0B(0.0f, 0.0f, 20.0f);
-    MultiplyMatrix_4C9B90_4C9BD0();
-    SonicMat_WorldTransform();
-    DrawTitleModel(0);
-    DrawTitleScr(3);
-    CopyMatrix_4C9B90_4C9C50();
-    Matrix_408B0B(0.0f, 0.0f, data_41F59C);
-    MultiplyMatrix_4C9B90_4C9BD0();
-    SonicMat_WorldTransform();
-    DrawTitleModel(1);
-}
-
-void Zone_TitleScreen_4128A3() { DrawGameMenu(TitleMenu, 160, 184); }
-
-void Zone_TitleScreen_4128CF() { DrawGameMenu(TitleMenu, 150, 48); }
-
 void DrawMenuBackground()
 {
-    for (int32_t i = 0; i < TitleMenu.field_10 + 1; ++i) {
+    for (int32_t i = 0; i < TitleMenu.selection1 + 1; ++i) {
         if (TitleMenu.selMode[i] == 1)
-            TitleMenu.field_14 = i;
+            TitleMenu.selection2 = i;
     }
 
-    SMenuY1 = 10 * TitleMenu.field_10;
+    SMenuY1 = 10 * TitleMenu.selection1;
 
-    if (10 * TitleMenu.field_10 > SMenuY2 + 60 && SMenuY2 < 10 * TitleMenu.rowCount - 130)
+    if (10 * TitleMenu.selection1 > SMenuY2 + 60 && SMenuY2 < 10 * TitleMenu.rowCount - 130)
         SMenuY2++;
 
     if (SMenuY1 < SMenuY2 + 60 && SMenuY1 > 0 && SMenuY2 > 0)
         SMenuY2--;
 
     DrawScrollingMenu(TitleMenu, 200, 48, 48, 160, -SMenuY2);
-}
-
-void Zone_TitleScreen_4129E4() { DrawGameMenu(TitleMenu, 160, 20); }
-
-void ResetTitleScreen()
-{
-    TitleScreenMode = 0;
-    TtlTime         = 0;
-    SAnimation      = 0;
-    TAnimation      = 0;
 }

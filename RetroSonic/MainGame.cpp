@@ -51,43 +51,43 @@ D3DMATERIAL7 material_420520 = {
     { { 0.0, 0.0, 0.0, 0.0 } }, { { 0.0, 0.0, 0.0, 0.0 } }, { { 0.0, 0.0, 0.0, 0.0 } }, { { 0.0, 0.0, 0.0, 0.0 } }, { 0.0 }
 };
 
-TMF stageObjectModel[2];
-TMF logoTMF;
-TMF backgroundTMF;
-TMF sonicTMF2;
-TMF sonicTMF;
-TMF ballTMF;
-Animation sonicAni;
+TMF StageObjMdl[2];
+TMF LogoMdl;
+TMF BackgroundMdl;
+TMF SonicBaseMdl;
+TMF SonicMdl;
+TMF BallMdl;
+Animation SonicAni;
 
 D3DMATRIX matrix_47A790[100][36];
 D3DMATRIX array_42C590[100][36]; // TODO: Correct size?
 
 void InitObjectModels()
 {
-    Load_TMF_File(&logoTMF, "Data/Title/Logo.tmf");
-    Load_TMF_File(&backgroundTMF, "Data/Levels/TestZone/BG.tmf");
-    Load_TMF_File(&sonicTMF2, "Data/Characters/Sonic.tmf");
-    Load_TMF_File(&sonicTMF, "Data/Characters/Sonic.tmf");
-    Load_TMF_File(&ballTMF, "Data/Characters/Ball.tmf");
-    Load_ANI_File(&sonicAni, "Data/Characters/Sonic.ani");
+    Load_TMF_File(&LogoMdl, "Data/Title/Logo.tmf");
+    Load_TMF_File(&BackgroundMdl, "Data/Levels/TestZone/BG.tmf");
+    Load_TMF_File(&SonicBaseMdl, "Data/Characters/Sonic.tmf");
+    Load_TMF_File(&SonicMdl, "Data/Characters/Sonic.tmf");
+    Load_TMF_File(&BallMdl, "Data/Characters/Ball.tmf");
+    Load_ANI_File(&SonicAni, "Data/Characters/Sonic.ani");
     MightBeSonicAnim_406432();
 
-    Load_TMF_File(&stageObjectModel[0], "Data/Objects/General/Ring.tmf");
+    Load_TMF_File(&StageObjMdl[0], "Data/Objects/General/Ring.tmf");
     stageObjectTextures[0] = Load_PNG_File("Data/Objects/General/Ring.png", 0);
-    Load_TMF_File(&stageObjectModel[1], "Data/Objects/General/Spring.tmf");
+    Load_TMF_File(&StageObjMdl[1], "Data/Objects/General/Spring.tmf");
     stageObjectTextures[1] = Load_PNG_File("Data/Objects/General/Spring.png", 0);
     sparkleTexture         = Load_PNG_File("Data/Objects/General/Sparkle.png", 0);
 
-    sonicAni.field_BFAB = 5;
-    sonicAni.field_BFAA = 5;
-    sonicAni.field_BFAC = 0;
-    sonicAni.field_BFB0 = 0;
-    sonicAni.field_BFAE = 0;
+    SonicAni.field_BFAB = 5;
+    SonicAni.field_BFAA = 5;
+    SonicAni.field_BFAC = 0;
+    SonicAni.field_BFB0 = 0;
+    SonicAni.field_BFAE = 0;
 }
 
 void InitZoneSurface()
 {
-    Load_LMF_File(&levelLMF, "Data/Levels/TestZone/Act1.lmf");
+    LoadLevelModel(&levelLMF, "Data/Levels/TestZone/Act1.lmf");
 
     for (int i = 0; i < 6; ++i) {
         switch (i) {
@@ -410,8 +410,8 @@ void DrawWorldSurface()
     Matrix_40893B(vector_4C9D74.x, vector_4C9D74.y, vector_4C9D74.z);
 
     D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
-    D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, (0x002 | 0x010 | 0x100), backgroundTMF.vertices, backgroundTMF.numVertices,
-                                    backgroundTMF.indices, backgroundTMF.numIndices, 0);
+    D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, (0x002 | 0x010 | 0x100), BackgroundMdl.vertices, BackgroundMdl.numVertices,
+                                    BackgroundMdl.indices, BackgroundMdl.numIndices, 0);
 
     D3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, 1);
     D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matWorld);
@@ -517,7 +517,7 @@ void Unknown_40823B(float x, float y, float z, float a4, float a5, float a6, flo
 
     Vector3D v8 = Vector3D(x, y, z);
     Vector3D v7 = Vector3D(vector_4C9D74.x, vector_4C9D74.y, vector_4C9D74.z);
-    Matrix_40398C(&matView, &v7, &v8, &v11);
+    Matrix_40398C(&matView, v7, v8, v11);
 
     IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_VIEW, &matView);
 }

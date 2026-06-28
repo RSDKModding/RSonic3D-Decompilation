@@ -37,6 +37,18 @@ typedef unsigned int uint;
 #include "coldet/src/coldet.h"
 #include "FreeImage/Dist/x32/FreeImage.h"
 
+#define SCREEN_XSIZE (320)
+#define SCREEN_YSIZE (240)
+
+#define SCREEN_XSIZE_F (320.0f)
+#define SCREEN_YSIZE_F (240.0f)
+
+#define SCREEN_XCENTER (SCREEN_XSIZE / 2)
+#define SCREEN_YCENTER (SCREEN_YSIZE / 2)
+
+#define SCREEN_XCENTER_F (SCREEN_XSIZE_F / 2.0f)
+#define SCREEN_YCENTER_F (SCREEN_YSIZE_F / 2.0f)
+
 // ============================
 // ENGINE INCLUDES
 // ============================
@@ -51,7 +63,7 @@ typedef unsigned int uint;
 #include "Reader.hpp"
 #include "Input.hpp"
 #include "Math.hpp"
-#include "Drawing.hpp"
+#include "String.hpp"
 #include "Text.hpp"
 
 #include "Misc.h"

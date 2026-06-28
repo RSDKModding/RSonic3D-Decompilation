@@ -5,6 +5,8 @@
 
 #define R3D_SCALE(base, scale) (base * scale)
 
+#define TO_ARGB(a, r, g, b) ((D3DCOLOR)((((a) & 0xFF) << 24) | (((r) & 0xFF) << 16) | (((g) & 0xFF) << 8) | ((b) & 0xFF)))
+
 extern tagRECT rect_420488;
 extern tagRECT clientRect;
 extern tagRECT windowBounds;

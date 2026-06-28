@@ -33,4 +33,12 @@ void ProcessPlayerInput();
 void ProcessPlayerCamera();
 void ProcessPlayerMovement();
 
+void LoadPlayerGfx(const char *textureName, sbyte playerID);
+
+void SonicModel_405A18(int32_t frameID);
+void SonicModel_405B7B(int32_t frameID);
+void SonicModel_405CE2(uint8_t a1, float a2);
+void ProcessPlayerAnimationLMC();
+void MightBeSonicAnim_406432();
+
 #endif // !ANIMATION_H

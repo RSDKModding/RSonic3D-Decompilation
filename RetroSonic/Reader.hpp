@@ -1,6 +1,18 @@
 #pragma once
 #include "RetroEngine.hpp"
 
+struct FileInfo {
+    byte *data;
+    int size;
+};
+
+struct LevelDirectoryEntry {
+    char levelName[4];
+    char actNum[4];
+    uint levelNameLen;
+    uint actNumLen;
+};
+
 struct LMF_VertexInfo {
     D3DLVERTEX *vertices;
     float *pVertexParams;
@@ -23,7 +35,7 @@ struct LMF {
 };
 
 struct TMF {
-    D3DTLVERTEX *vertices;
+    D3DVERTEX *vertices;
     ushort numVertices;
     ushort *indices;
     ushort numIndices;
@@ -58,13 +70,20 @@ struct Animation {
     ushort field_BFB0;
 };
 
-struct FileInfo {
-    void *data;
-    int size;
-};
+extern LevelDirectoryEntry *LDirectory;
+
+void LoadFile(FileInfo *file, const char *path);
 
 IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2);
-void Load_LMF_File(LMF *lmf, const char *path);
+
+void LoadLevelModel(LMF *lmf, const char *path);
+void SetLevelDirectory(const char *text, byte length, int index);
+void SetActNumber(const char *text, byte length, int index);
+void AllocateDirectories(int size);
+void LoadDirectoryFile(FileInfo *file, int id, const char *fileName, int fileNameLen);
+void LoadDirectoryActFile(FileInfo *file, int id, const char *fileName, int fileNameLen);
+void LoadDirectoryGraphic(int id, const char *fileName, int fileNameLen);
+void CreateDirectories();
+
 void Load_TMF_File(TMF *tmf, const char *path);
 void Load_ANI_File(Animation *animation, const char *path);
-void LoadFile(FileInfo *file, const char *path);
