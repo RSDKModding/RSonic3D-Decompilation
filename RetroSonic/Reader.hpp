@@ -13,25 +13,23 @@ struct LevelDirectoryEntry {
     uint actNumLen;
 };
 
-struct LMF_VertexInfo {
+struct LMFMesh {
     D3DLVERTEX *vertices;
-    float *pVertexParams;
-    uint16_t vertexCount;
-    uint16_t _pad0;
-    WORD *indexes;
-    uint16_t indexCount;
-    uint16_t _pad1;
+    float *colors;
+    ushort numVertices;
+    ushort *indices;
+    ushort numIndices;
 };
 
 struct LMF {
-    uint8_t surfaceCount;
-    uint8_t variable_1;
-    uint8_t surfaceID[10];
-    uint16_t variable_2;
-    uint16_t variable_3;
-    float variable_4;
-    float variable_5;
-    LMF_VertexInfo *drawList;
+    byte surfaceCount;
+    byte unused;
+    byte surfaceID[10];
+    ushort columns;
+    ushort rows;
+    float startX;
+    float startZ;
+    LMFMesh ***tiles;
 };
 
 struct TMF {
@@ -41,15 +39,15 @@ struct TMF {
     ushort numIndices;
 };
 
-struct AnimationUnknown {
-    byte count;
+struct AnimationState {
+    byte frameCount;
     byte unknown1;
-    ushort array_2[0x80];
-    byte field_200;
-    byte field_201;
+    ushort array_2[128];
+    byte loopIndex;
+    byte frameDuration;
 };
 
-struct AnimationFrame {
+struct AnimationNode {
     ushort *vertexIDs;
     ushort vertexCount;
     Vector3D position;
@@ -59,10 +57,10 @@ struct AnimationFrame {
 };
 
 struct Animation {
-    AnimationFrame frames[36];
-    AnimationUnknown array_AB90[10];
-    byte *frameIDs;
-    ushort field_BFA8;
+    AnimationNode nodes[36];
+    AnimationState states[10];
+    byte *frameIDs;      // TODO:
+    ushort frameIDCount; // TODO:
     byte field_BFAA;
     byte field_BFAB;
     ushort field_BFAC;
@@ -74,9 +72,9 @@ extern LevelDirectoryEntry *LDirectory;
 
 void LoadFile(FileInfo *file, const char *path);
 
-IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2);
+void LoadTexture(IDirectDrawSurface7 *&texture, const char *path, int a2);
 
-void LoadLevelModel(LMF *lmf, const char *path);
+void LoadLevelModel(LMF *model, const char *path);
 void SetLevelDirectory(const char *text, byte length, int index);
 void SetActNumber(const char *text, byte length, int index);
 void AllocateDirectories(int size);

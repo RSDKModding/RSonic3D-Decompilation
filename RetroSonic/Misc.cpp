@@ -1,5 +1,7 @@
 #include "RetroEngine.hpp"
 
+using namespace RenderDevice; // temp
+
 // Seems to move the world camera
 void Matrix_40398C(D3DMATRIX *matrix, Vector3D &param1, Vector3D &param2, Vector3D &param3)
 {
@@ -38,7 +40,7 @@ void Matrix_40398C(D3DMATRIX *matrix, Vector3D &param1, Vector3D &param2, Vector
     matrix->m[2][1] = variable4.z;
     matrix->m[2][2] = variable1.z;
 
-    MatrixInverse(&matrix_4C9C90, matrix);
+    MatrixInverse(&MatrixInversed, matrix);
 
     matrix->m[3][0] = param1 * variable5;
     matrix->m[3][1] = param1 * variable4;
@@ -49,151 +51,198 @@ void Matrix_40398C(D3DMATRIX *matrix, Vector3D &param1, Vector3D &param2, Vector
     matrix->m[3][2] = -matrix->m[3][2];
 }
 
-void Matrix_408779(float a1)
+void WorldMatrixTranslateXYZ(float x, float y, float z)
 {
-    memcpy(&matrixBackgroundTransform, &matWorld, sizeof(matrixBackgroundTransform));
-    matrixBackgroundTransform.m[1][1] = cos(a1);
-    matrixBackgroundTransform.m[1][2] = sin(a1);
-    matrixBackgroundTransform.m[2][1] = -sin(a1);
-    matrixBackgroundTransform.m[2][2] = cos(a1);
-    IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
+    memcpy(&MatrixWorld, &MatrixIdentity, sizeof(MatrixWorld));
+    MatrixWorld.m[3][0] = x;
+    MatrixWorld.m[3][1] = y;
+    MatrixWorld.m[3][2] = z;
+    MatrixWorld.m[3][3] = 1.0f;
 }
 
-void Matrix_40880F(float a1)
+void WorldMatrixRotateX(float value)
 {
-    memcpy(&matrixBackgroundTransform, &matWorld, sizeof(matrixBackgroundTransform));
-    matrixBackgroundTransform.m[0][0] = cos(a1);
-    matrixBackgroundTransform.m[0][2] = -sin(a1);
-    matrixBackgroundTransform.m[2][0] = sin(a1);
-    matrixBackgroundTransform.m[2][2] = cos(a1);
-    IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
+    memcpy(&MatrixWorld, &MatrixIdentity, sizeof(MatrixWorld));
+    MatrixWorld.m[0][0] = cos(value);
+    MatrixWorld.m[0][1] = sin(value);
+    MatrixWorld.m[1][0] = -sin(value);
+    MatrixWorld.m[1][1] = cos(value);
 }
 
-void Matrix_4088A5(float a1)
+void WorldMatrixRotateY(float value)
 {
-    memcpy(&matrixBackgroundTransform, &matWorld, sizeof(matrixBackgroundTransform));
-    matrixBackgroundTransform.m[0][0] = cos(a1);
-    matrixBackgroundTransform.m[0][1] = sin(a1);
-    matrixBackgroundTransform.m[1][0] = -sin(a1);
-    matrixBackgroundTransform.m[1][1] = cos(a1);
-    IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
+    memcpy(&MatrixWorld, &MatrixIdentity, sizeof(MatrixWorld));
+    MatrixWorld.m[0][0] = cos(value);
+    MatrixWorld.m[0][2] = -sin(value);
+    MatrixWorld.m[2][0] = sin(value);
+    MatrixWorld.m[2][2] = cos(value);
 }
 
-void Matrix_40893B(int a1, int a2, int a3)
+void WorldMatrixRotateZ(float x)
 {
-    memcpy(&matrixBackgroundTransform, &matWorld, sizeof(matrixBackgroundTransform));
-    matrixBackgroundTransform.m[3][0] = a1;
-    matrixBackgroundTransform.m[3][1] = a2;
-    matrixBackgroundTransform.m[3][2] = a3;
-    matrixBackgroundTransform.m[3][3] = 1.0;
-    IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
+    memcpy(&MatrixWorld, &MatrixIdentity, sizeof(MatrixWorld));
+    MatrixWorld.m[1][1] = cos(x);
+    MatrixWorld.m[1][2] = sin(x);
+    MatrixWorld.m[2][1] = -sin(x);
+    MatrixWorld.m[2][2] = cos(x);
 }
 
-void MatrixRotateX_4C9DB0(float value)
+void WorldMatrixSetTranslateXYZ(float x, float y, float z)
 {
-    memcpy(&matrixBackgroundTransform, &matWorld, sizeof(matrixBackgroundTransform));
-    matrixBackgroundTransform.m[1][1] = cos(value);
-    matrixBackgroundTransform.m[1][2] = sin(value);
-    matrixBackgroundTransform.m[2][1] = -sin(value);
-    matrixBackgroundTransform.m[2][2] = cos(value);
+    WorldMatrixTranslateXYZ(x, y, z);
+    RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixWorld);
 }
 
-void MatrixRotateY_4C9DB0(float value)
+void WorldMatrixSetRotateX(float z)
 {
-    memcpy(&matrixBackgroundTransform, &matWorld, sizeof(matrixBackgroundTransform));
-    matrixBackgroundTransform.m[0][0] = cos(value);
-    matrixBackgroundTransform.m[0][2] = -sin(value);
-    matrixBackgroundTransform.m[2][0] = sin(value);
-    matrixBackgroundTransform.m[2][2] = cos(value);
+    WorldMatrixRotateX(z);
+    RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixWorld);
 }
 
-void MatrixRotateZ_4C9DB0(float value)
+void WorldMatrixSetRotateY(float y)
 {
-    memcpy(&matrixBackgroundTransform, &matWorld, sizeof(matrixBackgroundTransform));
-    matrixBackgroundTransform.m[0][0] = cos(value);
-    matrixBackgroundTransform.m[0][1] = sin(value);
-    matrixBackgroundTransform.m[1][0] = -sin(value);
-    matrixBackgroundTransform.m[1][1] = cos(value);
+    WorldMatrixRotateY(y);
+    RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixWorld);
 }
 
-void Matrix_408B0B(float a1, float a2, float a3)
+void WorldMatrixSetRotateZ(float x)
 {
-    memcpy(&matrixBackgroundTransform, &matWorld, sizeof(matrixBackgroundTransform));
-    matrixBackgroundTransform.m[3][0] = a1;
-    matrixBackgroundTransform.m[3][1] = a2;
-    matrixBackgroundTransform.m[3][2] = a3;
-    matrixBackgroundTransform.m[3][3] = 1.0f;
+    WorldMatrixRotateZ(x);
+    RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixWorld);
 }
 
-void MultiplyMatrix_4C9B90_4C9BD0() { MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform); }
-
-//
-//
-//
-
-void DrawModelShadow(float x, float y, float z, float p_4, float a5, float a6, float a7)
+void DrawModelShadow(float x, float y, float z, float magnitude, float sx, float sy, float ry)
 {
-    //
+    Vector3D origin    = { x, y + 1.0f, z };
+    Vector3D direction = { 0.0f, 1.0f, 0.0f };
+
+    float point[3];
+    float colist[9];
+
+    float c = (x - LevelModel.startX) / 50.0f;
+    float r = (z - LevelModel.startZ) / 50.0f;
+
+    int minRow = CLAMP(r - 2, 0, LevelModel.rows);
+    int maxRow = CLAMP(r + 2, 0, LevelModel.rows);
+
+    int minCol = CLAMP(c - 2, 0, LevelModel.columns);
+    int maxCol = CLAMP(c + 2, 0, LevelModel.columns);
+
+    Collided = false;
+
+    D3DLVERTEX vertices[4];
+    ZeroMemory(vertices, sizeof(vertices));
+
+    ushort indices[] = { 0, 1, 2, 1, 3, 2 };
+
+    float alpha = 0.5f;
+    for (int row = minRow; row < maxRow; ++row) {
+        for (int col = minCol; col < maxCol; ++col) {
+            if (LCollision[row][col]->rayCollision(&origin[0], &direction[0], false, 0.0f, magnitude)) {
+                LCollision[row][col]->getCollisionPoint(point);
+                x = point[0];
+                y = point[1] + sy * 0.01f;
+                z = point[2];
+
+                LCollision[row][col]->getCollidingTriangles(colist, NULL);
+                Collided = true;
+            }
+        }
+    }
+
+    if (Collided == true) {
+        origin.y = (origin.y - 2.0f) - y;
+        origin.x = magnitude * -0.75f;
+        origin.z = magnitude * -0.5f;
+
+        Vector3D ab = { colist[3] - colist[0], colist[4] - colist[1], colist[5] - colist[2] };
+        Vector3D ac = { colist[6] - colist[0], colist[7] - colist[1], colist[8] - colist[2] };
+
+        if (origin.y > origin.x)
+            alpha = 0.5f - (origin.y - origin.x) / (-magnitude - origin.x) * 0.5f;
+
+        if (origin.y > origin.z) {
+            sx -= (origin.y - origin.z) / (-magnitude - origin.z) * sx;
+            sy -= (origin.y - origin.z) / (-magnitude - origin.z) * sy;
+        }
+
+        Vector3D normal = CrossProduct(ab, ac).Normalized();
+        D3DCOLOR color  = TO_ARGB_F(alpha, 255, 255, 255);
+
+        vertices[0] = { { -sx, 0.0f, sy }, color, 0, 0.05f, 0.05f };
+        vertices[1] = { { sx, 0.0f, sy }, color, 0, 0.99f, 0.05f };
+        vertices[2] = { { -sx, 0.0f, -sy }, color, 0, 0.05f, 0.99f };
+        vertices[3] = { { sx, 0.0f, -sy }, color, 0, 0.99f, 0.99f };
+
+        MatrixSonicModel = MatrixIdentity;
+        WorldMatrixRotateY(ry);
+        MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+        WorldMatrixRotateZ(ASin(normal.z));
+        MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+        WorldMatrixRotateX(-ASin(normal.x));
+        MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+        WorldMatrixTranslateXYZ(x, y, z);
+        MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+
+        RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
+        RenderDevice::SetTexture(0, surfaceShadow);
+        RenderDevice::DrawIndexed(RENDER_FVF_LVERTEX, vertices, 4, indices, 6);
+    }
 }
 
 void DrawModelSonic(float x, float y, float z, float rotation)
 {
-    IDirect3DDevice7_SetTexture(D3DDevice, 0, surfaceSonic);
+    RenderDevice::SetTexture(0, surfaceSonic);
     IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_SPECULARENABLE, TRUE);
-    memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl));
+    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
 
     if (SonicAni.field_BFAA == 4) {
         if (SonicAni.field_BFAC) {
-            MatrixRotateY_4C9DB0(rotation);
-            MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-            Matrix_408B0B(x, y, z);
-            MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
-            IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, BallMdl.vertices, BallMdl.numVertices,
-                                                  BallMdl.indices, BallMdl.numIndices, 0);
+            WorldMatrixRotateY(rotation);
+            MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+            WorldMatrixTranslateXYZ(x, y, z);
+            MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+            RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
+            RenderDevice::DrawIndexed(RENDER_FVF_VERTEX, BallMdl.vertices, BallMdl.numVertices, BallMdl.indices, BallMdl.numIndices);
         }
         else {
-            Matrix_408B0B(0.0f, -5.4000001f, 0.0f);
-            MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-            MatrixRotateX_4C9DB0(data_4C9D4C);
-            MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-            Matrix_408B0B(0.0f, 3.8f, 0.0f);
-            MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-            MatrixRotateY_4C9DB0(rotation);
-            MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-            Matrix_408B0B(x, y, z);
-            MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
+            WorldMatrixTranslateXYZ(0.0f, -5.4000001f, 0.0f);
+            MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+            WorldMatrixRotateZ(data_4C9D4C);
+            MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+            WorldMatrixTranslateXYZ(0.0f, 3.8f, 0.0f);
+            MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+            WorldMatrixRotateY(rotation);
+            MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+            WorldMatrixTranslateXYZ(x, y, z);
+            MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
 
-            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
-            IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, SonicMdl.vertices, SonicMdl.numVertices,
-                                                  SonicMdl.indices, SonicMdl.numIndices, 0);
+            RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
+            RenderDevice::DrawIndexed(RENDER_FVF_VERTEX, SonicMdl.vertices, SonicMdl.numVertices, SonicMdl.indices, SonicMdl.numIndices);
             material_420520.diffuse.a = 0.25f;
-            IDirect3DDevice7_SetMaterial(D3DDevice, &material_420520);
-            memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl));
-            Matrix_40880F(rotation);
-            MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-            Matrix_408B0B(x, y, z);
-            MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-            IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
-            IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, BallMdl.vertices, BallMdl.numVertices,
-                                                  BallMdl.indices, BallMdl.numIndices, 0);
+            RenderDevice::SetMaterial(&material_420520);
+            memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
+            WorldMatrixSetRotateY(rotation);
+            MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+            WorldMatrixTranslateXYZ(x, y, z);
+            MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+            RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
+            RenderDevice::DrawIndexed(RENDER_FVF_VERTEX, BallMdl.vertices, BallMdl.numVertices, BallMdl.indices, BallMdl.numIndices);
             material_420520.diffuse.a = 1.0f;
-            IDirect3DDevice7_SetMaterial(D3DDevice, &material_420520);
+            RenderDevice::SetMaterial(&material_420520);
         }
     }
     else {
-        MatrixRotateY_4C9DB0(rotation);
-        MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-        MatrixRotateX_4C9DB0(data_4C9D64);
-        MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-        MatrixRotateZ_4C9DB0(data_4C9D68);
-        MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-        Matrix_408B0B(x, y, z);
-        MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-        IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
-
-        IDirect3DDevice7_DrawIndexedPrimitive(D3DDevice, D3DPT_TRIANGLELIST, D3DFVF_VERTEX, SonicMdl.vertices, SonicMdl.numVertices, SonicMdl.indices,
-                                              SonicMdl.numIndices, 0);
+        WorldMatrixRotateY(rotation);
+        MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+        WorldMatrixRotateZ(PlayerRotationZ);
+        MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+        WorldMatrixRotateX(PlayerRotationX);
+        MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+        WorldMatrixTranslateXYZ(x, y, z);
+        MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+        RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
+        RenderDevice::DrawIndexed(RENDER_FVF_VERTEX, SonicMdl.vertices, SonicMdl.numVertices, SonicMdl.indices, SonicMdl.numIndices);
     }
 
     IDirect3DDevice7_SetRenderState(D3DDevice, D3DRENDERSTATE_SPECULARENABLE, FALSE);
@@ -207,29 +256,28 @@ void DrawObjectModelID(int object, float x, float y, float z, float ry, float rx
 
     uint16_t indices[6] = { 0, 1, 2, 1, 3, 2 };
 
-    memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl));
+    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
 
-    MatrixRotateY_4C9DB0(ry);
-    MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
+    WorldMatrixRotateY(ry);
+    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
 
-    MatrixRotateX_4C9DB0(rx);
-    MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
+    WorldMatrixRotateZ(rx);
+    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
 
-    MatrixRotateZ_4C9DB0(rz);
-    MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
+    WorldMatrixRotateX(rz);
+    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
 
-    Matrix_408B0B(x, y, z);
-    MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
+    WorldMatrixTranslateXYZ(x, y, z);
+    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
 
     switch (object) {
         case 0:
-            D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
-            D3DDevice->SetTexture(0, stageObjectTextures[object]);
-            D3DDevice->SetTextureStageState(0, D3DTSS_TEXCOORDINDEX, 196608);
-            D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, (0x002 | 0x010 | 0x100), StageObjMdl[object].vertices,
-                                            StageObjMdl[object].numVertices, StageObjMdl[object].indices,
-                                            StageObjMdl[object].numIndices, 0);
-            D3DDevice->SetTextureStageState(0, D3DTSS_TEXCOORDINDEX, 0);
+            RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
+            RenderDevice::SetTexture(0, stageObjectTextures[object]);
+            RenderDevice::SetTextureStageState(0, TEXTURE_STATE_TEXCOORDINDEX, 196608);
+            RenderDevice::DrawIndexed(RENDER_FVF_VERTEX, StageObjMdl[object].vertices, StageObjMdl[object].numVertices, StageObjMdl[object].indices,
+                                      StageObjMdl[object].numIndices);
+            RenderDevice::SetTextureStageState(0, TEXTURE_STATE_TEXCOORDINDEX, 0);
             break;
 
         case 2: {
@@ -238,55 +286,51 @@ void DrawObjectModelID(int object, float x, float y, float z, float ry, float rx
             vertices[2] = D3DLVERTEX({ -2.0f, -2.0f, 0.0f }, 0xFFFFFFFF, 0, 0.05f, 0.99f);
             vertices[3] = D3DLVERTEX({ 2.0f, -2.0f, 0.0f }, 0xFFFFFFFF, 0, 0.99f, 0.99f);
 
-            memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl));
-            MatrixRotateZ_4C9DB0(rz);
-            MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-            MatrixMultiply(&matSonicMdl, &matrix_4C9C90);
-            Matrix_408B0B(x, y, z);
-            MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
+            memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
+            WorldMatrixRotateX(rz);
+            MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+            MatrixMultiply(&MatrixSonicModel, &MatrixInversed);
+            WorldMatrixTranslateXYZ(x, y, z);
+            MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
 
-            D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
-            D3DDevice->SetTexture(0, sparkleTexture);
-            D3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, 0);
-            D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, (0x002 | 0x020 | 0x040 | 0x080 | 0x100), vertices, 4, indices, 6, 0);
-            D3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, 1);
+            RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
+            RenderDevice::SetTexture(0, sparkleTexture);
+            RenderDevice::SetRenderState(RENDER_STATE_LIGHTING, 0);
+            RenderDevice::DrawIndexed(RENDER_FVF_LVERTEX, vertices, 4, indices, 6);
+            RenderDevice::SetRenderState(RENDER_STATE_LIGHTING, 1);
             break;
         }
 
         default:
-            D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matSonicMdl);
-            D3DDevice->SetTexture(0, stageObjectTextures[object]);
-            D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, (0x002 | 0x010 | 0x100), StageObjMdl[object].vertices,
-                                            StageObjMdl[object].numVertices, StageObjMdl[object].indices,
-                                            StageObjMdl[object].numIndices, 0);
+            RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
+            RenderDevice::SetTexture(0, stageObjectTextures[object]);
+            RenderDevice::DrawIndexed(RENDER_FVF_VERTEX, StageObjMdl[object].vertices, StageObjMdl[object].numVertices, StageObjMdl[object].indices,
+                                      StageObjMdl[object].numIndices);
             break;
     }
 }
 
-//
-//
-
-void Matrix_40812C(float *a1, float *a2, float *a3)
+void PlayerRotationPhysics(float *x, float *y, float *z)
 {
-    float v3; // [esp+8h] [ebp-Ch]
-    float v4; // [esp+Ch] [ebp-8h]
-    float v5; // [esp+10h] [ebp-4h]
+    float sx = *x;
+    float sy = *y;
+    float sz = *z;
 
-    v4 = *a1;
-    v5 = *a2;
-    v3 = *a3;
-    memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl));
-    MatrixRotateX_4C9DB0(data_4C9D5C);
-    MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-    MatrixRotateZ_4C9DB0(data_4C9D60);
-    MatrixMultiply(&matSonicMdl, &matrixBackgroundTransform);
-    *a1 = matSonicMdl.m[0][0] * v4 + matSonicMdl.m[1][0] * v5 + matSonicMdl.m[2][0] * v3 + matSonicMdl.m[3][0];
-    *a2 = matSonicMdl.m[0][1] * v4 + matSonicMdl.m[1][1] * v5 + matSonicMdl.m[2][1] * v3 + matSonicMdl.m[3][1];
-    *a3 = matSonicMdl.m[0][2] * v4 + matSonicMdl.m[1][2] * v5 + matSonicMdl.m[2][2] * v3 + matSonicMdl.m[3][2];
+    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
+
+    WorldMatrixRotateZ(PlayerTargetRotationZ);
+    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+
+    WorldMatrixRotateX(PlayerTargetRotationX);
+    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+
+    *x = MatrixSonicModel.m[0][0] * sx + MatrixSonicModel.m[1][0] * sy + MatrixSonicModel.m[2][0] * sz + MatrixSonicModel.m[3][0];
+    *y = MatrixSonicModel.m[0][1] * sx + MatrixSonicModel.m[1][1] * sy + MatrixSonicModel.m[2][1] * sz + MatrixSonicModel.m[3][1];
+    *z = MatrixSonicModel.m[0][2] * sx + MatrixSonicModel.m[1][2] * sy + MatrixSonicModel.m[2][2] * sz + MatrixSonicModel.m[3][2];
 }
 
-void Unknown_408222()
+void ResetPlayerRotation()
 {
-    data_4C9D5C = 0.0f;
-    data_4C9D60 = 0.0f;
+    PlayerTargetRotationZ = 0.0f;
+    PlayerTargetRotationX = 0.0f;
 }

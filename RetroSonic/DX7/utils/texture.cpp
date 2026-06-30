@@ -11,6 +11,8 @@
 #define STRICT
 #include "RetroEngine.hpp"
 
+using namespace RenderDevice;
+
 //-----------------------------------------------------------------------------
 // Name: TextureSearchCallback()
 // Desc: Enumeration callback routine to find a 16-bit texture format. This

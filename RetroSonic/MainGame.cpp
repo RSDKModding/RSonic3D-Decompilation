@@ -16,10 +16,9 @@ int32_t data_4DA264;
 int32_t TempObjectPos = 232;
 int32_t dword_41F480  = 1;
 
-float_t data_4C9F68;
-float_t data_4C9F6C;
-float_t data_4C9F70;
-float_t data_4C9F74;
+Vector3D data_4C9F68;
+
+float data_4C9F74;
 float_t data_4C9F78;
 int32_t data_4C9F7C;
 
@@ -32,10 +31,7 @@ float float_420428;
 float float_42042C;
 float float_420430;
 
-int32_t data_4204C4;
-int32_t data_4204C8;
-
-LMF levelLMF;
+LMF LevelModel;
 LPDIRECTDRAWSURFACE7 levelSurfaceList[10];
 LPDIRECTDRAWSURFACE7 stageObjectTextures[2];
 LPDIRECTDRAWSURFACE7 sparkleTexture;
@@ -73,10 +69,10 @@ void InitObjectModels()
     MightBeSonicAnim_406432();
 
     Load_TMF_File(&StageObjMdl[0], "Data/Objects/General/Ring.tmf");
-    stageObjectTextures[0] = Load_PNG_File("Data/Objects/General/Ring.png", 0);
+    LoadTexture(stageObjectTextures[0], "Data/Objects/General/Ring.png", 0);
     Load_TMF_File(&StageObjMdl[1], "Data/Objects/General/Spring.tmf");
-    stageObjectTextures[1] = Load_PNG_File("Data/Objects/General/Spring.png", 0);
-    sparkleTexture         = Load_PNG_File("Data/Objects/General/Sparkle.png", 0);
+    LoadTexture(stageObjectTextures[1], "Data/Objects/General/Spring.png", 0);
+    LoadTexture(sparkleTexture, "Data/Objects/General/Sparkle.png", 0);
 
     SonicAni.field_BFAB = 5;
     SonicAni.field_BFAA = 5;
@@ -87,34 +83,34 @@ void InitObjectModels()
 
 void InitZoneSurface()
 {
-    LoadLevelModel(&levelLMF, "Data/Levels/TestZone/Act1.lmf");
+    LoadLevelModel(&LevelModel, "Data/Levels/TestZone/Act1.lmf");
 
     for (int i = 0; i < 6; ++i) {
         switch (i) {
-            case 0: levelSurfaceList[i] = Load_PNG_File("Data/Levels/TestZone/Lev01.png", 1); break;
-            case 1: levelSurfaceList[i] = Load_PNG_File("Data/Levels/TestZone/Lev02.png", 1); break;
-            case 2: levelSurfaceList[i] = Load_PNG_File("Data/Levels/TestZone/Lev03.png", 1); break;
-            case 3: levelSurfaceList[i] = Load_PNG_File("Data/Levels/TestZone/Lev04.png", 1); break;
-            case 4: levelSurfaceList[i] = Load_PNG_File("Data/Levels/TestZone/Lev05.png", 1); break;
-            case 5: levelSurfaceList[i] = Load_PNG_File("Data/Levels/TestZone/Lev06.png", 1); break;
-            case 6: levelSurfaceList[i] = Load_PNG_File("Data/Levels/TestZone/Lev07.png", 1); break;
-            case 7: levelSurfaceList[i] = Load_PNG_File("Data/Levels/TestZone/Lev08.png", 1); break;
-            case 8: levelSurfaceList[i] = Load_PNG_File("Data/Levels/TestZone/Lev09.png", 1); break;
-            case 9: levelSurfaceList[i] = Load_PNG_File("Data/Levels/TestZone/Lev10.png", 1); break;
+            case 0: LoadTexture(levelSurfaceList[i], "Data/Levels/TestZone/Lev01.png", 1); break;
+            case 1: LoadTexture(levelSurfaceList[i], "Data/Levels/TestZone/Lev02.png", 1); break;
+            case 2: LoadTexture(levelSurfaceList[i], "Data/Levels/TestZone/Lev03.png", 1); break;
+            case 3: LoadTexture(levelSurfaceList[i], "Data/Levels/TestZone/Lev04.png", 1); break;
+            case 4: LoadTexture(levelSurfaceList[i], "Data/Levels/TestZone/Lev05.png", 1); break;
+            case 5: LoadTexture(levelSurfaceList[i], "Data/Levels/TestZone/Lev06.png", 1); break;
+            case 6: LoadTexture(levelSurfaceList[i], "Data/Levels/TestZone/Lev07.png", 1); break;
+            case 7: LoadTexture(levelSurfaceList[i], "Data/Levels/TestZone/Lev08.png", 1); break;
+            case 8: LoadTexture(levelSurfaceList[i], "Data/Levels/TestZone/Lev09.png", 1); break;
+            case 9: LoadTexture(levelSurfaceList[i], "Data/Levels/TestZone/Lev10.png", 1); break;
             default: continue;
         }
     }
 }
 
-void InitMTextSurface() { surfaceMText = Load_PNG_File("Data/Title/MText.png", 0); }
+void InitMTextSurface() { LoadTexture(surfaceMText, "Data/Title/MText.png", 0); }
 
 void ProcessMainGame()
 {
     switch (MainGameMode) {
         case 0:
-            data_4C9F6C  = 10.0f;
-            data_4C9F70  = -32.0f;
-            MainGameMode = 2;
+            data_4C9F68.y = 10.0f;
+            data_4C9F68.z = -32.0f;
+            MainGameMode  = 2;
 
             for (ObjectLoop = 0; ObjectLoop < 6; ++ObjectLoop) {
                 LevelObjects[ObjectLoop].field_0    = 1;
@@ -168,11 +164,11 @@ void ProcessMainGame()
             }
 
             DrawMainGameGfx();
-            FlipScreen();
+            RenderDevice::FlipScreen();
             break;
 
         case 10:
-        case 11: FlipScreen(); break;
+        case 11: RenderDevice::FlipScreen(); break;
 
         default: break;
     }
@@ -221,7 +217,7 @@ void ProcessObjects()
                     }
                     break;
                 }
-                case 4: {
+                case 4: { // spring
                     Vector3D position;
                     position.z = LevelObjects[ObjectLoop].position.z - Player[0].position.z;
                     position.y = LevelObjects[ObjectLoop].position.y - Player[0].position.y + Player[0].f_0x18.y;
@@ -291,11 +287,11 @@ void DrawMainGameGfx()
     float v4;    // [esp+14h] [ebp-4h]
     float a7a;   // [esp+14h] [ebp-4h]
 
-    BeginScene();
-    Render_ClearScreen(190);
+    RenderDevice::BeginScene();
+    RenderDevice::Clear(0x0000BE);
     DrawTitleScr(1);
 
-    Unknown_40823B(Player[0].position.x, Player[0].position.y - Player[0].f_0x18.y, Player[0].position.z, data_4C9F68, data_4C9F6C, data_4C9F70,
+    Unknown_40823B(Player[0].position.x, Player[0].position.y - Player[0].f_0x18.y, Player[0].position.z, data_4C9F68.x, data_4C9F68.y, data_4C9F68.z,
                    data_4C9F74);
     DrawWorldSurface();
 
@@ -313,7 +309,7 @@ void DrawMainGameGfx()
     }
 
     DrawObjects();
-    EndScene();
+    RenderDevice::EndScene();
 }
 
 void DrawObjects()
@@ -365,159 +361,129 @@ void DrawObjects()
 
 void DrawWorldSurface()
 {
-    double v0;   // st7
-    Vector3D v1; // [esp+4h] [ebp-44h] BYREF
-    int k;       // [esp+10h] [ebp-38h]
-    int j;       // [esp+14h] [ebp-34h]
-    int l;       // [esp+18h] [ebp-30h]
-    float v5;    // [esp+1Ch] [ebp-2Ch]
-    Vector3D z;  // [esp+20h] [ebp-28h] BYREF
-    int v8;      // [esp+30h] [ebp-18h]
-    int v9;      // [esp+34h] [ebp-14h]
-    int v10;     // [esp+38h] [ebp-10h]
-    int i;       // [esp+3Ch] [ebp-Ch]
-    int v12;     // [esp+40h] [ebp-8h]
-    int v13;     // [esp+44h] [ebp-4h]
+    using namespace RenderDevice;
 
-    // callback((int)&z);
+    float c = (CameraCullX - LevelModel.startX) / 50.0f;
+    float r = (CameraCullZ - LevelModel.startZ) / 50.0f;
 
-    v13 = (__int64)((data_4C9D50 - levelLMF.variable_4) / 50.0) - 12;
-    v12 = v13 + 24;
-    v9  = (__int64)((data_4C9D58 - levelLMF.variable_5) / 50.0) - 12;
-    v8  = v9 + 24;
-    if (v13 < 0)
-        v13 = 0;
-    if (v13 > levelLMF.variable_2)
-        v13 = levelLMF.variable_2;
-    if (v12 < 0)
-        v12 = 0;
-    if (v12 > levelLMF.variable_2)
-        v12 = levelLMF.variable_2;
-    if (v9 < 0)
-        v9 = 0;
-    if (v9 > levelLMF.variable_3)
-        v9 = levelLMF.variable_3;
-    if (v8 < 0)
-        v8 = 0;
-    if (v8 > levelLMF.variable_3)
-        v8 = levelLMF.variable_3;
+    int minRow = CLAMP(r - 12, 0, LevelModel.rows);
+    int maxRow = CLAMP(r + 12, 0, LevelModel.rows);
 
-    D3DDevice->SetMaterial(&material_420520);
-    D3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, 0);
-    D3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, 0);
-    D3DDevice->SetTexture(0, surfaceTestZoneBG);
+    int minCol = CLAMP(c - 12, 0, LevelModel.columns);
+    int maxCol = CLAMP(c + 12, 0, LevelModel.columns);
 
-    Matrix_40893B(vector_4C9D74.x, vector_4C9D74.y, vector_4C9D74.z);
+    RenderDevice::SetMaterial(&material_420520);
+    RenderDevice::SetRenderState(RENDER_STATE_LIGHTING, false);
+    RenderDevice::SetRenderState(RENDER_STATE_ZENABLE, false);
+    RenderDevice::SetTexture(0, surfaceTestZoneBG);
 
-    D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matrixBackgroundTransform);
-    D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, (0x002 | 0x010 | 0x100), BackgroundMdl.vertices, BackgroundMdl.numVertices,
-                                    BackgroundMdl.indices, BackgroundMdl.numIndices, 0);
+    WorldMatrixSetTranslateXYZ(CameraPosition.x, CameraPosition.y, CameraPosition.z);
 
-    D3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, 1);
-    D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matWorld);
-    D3DDevice->SetTexture(0, levelSurfaceList[levelLMF.surfaceID[0]]);
+    RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixWorld);
+    RenderDevice::DrawIndexed(RENDER_FVF_VERTEX, BackgroundMdl.vertices, BackgroundMdl.numVertices, BackgroundMdl.indices, BackgroundMdl.numIndices);
 
-    uint8_t v7 = levelLMF.surfaceID[0];
-    for (i = 0; i < levelLMF.surfaceCount; ++i) {
-        if (v7 != levelLMF.surfaceID[i]) {
-            v7 = levelLMF.surfaceID[i];
-            D3DDevice->SetTexture(0, levelSurfaceList[v7]);
+    RenderDevice::SetRenderState(RENDER_STATE_ZENABLE, true);
+    RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixIdentity);
+    RenderDevice::SetTexture(0, levelSurfaceList[LevelModel.surfaceID[0]]);
+
+    byte id = LevelModel.surfaceID[0];
+    for (int s = 0; s < LevelModel.surfaceCount; ++s) {
+        if (id != LevelModel.surfaceID[s]) {
+            id = LevelModel.surfaceID[s];
+            RenderDevice::SetTexture(0, levelSurfaceList[id]);
         }
 
-        v10 = levelLMF.variable_2 * v9 + v13 + i * levelLMF.variable_3 * levelLMF.variable_2;
-        for (j = v9; j < v8; ++j) {
-            for (k = v13; k < v12; ++k) {
-                if (levelLMF.drawList[v10].vertexCount) {
-                    for (l = 0; l < levelLMF.drawList[v10].vertexCount; ++l) {
-                        z.x = levelLMF.drawList[v10].vertices[l].x - data_4C9F68;
-                        z.y = levelLMF.drawList[v10].vertices[l].y - data_4C9F6C;
-                        z.z = levelLMF.drawList[v10].vertices[l].z - data_4C9F70;
+        for (int y = minRow; y < maxRow; ++y) {
+            for (int x = minCol; x < maxCol; ++x) {
+                LMFMesh *tile = &LevelModel.tiles[s][y][x];
+                if (tile->numVertices) {
+                    for (int v = 0; v < tile->numVertices; ++v) {
+                        D3DLVERTEX *vert = &tile->vertices[v];
 
-                        // this is just here
-                        z.Normalized();
+                        Vector3D z;
+                        z.x = vert->x - data_4C9F68.x;
+                        z.y = vert->y - data_4C9F68.y;
+                        z.z = vert->z - data_4C9F68.z;
 
-                        v5  = z.Magnitude();
-                        z.x = levelLMF.drawList[v10].pVertexParams[l];
-                        if (v5 <= 600.0 || v5 >= 1000.0) {
-                            if (v5 < 1000.0)
-                                levelLMF.drawList[v10].vertices[l].color = (__int64)(z.x * 255.0) | ((unsigned int)(__int64)(z.x * 255.0) << 8)
-                                                                           | ((unsigned int)(__int64)(z.x * 255.0) << 16) | 0xFF000000;
-                            else
-                                levelLMF.drawList[v10].vertices[l].color = (__int64)(z.x * 255.0) | ((unsigned int)(__int64)(z.x * 255.0) << 8)
-                                                                           | ((unsigned int)(__int64)(z.x * 255.0) << 16);
+                        Vector3D normal = z.Normalized();
+                        float distance  = z.Magnitude();
+
+                        float alpha = 1.0f;
+                        if (distance < 1000.0f) {
+                            if (distance > 600.0f)
+                                alpha -= (distance - 600.0f) / 400.0f;
                         }
                         else {
-                            v0                                       = 1.0 - (v5 - 600.0) / 400.0;
-                            v5                                       = v0;
-                            levelLMF.drawList[v10].vertices[l].color = (__int64)(z.x * 255.0) | ((unsigned int)(__int64)(z.x * 255.0) << 8)
-                                                                       | ((unsigned int)(__int64)(z.x * 255.0) << 16)
-                                                                       | ((unsigned int)(__int64)(v0 * 255.0) << 24);
+                            if (distance >= 1000.0f)
+                                alpha = 0.0f;
                         }
+
+                        vert->color = TO_ARGB_F(alpha, tile->colors[v], tile->colors[v], tile->colors[v]);
                     }
 
-                    D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, (0x002 | 0x020 | 0x040 | 0x080 | 0x100), levelLMF.drawList[v10].vertices,
-                                                    levelLMF.drawList[v10].vertexCount, levelLMF.drawList[v10].indexes,
-                                                    levelLMF.drawList[v10].indexCount, 0);
+                    RenderDevice::DrawIndexed(RENDER_FVF_LVERTEX, tile->vertices, tile->numVertices, tile->indices, tile->numIndices);
                 }
-                ++v10;
             }
-            v10 += levelLMF.variable_2 - (v12 - v13);
         }
     }
 
-    D3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, 1);
+    RenderDevice::SetRenderState(RENDER_STATE_LIGHTING, true);
 }
 
 void Unknown_40823B(float x, float y, float z, float a4, float a5, float a6, float a7)
 {
-    memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl));
+    using namespace RenderDevice; // temp
 
-    if (data_4C9D6C != data_4C9D5C) {
-        if (data_4204C8) {
-            data_4C9D64 = (double)data_4204C8 * 0.1 * data_4C9D5C + (double)(10 - data_4204C8) * 0.1 * data_4C9D6C;
-            if (++data_4204C8 > 10) {
-                data_4C9D64 = data_4C9D5C;
-                data_4C9D6C = data_4C9D5C;
-                data_4204C8 = 0;
+    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
+
+    if (PlayerPrevRotationZ != PlayerTargetRotationZ) {
+        if (PlayerRotationTimerZ) {
+            PlayerRotationZ =
+                (double)PlayerRotationTimerZ * 0.1 * PlayerTargetRotationZ + (double)(10 - PlayerRotationTimerZ) * 0.1 * PlayerPrevRotationZ;
+            if (++PlayerRotationTimerZ > 10) {
+                PlayerRotationZ      = PlayerTargetRotationZ;
+                PlayerPrevRotationZ  = PlayerTargetRotationZ;
+                PlayerRotationTimerZ = 0;
             }
         }
         else {
-            data_4C9D6C = data_4C9D64;
-            ++data_4204C8;
+            PlayerPrevRotationZ = PlayerRotationZ;
+            PlayerRotationTimerZ++;
         }
     }
 
-    if (data_4C9D70 != data_4C9D60) {
-        if (data_4204C4) {
-            data_4C9D68 = (double)data_4204C4 * 0.1 * data_4C9D60 + (double)(10 - data_4204C4) * 0.1 * data_4C9D70;
-            if (++data_4204C4 > 10) {
-                data_4C9D68 = data_4C9D60;
-                data_4C9D70 = data_4C9D60;
-                data_4204C4 = 0;
+    if (PlayerPrevRotationX != PlayerTargetRotationX) {
+        if (PlayerRotationTimerX) {
+            PlayerRotationX =
+                (double)PlayerRotationTimerX * 0.1 * PlayerTargetRotationX + (double)(10 - PlayerRotationTimerX) * 0.1 * PlayerPrevRotationX;
+            if (++PlayerRotationTimerX > 10) {
+                PlayerRotationX      = PlayerTargetRotationX;
+                PlayerPrevRotationX  = PlayerTargetRotationX;
+                PlayerRotationTimerX = 0;
             }
         }
         else {
-            data_4C9D70 = data_4C9D68;
-            ++data_4204C4;
+            PlayerPrevRotationX = PlayerRotationX;
+            PlayerRotationTimerX++;
         }
     }
 
-    vector_4C9D74.x = matSonicMdl.m[0][0] * a4 + matSonicMdl.m[1][0] * a5 + matSonicMdl.m[2][0] * a6 + matSonicMdl.m[3][0];
-    vector_4C9D74.y = matSonicMdl.m[0][1] * a4 + matSonicMdl.m[1][1] * a5 + matSonicMdl.m[2][1] * a6 + matSonicMdl.m[3][1];
-    vector_4C9D74.z = matSonicMdl.m[0][2] * a4 + matSonicMdl.m[1][2] * a5 + matSonicMdl.m[2][2] * a6 + matSonicMdl.m[3][2];
-    memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl));
+    CameraPosition.x = MatrixSonicModel.m[0][0] * a4 + MatrixSonicModel.m[1][0] * a5 + MatrixSonicModel.m[2][0] * a6 + MatrixSonicModel.m[3][0];
+    CameraPosition.y = MatrixSonicModel.m[0][1] * a4 + MatrixSonicModel.m[1][1] * a5 + MatrixSonicModel.m[2][1] * a6 + MatrixSonicModel.m[3][1];
+    CameraPosition.z = MatrixSonicModel.m[0][2] * a4 + MatrixSonicModel.m[1][2] * a5 + MatrixSonicModel.m[2][2] * a6 + MatrixSonicModel.m[3][2];
+    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
 
     Vector3D v11;
-    v11.x = matSonicMdl.m[0][0] * 0.0 + matSonicMdl.m[1][0] * 1.0 + matSonicMdl.m[2][0] * 0.0 + matSonicMdl.m[3][0];
-    v11.y = matSonicMdl.m[0][1] * 0.0 + matSonicMdl.m[1][1] * 1.0 + matSonicMdl.m[2][1] * 0.0 + matSonicMdl.m[3][1];
-    v11.z = matSonicMdl.m[0][2] * 0.0 + matSonicMdl.m[1][2] * 1.0 + matSonicMdl.m[2][2] * 0.0 + matSonicMdl.m[3][2];
+    v11.x = MatrixSonicModel.m[0][0] * 0.0 + MatrixSonicModel.m[1][0] * 1.0 + MatrixSonicModel.m[2][0] * 0.0 + MatrixSonicModel.m[3][0];
+    v11.y = MatrixSonicModel.m[0][1] * 0.0 + MatrixSonicModel.m[1][1] * 1.0 + MatrixSonicModel.m[2][1] * 0.0 + MatrixSonicModel.m[3][1];
+    v11.z = MatrixSonicModel.m[0][2] * 0.0 + MatrixSonicModel.m[1][2] * 1.0 + MatrixSonicModel.m[2][2] * 0.0 + MatrixSonicModel.m[3][2];
 
-    data_4C9D50 = a4 - Sin(a7) * 500.0;
-    data_4C9D58 = Cos(a7) * 500.0 + a6;
+    CameraCullX = a4 - Sin(a7) * 500.0;
+    CameraCullZ = Cos(a7) * 500.0 + a6;
 
     Vector3D v8 = Vector3D(x, y, z);
-    Vector3D v7 = Vector3D(vector_4C9D74.x, vector_4C9D74.y, vector_4C9D74.z);
-    Matrix_40398C(&matView, v7, v8, v11);
+    Vector3D v7 = Vector3D(CameraPosition.x, CameraPosition.y, CameraPosition.z);
+    Matrix_40398C(&MatrixView, v7, v8, v11);
 
-    IDirect3DDevice7_SetTransform(D3DDevice, D3DTRANSFORMSTATE_VIEW, &matView);
+    RenderDevice::SetTransform(RENDER_TRANSFORM_VIEW, &MatrixView);
 }

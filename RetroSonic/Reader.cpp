@@ -18,8 +18,10 @@ void LoadFile(FileInfo *file, const char *path)
     fclose(handle);
 }
 
-IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
+void LoadTexture(IDirectDrawSurface7 *&texture, const char *path, int a2)
 {
+    using namespace RenderDevice; // temp
+
     FIBITMAP *fBitmap   = FreeImage_Load(FIF_PNG, path);
     FIBITMAP *fBitmap32 = FreeImage_ConvertTo32Bits(fBitmap);
     int bmWidth         = FreeImage_GetWidth(fBitmap);
@@ -27,7 +29,7 @@ IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
 
     D3DDEVICEDESC7 pDesc;
     if (D3DDevice->GetCaps(&pDesc) < 0)
-        return 0;
+        return;
 
     DDSURFACEDESC2 surfaceDesc;
     ZeroMemory(&surfaceDesc, sizeof(surfaceDesc));
@@ -38,19 +40,19 @@ IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
         if (bmWidth > 64) {
             switch (bmWidth) {
                 case 128:
-                    surfaceDesc.dwFlags        = 1183751;
+                    surfaceDesc.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
                     surfaceDesc.ddsCaps.dwCaps = 4198408;
                     surfaceDesc.dwMipMapCount  = 4;
                     break;
 
                 case 256:
-                    surfaceDesc.dwFlags        = 1183751;
+                    surfaceDesc.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
                     surfaceDesc.ddsCaps.dwCaps = 4198408;
                     surfaceDesc.dwMipMapCount  = 5;
                     break;
 
                 case 512:
-                    surfaceDesc.dwFlags        = 1183751;
+                    surfaceDesc.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
                     surfaceDesc.ddsCaps.dwCaps = 4198408;
                     surfaceDesc.dwMipMapCount  = 6;
                     break;
@@ -59,7 +61,7 @@ IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
         else {
             switch (bmWidth) {
                 case 64:
-                    surfaceDesc.dwFlags        = 1183751;
+                    surfaceDesc.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
                     surfaceDesc.ddsCaps.dwCaps = 4198408;
                     surfaceDesc.dwMipMapCount  = 3;
                     break;
@@ -69,12 +71,12 @@ IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
                     a2                         = 0;
                     break;
                 case 16:
-                    surfaceDesc.dwFlags        = 1183751;
+                    surfaceDesc.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
                     surfaceDesc.ddsCaps.dwCaps = 4096;
                     a2                         = 0;
                     break;
                 case 32:
-                    surfaceDesc.dwFlags        = 1183751;
+                    surfaceDesc.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
                     surfaceDesc.ddsCaps.dwCaps = 4198408;
                     surfaceDesc.dwMipMapCount  = 2;
                     break;
@@ -112,7 +114,7 @@ IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
         TexFmtSearchType = TEXTURE_FMT_16BIT_ALPHA;
         D3DDevice->EnumTextureFormats(TextureSearchCallback, &surfaceDesc.ddpfPixelFormat);
         if (!surfaceDesc.ddpfPixelFormat.dwRGBBitCount)
-            return 0;
+            return;
     }
 
     IDirectDrawSurface7 *ppRenderTarget;
@@ -120,9 +122,8 @@ IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
     ppRenderTarget->GetDDInterface((LPVOID *)&DDraw);
     ppRenderTarget->Release();
 
-    LPDIRECTDRAWSURFACE7 s;
-    if (DDraw->CreateSurface(&surfaceDesc, &s, 0) < 0)
-        return 0;
+    if (DDraw->CreateSurface(&surfaceDesc, &texture, 0) < 0)
+        return;
 
     DDSURFACEDESC2 lockDesc;
     memset(&lockDesc, 0, sizeof(lockDesc));
@@ -130,7 +131,7 @@ IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
 
     WORD alphaMask = (WORD)surfaceDesc.ddpfPixelFormat.dwRGBAlphaBitMask;
 
-    IDirectDrawSurface7 *surfacePtr = s;
+    IDirectDrawSurface7 *surfacePtr = texture;
     if (a2 == 1) {
         int vSize = bmWidth;
         for (int i = 0; i < surfaceDesc.dwMipMapCount; ++i) {
@@ -177,108 +178,121 @@ IDirectDrawSurface7 *Load_PNG_File(const char *path, int a2)
     }
     else {
         HDC hdc;
-        s->GetDC(&hdc);
+        texture->GetDC(&hdc);
         StretchDIBits(hdc, 0, 0, bmWidth, bmHeight, 0, 0, bmWidth, bmHeight, FreeImage_GetBits(fBitmap32), FreeImage_GetInfo(fBitmap32),
                       DIB_RGB_COLORS, SRCCOPY);
-        s->ReleaseDC(hdc);
+        texture->ReleaseDC(hdc);
 
         if (TexFmtSearchType == TEXTURE_FMT_16BIT_ALPHA) {
-            s->Lock(0, &lockDesc, DDLOCK_WAIT, 0);
-            DWORD pitch = lockDesc.lPitch;
-            BYTE *dst   = (BYTE *)lockDesc.lpSurface;
-            int srcLine = lockDesc.dwHeight - 1;
-            for (DWORD y = 0; y < lockDesc.dwHeight; ++y) {
-                WORD *p   = (WORD *)(dst + pitch * y);
-                BYTE *src = FreeImage_GetScanLine(fBitmap32, srcLine--);
-                for (DWORD x = 0; x < lockDesc.dwWidth; ++x) {
-                    if (src[3] == 255)
-                        *p |= alphaMask;
-                    else
-                        *p = 0;
-                    ++p;
-                    src += 4;
+            texture->Lock(0, &lockDesc, DDLOCK_WAIT, 0);
+
+            byte *dstRow = (byte *)lockDesc.lpSurface;
+            int srcLine  = lockDesc.dwHeight - 1;
+
+            for (int y = 0; y < lockDesc.dwHeight; ++y, --srcLine, dstRow += lockDesc.lPitch) {
+                ushort *p = (ushort *)dstRow;
+                byte *src = FreeImage_GetScanLine(fBitmap32, srcLine);
+
+                for (int x = 0; x < lockDesc.dwWidth; ++x, ++p, src += 4) {
+                    *p = (src[3] == 255) ? (*p | alphaMask) : 0;
                 }
             }
-            s->Unlock(0);
+
+            texture->Unlock(0);
         }
     }
 
     FreeImage_Unload(fBitmap32);
     FreeImage_Unload(fBitmap);
-    return s;
 }
 
-void LoadLevelModel(LMF *lmf, const char *path)
+void LoadLevelModel(LMF *model, const char *path)
 {
-    FILE *stream = fopen(path, "rb");
-    LMF temp;
-    uint8_t byte;
-    fread(&byte, 1, 1, stream);
-    temp.surfaceCount = byte;
-    fread(&temp.variable_2, sizeof(temp.variable_2), 1, stream);
-    fread(&temp.variable_3, sizeof(temp.variable_3), 1, stream);
-    fread(&temp.variable_4, sizeof(temp.variable_4), 1, stream);
-    fread(&temp.variable_5, sizeof(temp.variable_5), 1, stream);
-    fread(&byte, 1, 1, stream);
-    temp.variable_1 = byte;
+    memset(model, 0, sizeof(*model));
 
-    for (int i = 0; i < temp.surfaceCount; ++i) {
-        fread(&byte, 1, 1, stream);
-        temp.surfaceID[i] = byte;
+    FILE *stream = fopen(path, "rb");
+    fread(&model->surfaceCount, sizeof(model->surfaceCount), 1, stream);
+    fread(&model->columns, sizeof(model->columns), 1, stream);
+    fread(&model->rows, sizeof(model->rows), 1, stream);
+    fread(&model->startX, sizeof(model->startX), 1, stream);
+    fread(&model->startZ, sizeof(model->startZ), 1, stream);
+    fread(&model->unused, sizeof(model->unused), 1, stream);
+
+    for (int i = 0; i < model->surfaceCount; ++i) {
+        fread(&model->surfaceID[i], sizeof(model->surfaceID[i]), 1, stream);
     }
 
-    int vertexInfoCount = temp.surfaceCount * temp.variable_3 * temp.variable_2 + 1;
-    temp.drawList       = new LMF_VertexInfo[vertexInfoCount];
-    int cellCount       = temp.variable_3 * temp.variable_2;
-    LCollision          = new CollisionModel3D *[cellCount];
+    LCollision = new CollisionModel3D **[model->rows];
+    for (int row = 0; row < model->rows; ++row) {
+        LCollision[row] = new CollisionModel3D *[model->columns];
+    }
 
-    for (int j = 0; j < cellCount; ++j) {
-        LCollision[j] = newCollisionModel3D();
-        for (int k = 0; k < temp.surfaceCount; ++k) {
-            int index = k * cellCount + j;
-            uint16_t vcount;
-            fread(&vcount, sizeof(vcount), 1, stream);
-            temp.drawList[index].vertexCount = vcount;
-
-            int allocV                    = vcount + 1;
-            temp.drawList[index].vertices = new D3DLVERTEX[allocV];
-            memset(temp.drawList[index].vertices, 0, allocV * sizeof(D3DLVERTEX));
-            temp.drawList[index].pVertexParams = new float[vcount];
-
-            for (int v = 0; v < vcount; ++v) {
-                float coords[8];
-                for (int l = 0; l < 8; ++l) fread(&coords[l], sizeof(coords[l]), 1, stream);
-                float param    = (coords[4] + 1.0f) * 0.375f + 0.25f;
-                D3DCOLOR color = (uint32_t)(param * 255) | ((uint32_t)(param * 255) << 8) | ((uint32_t)(param * 255) << 16) | 0xFF000000;
-
-                D3DVECTOR pos(coords[0], coords[1], coords[2]);
-
-                temp.drawList[index].vertices[v]      = D3DLVERTEX(pos, color, 0, coords[6], coords[7]);
-                temp.drawList[index].pVertexParams[v] = param;
-            }
-
-            uint16_t icount;
-            fread(&icount, sizeof(icount), 1, stream);
-            temp.drawList[index].indexCount = icount;
-            temp.drawList[index].indexes    = new uint16_t[icount];
-
-            for (int v = 0; v < icount; ++v) {
-                fread(&temp.drawList[index].indexes[v], sizeof(uint16_t), 1, stream);
-            }
-
-            for (int t = 0; t < icount; t += 3) {
-                int i0 = temp.drawList[index].indexes[t];
-                int i1 = temp.drawList[index].indexes[t + 1];
-                int i2 = temp.drawList[index].indexes[t + 2];
-                LCollision[j]->addTriangle(&temp.drawList[index].vertices[i0].x, &temp.drawList[index].vertices[i1].x,
-                                           &temp.drawList[index].vertices[i2].x);
-            }
+    model->tiles = new LMFMesh **[model->surfaceCount];
+    for (int s = 0; s < model->surfaceCount; ++s) {
+        model->tiles[s] = new LMFMesh *[model->rows];
+        for (int row = 0; row < model->rows; ++row) {
+            model->tiles[s][row] = new LMFMesh[model->columns]();
         }
-        LCollision[j]->finalize();
+    }
+
+    for (int y = 0; y < model->rows; ++y) {
+        for (int c = 0; c < model->columns; ++c) {
+            LCollision[y][c] = newCollisionModel3D();
+
+            for (int s = 0; s < model->surfaceCount; ++s) {
+                LMFMesh *tile = &model->tiles[s][y][c];
+
+                fread(&tile->numVertices, sizeof(tile->numVertices), 1, stream);
+                tile->vertices = new D3DLVERTEX[tile->numVertices + 1]();
+                tile->colors   = new float[tile->numVertices];
+
+                for (int v = 0; v < tile->numVertices; ++v) {
+                    // did you know that this is straight up allowed in C++?
+                    // LMF vertices are identical to D3DLVERTEX layout-wise
+                    // though, we're using a seperate struct here due to color being float instead of D3DCOLOR (int)
+                    struct _ {
+                        D3DVECTOR v;
+                        float reserved;
+                        float color;
+                        float specular;
+                        float tu;
+                        float tv;
+                    } vert;
+
+                    fread(&vert, sizeof(vert), 1, stream);
+
+                    vert.color += 1.0f;
+                    vert.color *= 0.375f;
+                    vert.color += 0.25f;
+
+                    D3DCOLOR color = TO_ARGB_F(1.0f, vert.color, vert.color, vert.color);
+
+                    tile->vertices[v] = { vert.v, color, 0, vert.tu, vert.tv };
+                    tile->colors[v]   = vert.color;
+                }
+
+                fread(&tile->numIndices, sizeof(tile->numIndices), 1, stream);
+                tile->indices = new ushort[tile->numIndices];
+
+                for (int v = 0; v < tile->numIndices; ++v) {
+                    fread(&tile->indices[v], sizeof(tile->indices[v]), 1, stream);
+                }
+
+                for (int t = 0; t < tile->numIndices; t += 3) {
+                    float *vert[3] = { NULL, NULL, NULL };
+                    for (int v = 0; v < 3; ++v) {
+                        vert[v] = &tile->vertices[tile->indices[t + v]].x;
+                    }
+
+                    LCollision[y][c]->addTriangle(vert[0], vert[1], vert[2]);
+                }
+            }
+
+            LCollision[y][c]->finalize();
+        }
     }
 
     fclose(stream);
-    memcpy(lmf, &temp, sizeof(LMF));
 }
 
 void SetLevelDirectory(const char *text, byte length, int index)
@@ -390,115 +404,107 @@ void CreateDirectories()
     LDirectory[5].levelNameLen = 2;
 }
 
-void Load_TMF_File(TMF *tmf, const char *path)
+void Load_TMF_File(TMF *model, const char *path)
 {
-    TMF model;
+    memset(model, 0, sizeof(*model));
 
     FILE *stream = fopen(path, "rb");
     fseek(stream, 0, 0);
 
-    fread(&model.numVertices, 2, 1, stream);
+    fread(&model->numVertices, 2, 1, stream);
+    model->vertices = new D3DVERTEX[model->numVertices + 1];
+    if (model->vertices != NULL)
+        memset(model->vertices, 0, sizeof(*model->vertices));
 
-    model.vertices = new D3DVERTEX[model.numVertices + 1];
-    if (model.vertices != nullptr)
-        memset(model.vertices, 0, sizeof(D3DVERTEX));
-
-    D3DVERTEX vert;
-    int32_t readPos;
-
-    for (int32_t i = 0; i < model.numVertices; ++i) {
-        for (int32_t m = 0; m < 8; ++m) fread(&vert.x + m, sizeof(D3DVALUE), 1, stream);
-        memcpy(&model.vertices[i], &vert, sizeof(D3DVERTEX));
+    for (int i = 0; i < model->numVertices; ++i) {
+        fread(&model->vertices[i], sizeof(model->vertices[i]), 1, stream);
     }
 
-    fread(&readPos, 1, 1, stream);
-    model.numIndices = (uint8_t)readPos;
-
-    fread(&readPos, 1, 1, stream);
-    model.numIndices += (uint8_t)readPos << 8;
-
-    model.indices = new uint16_t[model.numIndices + 2];
-    for (int32_t i = 0; i < model.numIndices; ++i) fread(&model.indices[i], 2, 1, stream);
+    fread(&model->numIndices, sizeof(model->numIndices), 1, stream);
+    model->indices = new ushort[model->numIndices + 2];
+    for (int i = 0; i < model->numIndices; ++i) {
+        fread(&model->indices[i], sizeof(model->indices[i]), 1, stream);
+    }
 
     fclose(stream);
-    memcpy(tmf, &model, sizeof(TMF));
 }
 
-void Load_ANI_File(Animation *animationPtr, const char *path)
+void Load_ANI_File(Animation *animation, const char *path)
 {
-    Animation animation;
+    memset(animation, 0, sizeof(*animation));
+
     char boneName[256];
 
     FILE *stream = fopen(path, "rb");
     fseek(stream, 0, SEEK_SET);
 
     uint8_t frameCount;
-    uint16_t boneCount;
+    uint16_t nodeCount;
     fread(&frameCount, sizeof(uint8_t), 1, stream);
-    fread(&boneCount, sizeof(uint16_t), 1, stream);
+    fread(&nodeCount, sizeof(uint16_t), 1, stream);
 
     for (int i = 0; i < frameCount; ++i) {
         uint8_t nameLen;
         fread(&nameLen, sizeof(uint8_t), 1, stream);
         fread(boneName, sizeof(uint8_t), nameLen, stream);
 
-        fread(&animation.frames[i].position.x, sizeof(float), 1, stream);
-        fread(&animation.frames[i].position.y, sizeof(float), 1, stream);
-        fread(&animation.frames[i].position.z, sizeof(float), 1, stream);
+        fread(&animation->nodes[i].position.x, sizeof(float), 1, stream);
+        fread(&animation->nodes[i].position.y, sizeof(float), 1, stream);
+        fread(&animation->nodes[i].position.z, sizeof(float), 1, stream);
 
-        fread(&animation.frames[i].vertexCount, sizeof(uint16_t), 1, stream);
-        animation.frames[i].vertexIDs = new uint16_t[animation.frames[i].vertexCount];
+        fread(&animation->nodes[i].vertexCount, sizeof(uint16_t), 1, stream);
+        animation->nodes[i].vertexIDs = new uint16_t[animation->nodes[i].vertexCount];
 
-        for (int j = 0; j < animation.frames[i].vertexCount; ++j) {
-            fread(&animation.frames[i].vertexIDs[j], sizeof(uint16_t), 1, stream);
+        for (int j = 0; j < animation->nodes[i].vertexCount; ++j) {
+            fread(&animation->nodes[i].vertexIDs[j], sizeof(uint16_t), 1, stream);
         }
 
-        for (int j = 0; j < boneCount; ++j) {
+        for (int j = 0; j < nodeCount; ++j) {
             uint8_t idk;
             uint16_t val;
 
             fread(&idk, sizeof(uint8_t), 1, stream);
             fread(&val, sizeof(uint16_t), 1, stream);
-            animation.frames[i].rotX[j] = (float)((idk ? (int)val : -(int)val) * (RETRO_PI / 180.0));
+            animation->nodes[i].rotX[j] = (float)((idk ? (int)val : -(int)val) * (RETRO_PI / 180.0));
 
             fread(&idk, sizeof(uint8_t), 1, stream);
             fread(&val, sizeof(uint16_t), 1, stream);
-            animation.frames[i].rotY[j] = (float)((idk ? (int)val : -(int)val) * (RETRO_PI / 180.0));
+            animation->nodes[i].rotY[j] = (float)((idk ? (int)val : -(int)val) * (RETRO_PI / 180.0));
 
             fread(&idk, sizeof(uint8_t), 1, stream);
             fread(&val, sizeof(uint16_t), 1, stream);
-            animation.frames[i].rotZ[j] = (float)((idk ? (int)val : -(int)val) * (RETRO_PI / 180.0));
+            animation->nodes[i].rotZ[j] = (float)((idk ? (int)val : -(int)val) * (RETRO_PI / 180.0));
         }
     }
 
-    // field_BFA8 -> frameIDCount
+    fread(&animation->frameIDCount, sizeof(uint16_t), 1, stream);
+    animation->frameIDs = new byte[animation->frameIDCount];
 
-    fread(&animation.field_BFA8, sizeof(uint16_t), 1, stream);
-    animation.frameIDs = new uint8_t[animation.field_BFA8];
-
-    for (int i = 0; i < animation.field_BFA8; ++i) fread(&animation.frameIDs[i], sizeof(uint8_t), 1, stream);
-
-    uint8_t ab90Count;
-    fread(&ab90Count, sizeof(uint8_t), 1, stream);
-
-    for (int i = 0; i < ab90Count; ++i) {
-        // also a name
-        uint8_t nameLen;
-        fread(&nameLen, sizeof(uint8_t), 1, stream);
-        fread(boneName, sizeof(uint8_t), nameLen, stream); // animation/pose names?
-
-        fread(&animation.array_AB90[i].field_201, sizeof(uint8_t), 1, stream);
-        fread(&animation.array_AB90[i].field_200, sizeof(uint8_t), 1, stream);
-        fread(&animation.array_AB90[i].count, sizeof(uint8_t), 1, stream);
-
-        for (int j = 0; j < animation.array_AB90[i].count; ++j) fread(&animation.array_AB90[i].array_2[j], sizeof(uint16_t), 1, stream);
+    for (int i = 0; i < animation->frameIDCount; ++i) {
+        fread(&animation->frameIDs[i], sizeof(uint8_t), 1, stream);
     }
 
-    animation.field_BFAA = 0;
-    animation.field_BFAB = 0;
+    byte stateCount;
+    fread(&stateCount, sizeof(uint8_t), 1, stream);
+
+    for (int i = 0; i < stateCount; ++i) {
+        byte nameLen;
+        fread(&nameLen, sizeof(byte), 1, stream);
+        fread(&boneName, sizeof(byte), nameLen, stream);
+
+        fread(&animation->states[i].frameDuration, sizeof(byte), 1, stream);
+        fread(&animation->states[i].loopIndex, sizeof(byte), 1, stream);
+        fread(&animation->states[i].frameCount, sizeof(byte), 1, stream);
+
+        for (int j = 0; j < animation->states[i].frameCount; ++j) {
+            fread(&animation->states[i].array_2[j], sizeof(ushort), 1, stream);
+        }
+    }
+
+    animation->field_BFAA = 0;
+    animation->field_BFAB = 0;
 
     fclose(stream);
-    memcpy(animationPtr, &animation, sizeof(Animation));
 }
 
 #if 0

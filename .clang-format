@@ -21,6 +21,8 @@ AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: false
 AlignConsecutiveMacros: true
 UseTab: Never
+NamespaceIndentation: All
+FixNamespaceComments: false
 BreakBeforeBraces: Custom
 BraceWrapping:
     AfterClass:      true

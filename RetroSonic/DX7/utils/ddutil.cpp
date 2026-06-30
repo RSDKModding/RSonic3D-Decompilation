@@ -10,6 +10,8 @@
 
 #include "RetroEngine.hpp"
 
+using namespace RenderDevice;
+
 //-----------------------------------------------------------------------------
 // Name: DDLoadBitmap()
 // Desc: Create a DirectDrawSurface from a bitmap resource.

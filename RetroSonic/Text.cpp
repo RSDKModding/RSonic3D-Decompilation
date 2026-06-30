@@ -75,10 +75,10 @@ void DrawMenuText(const char *text, int length, int xpos, int ypos, byte sprite)
         indices[i][5] = (4 * i) + 2;
     }
 
-    D3DDevice->BeginScene();
-    D3DDevice->SetTexture(0, surfaceMText);
-    D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, D3DFVF_LVERTEX, vertices[0], 4 * length, indices[0], 6 * length, 0);
-    D3DDevice->EndScene();
+    RenderDevice::BeginScene();
+    RenderDevice::SetTexture(0, surfaceMText);
+    RenderDevice::DrawIndexed(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
+    RenderDevice::EndScene();
 }
 
 void DrawText_2(const char *text, int length, int xpos, int ypos)
@@ -133,10 +133,10 @@ void DrawText_2(const char *text, int length, int xpos, int ypos)
         indices[i][5] = (4 * i) + 2;
     }
 
-    D3DDevice->BeginScene();
-    D3DDevice->SetTexture(0, surfaceMText);
-    D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, D3DFVF_LVERTEX, vertices[0], 4 * length, indices[0], 6 * length, 0);
-    D3DDevice->EndScene();
+    RenderDevice::BeginScene();
+    RenderDevice::SetTexture(0, surfaceMText);
+    RenderDevice::DrawIndexed(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
+    RenderDevice::EndScene();
 }
 
 void DrawText_3(const char *text, int length, int xpos, int ypos, byte sprite, byte alphaStrengthT, byte alphaStrengthB)
@@ -211,8 +211,8 @@ void DrawText_3(const char *text, int length, int xpos, int ypos, byte sprite, b
         indices[i][5] = (4 * i) + 2;
     }
 
-    D3DDevice->BeginScene();
-    D3DDevice->SetTexture(0, surfaceMText);
-    D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, D3DFVF_LVERTEX, vertices[0], 4 * length, indices[0], 6 * length, 0);
-    D3DDevice->EndScene();
+    RenderDevice::BeginScene();
+    RenderDevice::SetTexture(0, surfaceMText);
+    RenderDevice::DrawIndexed(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
+    RenderDevice::EndScene();
 }

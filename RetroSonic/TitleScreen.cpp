@@ -1,5 +1,7 @@
 #include "RetroEngine.hpp"
 
+using namespace RenderDevice; // temp
+
 InputData TitleInput;
 TextMenu TitleMenu;
 float data_4DA320;
@@ -47,7 +49,7 @@ void ProcessTitleScreen()
         case 0:
             ++TtlTime;
             CodeCheck();
-            Render_ClearScreen(0x000000);
+            RenderDevice::Clear(0x000000);
 
             if (TtlTime == 240) {
                 TtlTime = 0;
@@ -93,16 +95,16 @@ void ProcessTitleScreen()
                 TitleMenu.alignment      = MENU_ALIGN_CENTER;
                 TitleMenu.selectionCount = 1;
                 TitleMenu.selection1     = 0;
-                SetFade(1.0f, 1.0f, 1.0f, 0.89999998f);
+                RenderDevice::DrawFade(1.0f, 1.0f, 1.0f, 0.89999998f);
             }
             else {
                 DrawTitleScr(0);
 
                 if (TtlTime < 61)
-                    SetFade(0.0f, 0.0f, 0.0f, 1.0f - (double)TtlTime * 0.0166f);
+                    RenderDevice::DrawFade(0.0f, 0.0f, 0.0f, 1.0f - (double)TtlTime * 0.0166f);
 
                 if (TtlTime > 179)
-                    SetFade(1.0f, 1.0f, 1.0f, (double)(TtlTime - 180) * 0.0166f);
+                    RenderDevice::DrawFade(1.0f, 1.0f, 1.0f, (double)(TtlTime - 180) * 0.0166f);
             }
             break;
 
@@ -114,7 +116,7 @@ void ProcessTitleScreen()
             DrawTitleScr(0);
 
             if (TtlTime < 61)
-                SetFade(1.0f, 1.0f, 1.0f, 1.0f - (double)TtlTime * 0.0166f);
+                RenderDevice::DrawFade(1.0f, 1.0f, 1.0f, 1.0f - (double)TtlTime * 0.0166f);
 
             if (TtlTime == 180) {
                 TtlTime = 0;
@@ -209,7 +211,7 @@ void ProcessTitleScreen()
             break;
 
         case 3:
-            Render_ClearScreen(0x000000);
+            RenderDevice::Clear(0x000000);
             DrawTitleScr(1);
             DrawTitleScr(0);
 
@@ -230,7 +232,7 @@ void ProcessTitleScreen()
             break;
 
         case 4:
-            Render_ClearScreen(0x000000);
+            RenderDevice::Clear(0x000000);
             DrawTitleScr(1);
             DrawTitleScr(0);
 
@@ -251,7 +253,7 @@ void ProcessTitleScreen()
             break;
 
         case 6:
-            Render_ClearScreen(0x000000);
+            RenderDevice::Clear(0x000000);
             DrawTitleScr(1);
             DrawTitleScr(0);
 
@@ -398,27 +400,27 @@ void DrawTitleScr(sbyte type)
 {
     switch (type) {
         case 0:
-            D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matWorld);
-            D3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, &matWorld);
-            D3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, &matWorld);
+            RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixIdentity);
+            RenderDevice::SetTransform(RENDER_TRANSFORM_VIEW, &MatrixIdentity);
+            RenderDevice::SetTransform(RENDER_TRANSFORM_PROJECTION, &MatrixIdentity);
 
-            D3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, false);
-            D3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, false);
-            D3DDevice->SetRenderState(D3DRENDERSTATE_SPECULARENABLE, false);
+            RenderDevice::SetRenderState(RENDER_STATE_ZENABLE, false);
+            RenderDevice::SetRenderState(RENDER_STATE_LIGHTING, false);
+            RenderDevice::SetRenderState(RENDER_STATE_SPECULARENABLE, false);
             break;
 
         case 1:
-            D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matWorld);
-            D3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, &matView);
-            D3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, &matProject);
+            RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixIdentity);
+            RenderDevice::SetTransform(RENDER_TRANSFORM_VIEW, &MatrixView);
+            RenderDevice::SetTransform(RENDER_TRANSFORM_PROJECTION, &MatrixProjection);
 
-            D3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, true);
-            D3DDevice->SetRenderState(D3DRENDERSTATE_LIGHTING, true);
-            D3DDevice->SetRenderState(D3DRENDERSTATE_SPECULARENABLE, false);
+            RenderDevice::SetRenderState(RENDER_STATE_ZENABLE, true);
+            RenderDevice::SetRenderState(RENDER_STATE_LIGHTING, true);
+            RenderDevice::SetRenderState(RENDER_STATE_SPECULARENABLE, false);
             break;
 
-        case 2: D3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, false); break;
-        case 3: D3DDevice->SetRenderState(D3DRENDERSTATE_ZENABLE, true); break;
+        case 2: RenderDevice::SetRenderState(RENDER_STATE_ZENABLE, false); break;
+        case 3: RenderDevice::SetRenderState(RENDER_STATE_ZENABLE, true); break;
 
         default: break;
     }
@@ -737,7 +739,7 @@ void SetMenuSelMode(TextMenu *menu, int id) { menu->selMode[id] = 1; }
 
 void Zone_TitleScreen_4127E6()
 {
-    Render_ClearScreen(0x000000);
+    RenderDevice::Clear(0x000000);
 
     data_4DA320 += 0.0049999999f;
     if (3.1415927 + 3.1415927 < data_4DA320)
@@ -745,16 +747,16 @@ void Zone_TitleScreen_4127E6()
 
     DrawTitleScr(2);
     CopyMatrix_4C9B90_4C9C50();
-    MatrixRotateY_4C9DB0(data_4DA320);
-    MultiplyMatrix_4C9B90_4C9BD0();
-    Matrix_408B0B(0.0f, 0.0f, 20.0f);
-    MultiplyMatrix_4C9B90_4C9BD0();
+    WorldMatrixRotateY(data_4DA320);
+    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+    WorldMatrixTranslateXYZ(0.0f, 0.0f, 20.0f);
+    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
     SonicMat_WorldTransform();
     DrawTitleModel(0);
     DrawTitleScr(3);
     CopyMatrix_4C9B90_4C9C50();
-    Matrix_408B0B(0.0f, 0.0f, data_41F59C);
-    MultiplyMatrix_4C9B90_4C9BD0();
+    WorldMatrixTranslateXYZ(0.0f, 0.0f, data_41F59C);
+    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
     SonicMat_WorldTransform();
     DrawTitleModel(1);
 }

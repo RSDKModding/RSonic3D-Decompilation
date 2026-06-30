@@ -2,16 +2,16 @@
 #define R_MISC_H
 
 void Matrix_40398C(D3DMATRIX *matrix, Vector3D &a2, Vector3D &a3, Vector3D &a4);
-void Matrix_408779(float a1);
-void Matrix_40880F(float a1);
-void Matrix_4088A5(float a1);
-void Matrix_40893B(int a1, int a2, int a3);
-void MatrixRotateX_4C9DB0(float value);
-void MatrixRotateY_4C9DB0(float value);
-void MatrixRotateZ_4C9DB0(float value);
-void Matrix_408B0B(float a1, float a2, float a3);
 
-void MultiplyMatrix_4C9B90_4C9BD0();
+void WorldMatrixTranslateXYZ(float x, float y, float z);
+void WorldMatrixRotateZ(float value);
+void WorldMatrixRotateY(float value);
+void WorldMatrixRotateX(float value);
+
+void WorldMatrixSetTranslateXYZ(float x, float y, float z);
+void WorldMatrixSetRotateX(float x);
+void WorldMatrixSetRotateY(float y);
+void WorldMatrixSetRotateZ(float z);
 
 enum ObjectID {
     OBJECT_ID_RING,
@@ -19,11 +19,11 @@ enum ObjectID {
     OBJECT_ID_RING_SPARKLE,
 };
 
-void DrawModelShadow(float x, float y, float z, float p_4, float a5, float a6, float a7);
+void DrawModelShadow(float x, float y, float z, float magnitude, float sx, float sy, float ry);
 void DrawModelSonic(float x, float y, float z, float a4);
 void DrawObjectModelID(int object, float x, float y, float z, float ry, float rx, float rz);
 
-void Matrix_40812C(float *a1, float *a2, float *a3);
-void Unknown_408222();
+void PlayerRotationPhysics(float *a1, float *a2, float *a3);
+void ResetPlayerRotation();
 
 #endif // !R_MISC_H

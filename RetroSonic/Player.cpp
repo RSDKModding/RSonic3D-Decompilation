@@ -1,5 +1,17 @@
 #include "RetroEngine.hpp"
 
+float PlayerTargetRotationZ;
+float PlayerTargetRotationX;
+
+float PlayerRotationZ;
+float PlayerRotationX;
+
+float PlayerPrevRotationZ;
+float PlayerPrevRotationX;
+
+int PlayerRotationTimerX;
+int PlayerRotationTimerZ;
+
 byte PNumber;
 PlayerObject Player[2];
 
@@ -28,24 +40,24 @@ void ProcessPlayerInput()
         if (Debug) {
             if (MGameInput.left == 1) {
                 Player[0].position.x = Player[0].position.x - Cos(data_4C9F74);
-                data_4C9F68          = data_4C9F68 - Cos(data_4C9F74);
+                data_4C9F68.x        = data_4C9F68.x - Cos(data_4C9F74);
                 Player[0].position.z = Player[0].position.z - Sin(data_4C9F74);
-                data_4C9F70          = data_4C9F70 - Sin(data_4C9F74);
+                data_4C9F68.z        = data_4C9F68.z - Sin(data_4C9F74);
             }
             if (MGameInput.right == 1) {
                 Player[0].position.x = Cos(data_4C9F74) + Player[0].position.x;
-                data_4C9F68          = Cos(data_4C9F74) + data_4C9F68;
+                data_4C9F68.x        = Cos(data_4C9F74) + data_4C9F68.x;
                 Player[0].position.z = Sin(data_4C9F74) + Player[0].position.z;
-                data_4C9F70          = Sin(data_4C9F74) + data_4C9F70;
+                data_4C9F68.z        = Sin(data_4C9F74) + data_4C9F68.z;
             }
             if (MGameInput.Z) {
                 if (MGameInput.up == 1) {
-                    Player[0].position.y = Player[0].position.y + 1.0;
-                    data_4C9F6C          = data_4C9F6C + 1.2;
+                    Player[0].position.y += 1.0;
+                    data_4C9F68.y += 1.2;
                 }
                 if (MGameInput.down == 1) {
-                    Player[0].position.y = Player[0].position.y - 1.0;
-                    data_4C9F6C          = data_4C9F6C - 1.2;
+                    Player[0].position.y -= 1.0f;
+                    data_4C9F68.y -= 1.2f;
                 }
             }
             else {
@@ -53,21 +65,21 @@ void ProcessPlayerInput()
                     v2                   = data_4C9F74 - 3.1415927 * 0.5;
                     Player[0].position.x = Player[0].position.x - Cos(v2);
                     v3                   = data_4C9F74 - 3.1415927 * 0.5;
-                    data_4C9F68          = data_4C9F68 - Cos(v3);
+                    data_4C9F68.x        = data_4C9F68.x - Cos(v3);
                     v4                   = data_4C9F74 - 3.1415927 * 0.5;
                     Player[0].position.z = Player[0].position.z - Sin(v4);
                     v5                   = data_4C9F74 - 3.1415927 * 0.5;
-                    data_4C9F70          = data_4C9F70 - Sin(v5);
+                    data_4C9F68.z        = data_4C9F68.z - Sin(v5);
                 }
                 if (MGameInput.down == 1) {
                     v6                   = data_4C9F74 - 3.1415927 * 0.5;
                     Player[0].position.x = Cos(v6) + Player[0].position.x;
                     v7                   = data_4C9F74 - 3.1415927 * 0.5;
-                    data_4C9F68          = Cos(v7) + data_4C9F68;
+                    data_4C9F68.x        = Cos(v7) + data_4C9F68.x;
                     v8                   = data_4C9F74 - 3.1415927 * 0.5;
                     Player[0].position.z = Sin(v8) + Player[0].position.z;
                     v9                   = data_4C9F74 - 3.1415927 * 0.5;
-                    data_4C9F70          = Sin(v9) + data_4C9F70;
+                    data_4C9F68.z        = Sin(v9) + data_4C9F68.z;
                 }
             }
 
@@ -147,123 +159,125 @@ void ProcessPlayerCamera()
     float v14; // [esp+24h] [ebp-4h]
 
     if (MGameInput.Z == true) {
-        data_4C9F68 = data_4C9F68 - Player[PNumber].position.x;
-        data_4C9F70 = data_4C9F70 - Player[PNumber].position.z;
-        v9          = Cos(0.02) * data_4C9F68;
-        v12         = Sin(0.02) * data_4C9F70 + v9;
-        v8          = -Sin(0.02) * data_4C9F68;
-        v10         = Cos(0.02) * data_4C9F70 + v8;
-        data_4C9F68 = v12 + Player[PNumber].position.x;
-        data_4C9F70 = v10 + Player[PNumber].position.z;
+        data_4C9F68.x = data_4C9F68.x - Player[PNumber].position.x;
+        data_4C9F68.z = data_4C9F68.z - Player[PNumber].position.z;
+        v9            = Cos(0.02) * data_4C9F68.x;
+        v12           = Sin(0.02) * data_4C9F68.z + v9;
+        v8            = -Sin(0.02) * data_4C9F68.x;
+        v10           = Cos(0.02) * data_4C9F68.z + v8;
+        data_4C9F68.x = v12 + Player[PNumber].position.x;
+        data_4C9F68.z = v10 + Player[PNumber].position.z;
     }
 
     if (MGameInput.X == true) {
-        data_4C9F68 = data_4C9F68 - Player[PNumber].position.x;
-        data_4C9F70 = data_4C9F70 - Player[PNumber].position.z;
-        v7          = Cos(-0.02) * data_4C9F68;
-        v13         = Sin(-0.02) * data_4C9F70 + v7;
-        v6          = -Sin(-0.02) * data_4C9F68;
-        v11         = Cos(-0.02) * data_4C9F70 + v6;
-        data_4C9F68 = v13 + Player[PNumber].position.x;
-        data_4C9F70 = v11 + Player[PNumber].position.z;
+        data_4C9F68.x = data_4C9F68.x - Player[PNumber].position.x;
+        data_4C9F68.z = data_4C9F68.z - Player[PNumber].position.z;
+        v7            = Cos(-0.02) * data_4C9F68.x;
+        v13           = Sin(-0.02) * data_4C9F68.z + v7;
+        v6            = -Sin(-0.02) * data_4C9F68.x;
+        v11           = Cos(-0.02) * data_4C9F68.z + v6;
+        data_4C9F68.x = v13 + Player[PNumber].position.x;
+        data_4C9F68.z = v11 + Player[PNumber].position.z;
     }
 
-    if (data_4C9F68 == Player[PNumber].position.x) {
-        if (data_4C9F70 >= (double)Player[PNumber].position.z)
+    if (data_4C9F68.x == Player[PNumber].position.x) {
+        if (data_4C9F68.z >= (double)Player[PNumber].position.z)
             data_4C9F74 = 3.1415927;
         else
             data_4C9F74 = 0.0;
     }
     else {
-        v4 = (data_4C9F70 - Player[PNumber].position.z) / (data_4C9F68 - Player[PNumber].position.x);
-        if (data_4C9F68 <= (double)Player[PNumber].position.x)
+        v4 = (data_4C9F68.z - Player[PNumber].position.z) / (data_4C9F68.x - Player[PNumber].position.x);
+        if (data_4C9F68.x <= (double)Player[PNumber].position.x)
             data_4C9F74 = ATan(v4) - 3.1415927 * 0.5;
         else
             data_4C9F74 = ATan(v4) + 3.1415927 * 0.5;
     }
 
-    v5  = Player[PNumber].position.x - data_4C9F68;
+    v5  = Player[PNumber].position.x - data_4C9F68.x;
     v14 = v5 / Sin(data_4C9F74);
     if (v14 < 0.0)
         v14 = v14 * -1.0;
 
     if (v14 < 32.0f) {
-        data_4C9F68 = Player[PNumber].position.x - Sin(data_4C9F74) * -32.0;
-        data_4C9F70 = Cos(data_4C9F74) * -32.0 + Player[PNumber].position.z;
+        data_4C9F68.x = Player[PNumber].position.x - Sin(data_4C9F74) * -32.0;
+        data_4C9F68.z = Cos(data_4C9F74) * -32.0 + Player[PNumber].position.z;
     }
 
     if (v14 > 60.0f) {
-        data_4C9F68 = Player[PNumber].position.x - Sin(data_4C9F74) * -60.0;
-        data_4C9F70 = Cos(data_4C9F74) * -60.0 + Player[PNumber].position.z;
+        data_4C9F68.x = Player[PNumber].position.x - Sin(data_4C9F74) * -60.0;
+        data_4C9F68.z = Cos(data_4C9F74) * -60.0 + Player[PNumber].position.z;
     }
 }
 
 void ProcessPlayerMovement()
 {
+    PlayerObject *player = &Player[PNumber];
+
     float a6; // [esp+0h] [ebp-14h]
     float v1; // [esp+4h] [ebp-10h]
     float v2; // [esp+4h] [ebp-10h]
     char v3;  // [esp+8h] [ebp-Ch]
 
-    if (Player[PNumber].f_0x38 == 1 && Player[PNumber].f_0x48 == 1) {
-        if (Player[PNumber].f_0x28 < Player[PNumber].f_0x2C) {
-            Player[PNumber].f_0x28 += 6;
-            if (Player[PNumber].f_0x24 > 0.0)
-                Player[PNumber].f_0x24 -= 0.02;
-            if (Player[PNumber].f_0x28 > Player[PNumber].f_0x2C)
-                Player[PNumber].f_0x28 = Player[PNumber].f_0x2C;
+    if (player->f_0x38 == 1 && player->f_0x48 == 1) {
+        if (player->f_0x28 < player->f_0x2C) {
+            player->f_0x28 += 6;
+            if (player->f_0x24 > 0.0)
+                player->f_0x24 -= 0.02;
+            if (player->f_0x28 > player->f_0x2C)
+                player->f_0x28 = player->f_0x2C;
         }
 
-        if (Player[PNumber].f_0x28 > Player[PNumber].f_0x2C) {
-            Player[PNumber].f_0x28 -= 6;
-            if (Player[PNumber].f_0x24 > 0.0)
-                Player[PNumber].f_0x24 -= 0.02;
-            if (Player[PNumber].f_0x28 < Player[PNumber].f_0x2C)
-                Player[PNumber].f_0x28 = Player[PNumber].f_0x2C;
+        if (player->f_0x28 > player->f_0x2C) {
+            player->f_0x28 -= 6;
+            if (player->f_0x24 > 0.0)
+                player->f_0x24 -= 0.02;
+            if (player->f_0x28 < player->f_0x2C)
+                player->f_0x28 = player->f_0x2C;
         }
 
-        if (Player[PNumber].f_0x24 < 2.4000001)
-            Player[PNumber].f_0x24 += 0.012;
+        if (player->f_0x24 < 2.4000001)
+            player->f_0x24 += 0.012;
     }
-    else if (Player[PNumber].f_0x38 == 0 && Player[PNumber].f_0x48 == 1) {
-        if (Player[PNumber].f_0x28 < Player[PNumber].f_0x2C) {
-            Player[PNumber].f_0x28 += 8;
-            if (Player[PNumber].f_0x24 > 0.0)
-                Player[PNumber].f_0x24 -= 0.0099999998;
-            if (Player[PNumber].f_0x28 > Player[PNumber].f_0x2C)
-                Player[PNumber].f_0x28 = Player[PNumber].f_0x2C;
+    else if (player->f_0x38 == 0 && player->f_0x48 == 1) {
+        if (player->f_0x28 < player->f_0x2C) {
+            player->f_0x28 += 8;
+            if (player->f_0x24 > 0.0)
+                player->f_0x24 -= 0.0099999998;
+            if (player->f_0x28 > player->f_0x2C)
+                player->f_0x28 = player->f_0x2C;
         }
 
-        if (Player[PNumber].f_0x28 > Player[PNumber].f_0x2C) {
-            Player[PNumber].f_0x28 -= 8;
-            if (Player[PNumber].f_0x24 > 0.0)
-                Player[PNumber].f_0x24 -= 0.0099999998;
-            if (Player[PNumber].f_0x28 < Player[PNumber].f_0x2C)
-                Player[PNumber].f_0x28 = Player[PNumber].f_0x2C;
+        if (player->f_0x28 > player->f_0x2C) {
+            player->f_0x28 -= 8;
+            if (player->f_0x24 > 0.0)
+                player->f_0x24 -= 0.0099999998;
+            if (player->f_0x28 < player->f_0x2C)
+                player->f_0x28 = player->f_0x2C;
         }
 
-        if (Player[PNumber].f_0x24 < 2.4000001)
-            Player[PNumber].f_0x24 = Player[PNumber].f_0x24 + 0.012;
+        if (player->f_0x24 < 2.4000001)
+            player->f_0x24 = player->f_0x24 + 0.012;
     }
     else {
-        if (Player[PNumber].f_0x24 > 0.0)
-            Player[PNumber].f_0x24 -= 0.012;
+        if (player->f_0x24 > 0.0)
+            player->f_0x24 -= 0.012;
 
-        if (Player[PNumber].f_0x24 > -0.050000001 && Player[PNumber].f_0x24 < 0.0)
-            Player[PNumber].f_0x24 = 0.0;
+        if (player->f_0x24 > -0.050000001 && player->f_0x24 < 0.0)
+            player->f_0x24 = 0.0;
     }
 
-    if (Player[PNumber].f_0x38 != 2) {
-        if (Player[PNumber].f_0x44 == 1) {
-            Player[PNumber].f_0x38 = 1;
+    if (player->f_0x38 != 2) {
+        if (player->f_0x44 == true) {
+            player->f_0x38 = 1;
 
-            Player[PNumber].velocity.y -= 0.050000001;
-            if (Player[PNumber].velocity.y > 4.0) {
-                Player[PNumber].velocity.y = 4.0;
-                Unknown_408222();
+            player->velocity.y -= 0.050000001;
+            if (player->velocity.y > 4.0) {
+                player->velocity.y = 4.0;
+                ResetPlayerRotation();
             }
 
-            v1 = Player[PNumber].f_0x24 * 0.40000001 + 0.40000001;
+            v1 = player->f_0x24 * 0.40000001 + 0.40000001;
             SonicModel_405CE2(4, v1);
         }
         else {
@@ -271,90 +285,89 @@ void ProcessPlayerMovement()
                 SonicModel_405CE2(0, 0.0);
             }
             else {
-                v2 = Player[PNumber].f_0x24 * 0.40000001;
+                v2 = player->f_0x24 * 0.40000001;
                 SonicModel_405CE2(2, v2);
             }
 
-            Player[PNumber].f_0x38 = 0;
-            if (Player[PNumber].f_0x24 == 0.0)
-                Player[PNumber].gap_54[0] = 0;
+            player->f_0x38 = 0;
+            if (player->f_0x24 == 0.0)
+                player->gap_54[0] = 0;
 
-            if (Player[PNumber].f_0x4C == 1) {
-                Player[PNumber].f_0x44     = 1;
-                Player[PNumber].velocity.y = 2.0;
-                Player[PNumber].f_0x38     = 1;
-                Unknown_408222();
+            if (player->f_0x4C == 1) {
+                player->f_0x44     = true;
+                player->velocity.y = 2.0;
+                player->f_0x38     = 1;
+                ResetPlayerRotation();
             }
         }
     }
 
-    Player[PNumber].velocity.x = -Sin(Player[PNumber].f_0x30) * Player[PNumber].f_0x24;
-    Player[PNumber].velocity.z = Cos(Player[PNumber].f_0x30) * Player[PNumber].f_0x24;
-    Player[PNumber].f_0x18.x   = 0.0;
-    Player[PNumber].f_0x18.y   = -4.0;
-    Player[PNumber].f_0x18.z   = 0.0;
+    player->velocity.x = -Sin(player->f_0x30) * player->f_0x24;
+    player->velocity.z = Cos(player->f_0x30) * player->f_0x24;
+    player->f_0x18.x   = 0.0;
+    player->f_0x18.y   = -4.0;
+    player->f_0x18.z   = 0.0;
 
-    if (Player[PNumber].f_0x44 == 1) {
-        if (Player[PNumber].velocity.y < 0.0) {
-            a6 = Player[PNumber].velocity.y * -1.0;
-            if (ObjectFloorCollision(&Player[PNumber].position.x, &Player[PNumber].position.y, &Player[PNumber].position.z,
-                                     Player[PNumber].velocity.x, a6, Player[PNumber].velocity.z)
+    if (player->f_0x44 == true) {
+        if (player->velocity.y < 0.0) {
+            a6 = player->velocity.y * -1.0;
+            if (ObjectFloorCollision(&player->position.x, &player->position.y, &player->position.z, player->velocity.x, a6, player->velocity.z)
                 == 1) {
-                Player[PNumber].velocity.y = 0.0;
-                Player[PNumber].f_0x44     = 0;
-                Player[PNumber].f_0x38     = 0;
+                player->velocity.y = 0.0;
+                player->f_0x44     = false;
+                player->f_0x38     = 0;
             }
         }
     }
     else {
-        Player[PNumber].velocity.y = 0.0;
-        Matrix_40812C(&Player[PNumber].velocity.x, &Player[PNumber].velocity.y, &Player[PNumber].velocity.z);
-        Player[PNumber].f_0x18.x = 0.0;
-        Player[PNumber].f_0x18.y = -3.5;
-        Player[PNumber].f_0x18.z = 0.0;
-        Matrix_40812C(&Player[PNumber].f_0x18.x, &Player[PNumber].f_0x18.y, &Player[PNumber].f_0x18.z);
-        Player[PNumber].position.x = Player[PNumber].position.x - (Player[PNumber].f_0x18.x - Player[PNumber].f_0x18.x * 0.25);
-        Player[PNumber].position.y = Player[PNumber].position.y - (Player[PNumber].f_0x18.y - Player[PNumber].f_0x18.y * 0.25);
-        Player[PNumber].position.z = Player[PNumber].position.z - (Player[PNumber].f_0x18.z - Player[PNumber].f_0x18.z * 0.25);
+        player->velocity.y = 0.0;
+        PlayerRotationPhysics(&player->velocity.x, &player->velocity.y, &player->velocity.z);
+        player->f_0x18.x = 0.0;
+        player->f_0x18.y = -3.5;
+        player->f_0x18.z = 0.0;
+        PlayerRotationPhysics(&player->f_0x18.x, &player->f_0x18.y, &player->f_0x18.z);
+        player->position.x = player->position.x - (player->f_0x18.x - player->f_0x18.x * 0.25);
+        player->position.y = player->position.y - (player->f_0x18.y - player->f_0x18.y * 0.25);
+        player->position.z = player->position.z - (player->f_0x18.z - player->f_0x18.z * 0.25);
 
-        v3 = ObjectFloorCollision(&Player[PNumber].position.x, &Player[PNumber].position.y, &Player[PNumber].position.z, Player[PNumber].f_0x18.x,
-                                  Player[PNumber].f_0x18.y, Player[PNumber].f_0x18.z);
+        v3 =
+            ObjectFloorCollision(&player->position.x, &player->position.y, &player->position.z, player->f_0x18.x, player->f_0x18.y, player->f_0x18.z);
         if (v3) {
             if (v3 > 0 && v3 <= 2) {
-                Player[PNumber].f_0x44 = 0;
-                Player[PNumber].f_0x38 = 0;
+                player->f_0x44 = false;
+                player->f_0x38 = 0;
             }
         }
         else {
-            Player[PNumber].position.x = Player[PNumber].f_0x18.x - Player[PNumber].f_0x18.x * 0.25 + Player[PNumber].position.x;
-            Player[PNumber].position.y = Player[PNumber].f_0x18.y - Player[PNumber].f_0x18.y * 0.25 + Player[PNumber].position.y;
-            Player[PNumber].position.z = Player[PNumber].f_0x18.z - Player[PNumber].f_0x18.z * 0.25 + Player[PNumber].position.z;
-            Player[PNumber].f_0x44     = 1;
+            player->position.x = player->f_0x18.x - player->f_0x18.x * 0.25 + player->position.x;
+            player->position.y = player->f_0x18.y - player->f_0x18.y * 0.25 + player->position.y;
+            player->position.z = player->f_0x18.z - player->f_0x18.z * 0.25 + player->position.z;
+            player->f_0x44     = true;
         }
     }
 
-    Player[PNumber].position.x += Player[PNumber].velocity.x;
-    Player[PNumber].position.y += Player[PNumber].velocity.y;
-    Player[PNumber].position.z += Player[PNumber].velocity.z;
+    player->position.x += player->velocity.x;
+    player->position.y += player->velocity.y;
+    player->position.z += player->velocity.z;
     ProcessPlayerCamera();
 
-    if (Player[PNumber].f_0x48 == 1)
-        Player[PNumber].f_0x30 = (double)Player[PNumber].f_0x28 / 128.0 * 3.1415927 + data_4C9F74;
+    if (player->f_0x48 == 1)
+        player->f_0x30 = (double)player->f_0x28 / 128.0 * 3.1415927 + data_4C9F74;
 
-    if (Player[PNumber].f_0x44 == 1) {
+    if (player->f_0x44 == true) {
         if (data_4C9F7C < 30)
             data_4C9F7C++;
 
-        if (data_4C9F78 < (double)Player[PNumber].velocity.y) {
+        if (data_4C9F78 < (double)player->velocity.y) {
             data_4C9F78 += 0.1;
-            if (data_4C9F78 > (double)Player[PNumber].velocity.y)
-                data_4C9F78 = Player[PNumber].velocity.y;
+            if (data_4C9F78 > (double)player->velocity.y)
+                data_4C9F78 = player->velocity.y;
         }
 
-        if (data_4C9F78 > (double)Player[PNumber].velocity.y) {
+        if (data_4C9F78 > (double)player->velocity.y) {
             data_4C9F78 -= 0.1;
-            if (data_4C9F78 < (double)Player[PNumber].velocity.y)
-                data_4C9F78 = Player[PNumber].velocity.y;
+            if (data_4C9F78 < (double)player->velocity.y)
+                data_4C9F78 = player->velocity.y;
         }
     }
     else {
@@ -374,11 +387,13 @@ void ProcessPlayerMovement()
         }
     }
 
-    data_4C9F6C = Player[PNumber].position.y + 15.0 - (double)data_4C9F7C * 0.25 * data_4C9F78;
+    data_4C9F68.y = player->position.y + 15.0 - (double)data_4C9F7C * 0.25 * data_4C9F78;
 }
 
 void LoadPlayerGfx(const char *textureName, sbyte playerID)
 {
+    using namespace RenderDevice; // temp
+
     char name[64];
     lstrcpy(name, "Data/Characters/");
     lstrcat(name, textureName);
@@ -392,31 +407,37 @@ void LoadPlayerGfx(const char *textureName, sbyte playerID)
         DDLoadBitmap(name, 0);
 }
 
-void SonicModel_405A18(int frameID)
+void HandleSonicVertexPositions(int frameID)
 {
-    AnimationFrame *frame = &SonicAni.frames[frameID];
+    AnimationNode *node = &SonicAni.nodes[frameID];
 
-    for (int i = 0; i < frame->vertexCount; ++i) {
-        D3DVERTEX *vert = &SonicMdl.vertices[frame->vertexIDs[i]];
-        D3DVERTEX *base = &SonicBaseMdl.vertices[frame->vertexIDs[i]];
+    for (int i = 0; i < node->vertexCount; ++i) {
+        D3DVERTEX *vert = &SonicMdl.vertices[node->vertexIDs[i]];
+        D3DVERTEX *base = &SonicBaseMdl.vertices[node->vertexIDs[i]];
 
-        vert->x = matSonicMdl.m[0][0] * base->x + matSonicMdl.m[1][0] * base->y + matSonicMdl.m[2][0] * base->z + matSonicMdl.m[3][0];
-        vert->y = matSonicMdl.m[0][1] * base->x + matSonicMdl.m[1][1] * base->y + matSonicMdl.m[2][1] * base->z + matSonicMdl.m[3][1];
-        vert->z = matSonicMdl.m[0][2] * base->x + matSonicMdl.m[1][2] * base->y + matSonicMdl.m[2][2] * base->z + matSonicMdl.m[3][2];
+        vert->x =
+            MatrixSonicModel.m[0][0] * base->x + MatrixSonicModel.m[1][0] * base->y + MatrixSonicModel.m[2][0] * base->z + MatrixSonicModel.m[3][0];
+        vert->y =
+            MatrixSonicModel.m[0][1] * base->x + MatrixSonicModel.m[1][1] * base->y + MatrixSonicModel.m[2][1] * base->z + MatrixSonicModel.m[3][1];
+        vert->z =
+            MatrixSonicModel.m[0][2] * base->x + MatrixSonicModel.m[1][2] * base->y + MatrixSonicModel.m[2][2] * base->z + MatrixSonicModel.m[3][2];
     }
 }
 
-void SonicModel_405B7B(int frameID)
+void HandleSonicVertexNormals(int frameID)
 {
-    AnimationFrame *frame = &SonicAni.frames[frameID];
+    AnimationNode *node = &SonicAni.nodes[frameID];
 
-    for (int i = 0; i < frame->vertexCount; ++i) {
-        D3DVERTEX *vert = &SonicMdl.vertices[frame->vertexIDs[i]];
-        D3DVERTEX *base = &SonicBaseMdl.vertices[frame->vertexIDs[i]];
+    for (int i = 0; i < node->vertexCount; ++i) {
+        D3DVERTEX *vert = &SonicMdl.vertices[node->vertexIDs[i]];
+        D3DVERTEX *base = &SonicBaseMdl.vertices[node->vertexIDs[i]];
 
-        vert->nx = matSonicMdl.m[0][0] * base->nx + matSonicMdl.m[1][0] * base->ny + matSonicMdl.m[2][0] * base->nz + matSonicMdl.m[3][0];
-        vert->ny = matSonicMdl.m[0][1] * base->nx + matSonicMdl.m[1][1] * base->ny + matSonicMdl.m[2][1] * base->nz + matSonicMdl.m[3][1];
-        vert->nz = matSonicMdl.m[0][2] * base->nx + matSonicMdl.m[1][2] * base->ny + matSonicMdl.m[2][2] * base->nz + matSonicMdl.m[3][2];
+        vert->nx = MatrixSonicModel.m[0][0] * base->nx + MatrixSonicModel.m[1][0] * base->ny + MatrixSonicModel.m[2][0] * base->nz
+                   + MatrixSonicModel.m[3][0];
+        vert->ny = MatrixSonicModel.m[0][1] * base->nx + MatrixSonicModel.m[1][1] * base->ny + MatrixSonicModel.m[2][1] * base->nz
+                   + MatrixSonicModel.m[3][1];
+        vert->nz = MatrixSonicModel.m[0][2] * base->nx + MatrixSonicModel.m[1][2] * base->ny + MatrixSonicModel.m[2][2] * base->nz
+                   + MatrixSonicModel.m[3][2];
     }
 }
 
@@ -434,169 +455,171 @@ void SonicModel_405CE2(uint8_t a1, float a2)
     }
 
     if (a1 == 2) {
-        SonicAni.array_AB90[2].field_201 = (__int64)(a2 * 128.0);
+        SonicAni.states[2].frameDuration = (__int64)(a2 * 128.0);
     }
     else if (a1 == 4) {
         data_4C9D4C = data_4C9D4C - a2 * 0.30000001f;
         if (data_4C9D4C < 0.0f)
             data_4C9D4C = 3.1415927f + 3.1415927f;
-        SonicAni.array_AB90[4].field_201 = (__int64)(a2 * 128.0);
+        SonicAni.states[4].frameDuration = (__int64)(a2 * 128.0);
     }
 }
 
 void ProcessPlayerAnimationLMC()
 {
-    int v0;       // edx
-    float a1;     // [esp+0h] [ebp-30h]
-    float a1_4;   // [esp+4h] [ebp-2Ch]
-    float a2;     // [esp+8h] [ebp-28h]
-    int i;        // [esp+1Ch] [ebp-14h]
-    int j;        // [esp+1Ch] [ebp-14h]
-    float v6;     // [esp+20h] [ebp-10h]
-    char v7;      // [esp+24h] [ebp-Ch]
-    float value;  // [esp+28h] [ebp-8h]
-    float valuea; // [esp+28h] [ebp-8h]
-    float valueb; // [esp+28h] [ebp-8h]
-    int k;        // [esp+2Ch] [ebp-4h]
-    int l;        // [esp+2Ch] [ebp-4h]
+    int v0; // edx
 
-    v7 = 0;
+    bool v7 = false;
     if (SonicAni.field_BFAA == SonicAni.field_BFAB)
         v0 = SonicAni.field_BFAA;
     else
         v0 = SonicAni.field_BFAB;
-    SonicAni.field_BFB0 += SonicAni.array_AB90[v0].field_201;
-    if (SonicAni.field_BFB0 > 0xEFu) {
+
+    SonicAni.field_BFB0 += SonicAni.states[v0].frameDuration;
+    if (SonicAni.field_BFB0 >= 240) {
         SonicAni.field_BFB0 -= 240;
-        if (++SonicAni.field_BFAC >= (int)SonicAni.array_AB90[SonicAni.field_BFAA].count)
-            SonicAni.field_BFAC = SonicAni.array_AB90[SonicAni.field_BFAA].field_200;
+
+        if (++SonicAni.field_BFAC >= (int)SonicAni.states[SonicAni.field_BFAA].frameCount)
+            SonicAni.field_BFAC = SonicAni.states[SonicAni.field_BFAA].loopIndex;
+
         if (SonicAni.field_BFAA != SonicAni.field_BFAB) {
             SonicAni.field_BFAA = SonicAni.field_BFAB;
             SonicAni.field_BFAC = 0;
         }
+
         SonicAni.field_BFAE = SonicAni.field_BFAC + 1;
-        if (SonicAni.field_BFAE >= (int)SonicAni.array_AB90[SonicAni.field_BFAA].count)
-            SonicAni.field_BFAE = SonicAni.array_AB90[SonicAni.field_BFAA].field_200;
+        if (SonicAni.field_BFAE >= (int)SonicAni.states[SonicAni.field_BFAA].frameCount)
+            SonicAni.field_BFAE = SonicAni.states[SonicAni.field_BFAA].loopIndex;
     }
-    v6 = (double)SonicAni.field_BFB0 / 240.0;
-    for (i = 0; i < 36; ++i) {
-        memcpy(&matrix_4C8990[i], &matWorld, sizeof(D3DMATRIX));
-        value = (1.0 - v6) * SonicAni.frames[i].rotX[SonicAni.array_AB90[SonicAni.field_BFAA].array_2[SonicAni.field_BFAC]]
-                + v6 * SonicAni.frames[i].rotX[SonicAni.array_AB90[SonicAni.field_BFAB].array_2[SonicAni.field_BFAE]];
-        MatrixRotateX_4C9DB0(value);
-        MatrixMultiply(&matrix_4C8990[i], &matrixBackgroundTransform);
-        valuea = (1.0 - v6) * SonicAni.frames[i].rotY[SonicAni.array_AB90[SonicAni.field_BFAA].array_2[SonicAni.field_BFAC]]
-                 + v6 * SonicAni.frames[i].rotY[SonicAni.array_AB90[SonicAni.field_BFAB].array_2[SonicAni.field_BFAE]];
-        MatrixRotateY_4C9DB0(valuea);
-        MatrixMultiply(&matrix_4C8990[i], &matrixBackgroundTransform);
-        valueb = (1.0 - v6) * SonicAni.frames[i].rotZ[SonicAni.array_AB90[SonicAni.field_BFAA].array_2[SonicAni.field_BFAC]]
-                 + v6 * SonicAni.frames[i].rotZ[SonicAni.array_AB90[SonicAni.field_BFAB].array_2[SonicAni.field_BFAE]];
-        MatrixRotateZ_4C9DB0(valueb);
-        MatrixMultiply(&matrix_4C8990[i], &matrixBackgroundTransform);
-        memcpy(&matrix_4C9290[i], &matWorld, sizeof(D3DMATRIX));
-        a2   = -SonicAni.frames[i].position.z;
-        a1_4 = -SonicAni.frames[i].position.y;
-        a1   = -SonicAni.frames[i].position.x;
-        Matrix_408B0B(a1, a1_4, a2);
-        MatrixMultiply(&matrix_4C9290[i], &matrixBackgroundTransform);
-        MatrixMultiply(&matrix_4C9290[i], &matrix_4C8990[i]);
-        Matrix_408B0B(SonicAni.frames[i].position.x, SonicAni.frames[i].position.y, SonicAni.frames[i].position.z);
-        MatrixMultiply(&matrix_4C9290[i], &matrixBackgroundTransform);
+
+    float F_BFB0 = (double)SonicAni.field_BFB0 / 240.0;
+    for (int i = 0; i < 36; ++i) {
+        AnimationNode *node = &SonicAni.nodes[i];
+
+        AnimationState *AB90_BFAA = &SonicAni.states[SonicAni.field_BFAA];
+        AnimationState *AB90_BFAB = &SonicAni.states[SonicAni.field_BFAB];
+
+        ushort BFAA_BFAC = AB90_BFAA->array_2[SonicAni.field_BFAC];
+        ushort BFAB_BFAE = AB90_BFAB->array_2[SonicAni.field_BFAE];
+
+        memcpy(&MatrixSonicAni_4C8990[i], &MatrixIdentity, sizeof(D3DMATRIX));
+
+        WorldMatrixRotateZ((1.0 - F_BFB0) * node->rotX[BFAA_BFAC] + F_BFB0 * node->rotX[BFAB_BFAE]);
+        MatrixMultiply(&MatrixSonicAni_4C8990[i], &MatrixWorld);
+
+        WorldMatrixRotateY((1.0 - F_BFB0) * node->rotY[BFAA_BFAC] + F_BFB0 * node->rotY[BFAB_BFAE]);
+        MatrixMultiply(&MatrixSonicAni_4C8990[i], &MatrixWorld);
+
+        WorldMatrixRotateX((1.0 - F_BFB0) * node->rotZ[BFAA_BFAC] + F_BFB0 * node->rotZ[BFAB_BFAE]);
+        MatrixMultiply(&MatrixSonicAni_4C8990[i], &MatrixWorld);
+
+        memcpy(&MatrixSonicAni_4C9290[i], &MatrixIdentity, sizeof(D3DMATRIX));
+        WorldMatrixTranslateXYZ(-node->position.x, -node->position.y, -node->position.z);
+        MatrixMultiply(&MatrixSonicAni_4C9290[i], &MatrixWorld);
+
+        MatrixMultiply(&MatrixSonicAni_4C9290[i], &MatrixSonicAni_4C8990[i]);
+        WorldMatrixTranslateXYZ(node->position.x, node->position.y, node->position.z);
+        MatrixMultiply(&MatrixSonicAni_4C9290[i], &MatrixWorld);
     }
-    for (j = 0; j < SonicAni.field_BFA8; ++j) {
-        if (v7) {
-            if (SonicAni.frameIDs[j] == 255) {
-                v7 = 0;
+
+    for (int j = 0; j < SonicAni.frameIDCount; ++j) {
+        if (v7 != false) {
+            switch (SonicAni.frameIDs[j]) {
+                case 254: v7 = true; break;
+                case 255: v7 = false; break;
+
+                default:
+                    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
+                    for (int k = j; SonicAni.frameIDs[k] < 254; ++k) {
+                        MatrixMultiply(&MatrixSonicModel, &MatrixSonicAni_4C9290[SonicAni.frameIDs[k]]);
+                    }
+                    HandleSonicVertexPositions(SonicAni.frameIDs[j]);
+
+                    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
+                    for (int l = j; SonicAni.frameIDs[l] < 254; ++l) {
+                        MatrixMultiply(&MatrixSonicModel, &MatrixSonicAni_4C8990[SonicAni.frameIDs[l]]);
+                    }
+                    HandleSonicVertexNormals(SonicAni.frameIDs[j]);
+                    break;
             }
-            else if (SonicAni.frameIDs[j] == 254) {
-                v7 = 1;
-            }
-            else {
-                memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl));
-                for (k = j; SonicAni.frameIDs[k] < 0xFEu; ++k) MatrixMultiply(&matSonicMdl, &matrix_4C9290[SonicAni.frameIDs[k]]);
-                SonicModel_405A18(SonicAni.frameIDs[j]);
-                memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl));
-                for (l = j; SonicAni.frameIDs[l] < 254u; ++l) MatrixMultiply(&matSonicMdl, &matrix_4C8990[SonicAni.frameIDs[l]]);
-                SonicModel_405B7B(SonicAni.frameIDs[j]);
-            }
-        }
-        else if (SonicAni.frameIDs[j] == 254) {
-            v7 = 1;
-        }
-        else if (SonicAni.frameIDs[j] == 255) {
-            v7 = 0;
         }
         else {
-            memcpy(&matSonicMdl, &matrix_4C9290[SonicAni.frameIDs[j]], sizeof(matSonicMdl));
-            SonicModel_405A18(SonicAni.frameIDs[j]);
-            memcpy(&matSonicMdl, &matrix_4C8990[SonicAni.frameIDs[j]], sizeof(matSonicMdl));
-            SonicModel_405B7B(SonicAni.frameIDs[j]);
+            switch (SonicAni.frameIDs[j]) {
+                case 254: v7 = true; break;
+                case 255: v7 = false; break;
+
+                default:
+                    memcpy(&MatrixSonicModel, &MatrixSonicAni_4C9290[SonicAni.frameIDs[j]], sizeof(MatrixSonicModel));
+                    HandleSonicVertexPositions(SonicAni.frameIDs[j]);
+
+                    memcpy(&MatrixSonicModel, &MatrixSonicAni_4C8990[SonicAni.frameIDs[j]], sizeof(MatrixSonicModel));
+                    HandleSonicVertexNormals(SonicAni.frameIDs[j]);
+                    break;
+            }
         }
     }
 }
 
 void MightBeSonicAnim_406432()
 {
-    float v0; // [esp+0h] [ebp-28h]
-    float a2; // [esp+4h] [ebp-24h]
-    float v2; // [esp+8h] [ebp-20h]
-    int j;    // [esp+18h] [ebp-10h]
-    int k;    // [esp+18h] [ebp-10h]
-    int i;    // [esp+1Ch] [ebp-Ch]
-    char v6;  // [esp+20h] [ebp-8h]
-    int m;    // [esp+24h] [ebp-4h]
-    int n;    // [esp+24h] [ebp-4h]
+    bool v6 = false;
+    for (int i = 0; i < 36; ++i) {
+        for (int j = 0; j < 36; ++j) {
+            AnimationNode *node = &SonicAni.nodes[j];
 
-    v6 = 0;
-    for (i = 0; i < 36; ++i) {
-        for (j = 0; j < 36; ++j) {
-            memcpy(&matrix_4C8990[j], &matWorld, sizeof(D3DMATRIX));
-            MatrixRotateX_4C9DB0(SonicAni.frames[j].rotX[i]);
+            memcpy(&MatrixSonicAni_4C8990[j], &MatrixIdentity, sizeof(D3DMATRIX));
+            WorldMatrixRotateZ(node->rotX[i]);
 
-            MatrixMultiply(&matrix_4C8990[j], &matrixBackgroundTransform);
-            MatrixRotateY_4C9DB0(SonicAni.frames[j].rotY[i]);
+            MatrixMultiply(&MatrixSonicAni_4C8990[j], &MatrixWorld);
+            WorldMatrixRotateY(node->rotY[i]);
 
-            MatrixMultiply(&matrix_4C8990[j], &matrixBackgroundTransform);
-            MatrixRotateZ_4C9DB0(SonicAni.frames[j].rotZ[i]);
+            MatrixMultiply(&MatrixSonicAni_4C8990[j], &MatrixWorld);
+            WorldMatrixRotateX(node->rotZ[i]);
 
-            MatrixMultiply(&matrix_4C8990[j], &matrixBackgroundTransform);
-            memcpy(&matrix_4C9290[j], &matWorld, sizeof(D3DMATRIX));
+            MatrixMultiply(&MatrixSonicAni_4C8990[j], &MatrixWorld);
+            memcpy(&MatrixSonicAni_4C9290[j], &MatrixIdentity, sizeof(D3DMATRIX));
 
-            Matrix_408B0B(-SonicAni.frames[j].position.x, -SonicAni.frames[j].position.y, -SonicAni.frames[j].position.z);
-            MatrixMultiply(&matrix_4C9290[j], &matrixBackgroundTransform);
-            MatrixMultiply(&matrix_4C9290[j], &matrix_4C8990[j]);
-            Matrix_408B0B(SonicAni.frames[j].position.x, SonicAni.frames[j].position.y, SonicAni.frames[j].position.z);
-            MatrixMultiply(&matrix_4C9290[j], &matrixBackgroundTransform);
+            WorldMatrixTranslateXYZ(-node->position.x, -node->position.y, -node->position.z);
+            MatrixMultiply(&MatrixSonicAni_4C9290[j], &MatrixWorld);
+            MatrixMultiply(&MatrixSonicAni_4C9290[j], &MatrixSonicAni_4C8990[j]);
+            WorldMatrixTranslateXYZ(node->position.x, node->position.y, node->position.z);
+            MatrixMultiply(&MatrixSonicAni_4C9290[j], &MatrixWorld);
         }
 
-        for (k = 0; k < SonicAni.field_BFA8; ++k) {
-            if (v6) {
-                if (SonicAni.frameIDs[k] == 255) {
-                    v6 = 0;
+        for (int k = 0; k < SonicAni.frameIDCount; ++k) {
+            if (v6 != false) {
+                switch (SonicAni.frameIDs[k]) {
+                    case 254: v6 = true; break;
+                    case 255: v6 = false; break;
+
+                    default:
+                        memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
+                        for (int m = k; SonicAni.frameIDs[m] < 254; ++m) {
+                            MatrixMultiply(&MatrixSonicModel, &MatrixSonicAni_4C9290[SonicAni.frameIDs[m]]);
+                        }
+                        memcpy(&matrix_47A790[k][i], &MatrixSonicModel, sizeof(matrix_47A790[k][i]));
+
+                        memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
+                        for (int n = k; SonicAni.frameIDs[n] < 254; ++n) {
+                            MatrixMultiply(&MatrixSonicModel, &MatrixSonicAni_4C8990[SonicAni.frameIDs[n]]);
+                        }
+                        memcpy(&array_42C590[k][i], &MatrixSonicModel, sizeof(array_42C590[k][i]));
+                        break;
                 }
-                else if (SonicAni.frameIDs[k] == 254) {
-                    v6 = 1;
-                }
-                else {
-                    memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl));
-                    for (m = k; SonicAni.frameIDs[m] < 254u; ++m) MatrixMultiply(&matSonicMdl, &matrix_4C9290[SonicAni.frameIDs[m]]);
-                    memcpy(&matrix_47A790[k][i], &matSonicMdl, sizeof(matrix_47A790[k][i]));
-                    memcpy(&matSonicMdl, &matWorld, sizeof(matSonicMdl));
-                    for (n = k; SonicAni.frameIDs[n] < 254u; ++n) MatrixMultiply(&matSonicMdl, &matrix_4C8990[SonicAni.frameIDs[n]]);
-                    memcpy(&array_42C590[k][i], &matSonicMdl, sizeof(array_42C590[k][i]));
-                }
-            }
-            else if (SonicAni.frameIDs[k] == 254) {
-                v6 = 1;
-            }
-            else if (SonicAni.frameIDs[k] == 255) {
-                v6 = 0;
             }
             else {
-                memcpy(&matSonicMdl, &matrix_4C9290[SonicAni.frameIDs[k]], sizeof(matSonicMdl));
-                SonicModel_405A18(SonicAni.frameIDs[k]);
-                memcpy(&matSonicMdl, &matrix_4C8990[SonicAni.frameIDs[k]], sizeof(matSonicMdl));
-                SonicModel_405B7B(SonicAni.frameIDs[k]);
+                switch (SonicAni.frameIDs[k]) {
+                    case 254: v6 = true; break;
+                    case 255: v6 = false; break;
+
+                    default:
+                        memcpy(&MatrixSonicModel, &MatrixSonicAni_4C9290[SonicAni.frameIDs[k]], sizeof(MatrixSonicModel));
+                        HandleSonicVertexPositions(SonicAni.frameIDs[k]);
+
+                        memcpy(&MatrixSonicModel, &MatrixSonicAni_4C8990[SonicAni.frameIDs[k]], sizeof(MatrixSonicModel));
+                        HandleSonicVertexNormals(SonicAni.frameIDs[k]);
+                        break;
+                }
             }
         }
     }

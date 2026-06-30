@@ -31,9 +31,8 @@ extern int32_t data_4DA264;
 extern int32_t TempObjectPos;
 extern int32_t dword_41F480;
 
-extern float_t data_4C9F68;
-extern float_t data_4C9F6C;
-extern float_t data_4C9F70;
+extern Vector3D data_4C9F68;
+
 extern float_t data_4C9F74;
 extern float_t data_4C9F78;
 extern int32_t data_4C9F7C;
@@ -47,10 +46,8 @@ extern float float_420428;
 extern float float_42042C;
 extern float float_420430;
 
-extern int32_t data_4204C4;
-extern int32_t data_4204C8;
 
-extern LMF levelLMF;
+extern LMF LevelModel;
 extern LPDIRECTDRAWSURFACE7 levelSurfaceList[10];
 extern LPDIRECTDRAWSURFACE7 stageObjectTextures[2];
 extern LPDIRECTDRAWSURFACE7 sparkleTexture;

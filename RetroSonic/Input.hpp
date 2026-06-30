@@ -26,15 +26,10 @@ struct InputData {
     int X;
 };
 
-extern int InputDeviceState;
 extern int InputEnabled;
-extern char keys[0x100];
-
 extern InputData InputPress;
-extern LPDIRECTINPUTDEVICEA DirectInputDevice;
-extern LPDIRECTINPUTA DirectInput;
 
-int InitInputDevice(HWND hWnd, HINSTANCE hInst);
+bool InitInputDevice();
 void ReleaseInputDevice();
 
 void EnableInput();

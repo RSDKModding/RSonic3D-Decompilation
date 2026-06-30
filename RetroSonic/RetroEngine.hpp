@@ -31,7 +31,6 @@ typedef unsigned int uint;
 
 #define D3D_OVERLOADS
 #include "d3d.h"
-#include "dinput.h"
 
 #include "coldet/src/cdmath3d.h"
 #include "coldet/src/coldet.h"
@@ -53,9 +52,7 @@ typedef unsigned int uint;
 // ENGINE INCLUDES
 // ============================
 
-#include "DX7/ddutil.h"
-#include "DX7/enums.h"
-#include "DX7/texture.h"
+#include "DX7/DX7Include.h"
 
 #include "Player.hpp"
 #include "Collision.hpp"
@@ -87,15 +84,10 @@ extern int32_t dword_4DA2C0;
 extern LARGE_INTEGER FrameNextTicks;
 
 extern float data_4C9D4C;
-extern float data_4C9D50;
-extern float data_4C9D58;
-extern float data_4C9D5C;
-extern float data_4C9D60;
-extern float data_4C9D64;
-extern float data_4C9D68;
-extern float data_4C9D6C;
-extern float data_4C9D70;
-extern Vector3D vector_4C9D74;
+extern float CameraCullX;
+extern float CameraCullZ;
+
+extern Vector3D CameraPosition;
 extern int32_t SupportsZBufferFmt;
 extern uint8_t D3DDeviceType;
 extern int32_t QuitMessage;

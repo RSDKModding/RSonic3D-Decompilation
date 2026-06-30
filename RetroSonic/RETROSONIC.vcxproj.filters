@@ -19,6 +19,9 @@
     <Filter Include="Source Files\DX7">
       <UniqueIdentifier>{b141ee56-b19c-4869-be55-5b29cb32468c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\DX7\utils">
+      <UniqueIdentifier>{ecc8b6d8-c580-4640-be48-b0f056add2b3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -87,17 +90,26 @@
     <ClInclude Include="..\dependencies\coldet\src\sysdep.h">
       <Filter>Source Files\coldet</Filter>
     </ClInclude>
-    <ClInclude Include="DX7\texture.h">
-      <Filter>Source Files\DX7</Filter>
-    </ClInclude>
-    <ClInclude Include="DX7\ddutil.h">
-      <Filter>Source Files\DX7</Filter>
-    </ClInclude>
-    <ClInclude Include="DX7\enums.h">
-      <Filter>Source Files\DX7</Filter>
-    </ClInclude>
     <ClInclude Include="String.hpp">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DX7\DX7InputDevice.h">
+      <Filter>Source Files\DX7</Filter>
+    </ClInclude>
+    <ClInclude Include="DX7\utils\ddutil.h">
+      <Filter>Source Files\DX7\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="DX7\utils\enums.h">
+      <Filter>Source Files\DX7\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="DX7\utils\texture.h">
+      <Filter>Source Files\DX7\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="DX7\DX7Include.h">
+      <Filter>Source Files\DX7</Filter>
+    </ClInclude>
+    <ClInclude Include="DX7\DX7RenderDevice.h">
+      <Filter>Source Files\DX7</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -164,14 +176,20 @@
     <ClCompile Include="..\dependencies\coldet\src\sysdep.cpp">
       <Filter>Source Files\coldet</Filter>
     </ClCompile>
-    <ClCompile Include="DX7\texture.cpp">
-      <Filter>Source Files\DX7</Filter>
-    </ClCompile>
-    <ClCompile Include="DX7\ddutil.cpp">
-      <Filter>Source Files\DX7</Filter>
-    </ClCompile>
     <ClCompile Include="String.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DX7\DX7InputDevice.cpp">
+      <Filter>Source Files\DX7</Filter>
+    </ClCompile>
+    <ClCompile Include="DX7\utils\ddutil.cpp">
+      <Filter>Source Files\DX7\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="DX7\utils\texture.cpp">
+      <Filter>Source Files\DX7\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="DX7\DX7RenderDevice.cpp">
+      <Filter>Source Files\DX7</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

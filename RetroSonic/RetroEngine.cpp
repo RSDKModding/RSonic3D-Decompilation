@@ -16,15 +16,10 @@ int32_t dword_4DA2C0;
 LARGE_INTEGER FrameNextTicks;
 
 float data_4C9D4C;
-float data_4C9D50;
-float data_4C9D58;
-float data_4C9D5C;
-float data_4C9D60;
-float data_4C9D64;
-float data_4C9D68;
-float data_4C9D6C;
-float data_4C9D70;
-Vector3D vector_4C9D74;
+float CameraCullX;
+float CameraCullZ;
+
+Vector3D CameraPosition;
 int32_t SupportsZBufferFmt;
 uint8_t D3DDeviceType;
 int32_t QuitMessage = EXIT_FAILURE;
@@ -37,19 +32,21 @@ char *StrWindowClassErr;
 
 BOOL CreateMWindow(_In_ HINSTANCE hInstance, _In_ int nCmdShow)
 {
-    WNDCLASSA wCA;
-    wCA.style         = CS_VREDRAW | CS_HREDRAW;
-    wCA.lpfnWndProc   = MWindowProc;
-    wCA.cbClsExtra    = 0;
-    wCA.cbWndExtra    = 4;
-    wCA.hInstance     = hInstance;
-    wCA.hIcon         = LoadIconA(hInstance, MAKEINTRESOURCEA(0x65));
-    wCA.hCursor       = LoadCursorA(0, MAKEINTRESOURCEA(0x7F00));
-    wCA.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-    wCA.lpszMenuName  = (LPCSTR)IDR_MAINMENU;
-    wCA.lpszClassName = "Retro-Sonic 3D: A Taxman Test";
+    RenderDevice::HInst = hInstance;
 
-    if (RegisterClassA(&wCA)) {
+    WNDCLASSA wndClass;
+    wndClass.style         = CS_VREDRAW | CS_HREDRAW;
+    wndClass.lpfnWndProc   = MWindowProc;
+    wndClass.cbClsExtra    = 0;
+    wndClass.cbWndExtra    = 4;
+    wndClass.hInstance     = RenderDevice::HInst;
+    wndClass.hIcon         = LoadIconA(RenderDevice::HInst, MAKEINTRESOURCEA(0x65));
+    wndClass.hCursor       = LoadCursorA(0, MAKEINTRESOURCEA(0x7F00));
+    wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    wndClass.lpszMenuName  = (LPCSTR)IDR_MAINMENU;
+    wndClass.lpszClassName = "Retro-Sonic 3D: A Taxman Test";
+
+    if (RegisterClassA(&wndClass)) {
         int cxSizeFrame = GetSystemMetrics(SM_CXSIZEFRAME);
         int cySizeFrame = GetSystemMetrics(SM_CYSIZEFRAME);
         int cyCaption   = GetSystemMetrics(SM_CYCAPTION);
@@ -60,15 +57,13 @@ BOOL CreateMWindow(_In_ HINSTANCE hInstance, _In_ int nCmdShow)
 
         int dwStyle = WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 
-        HWND hWnd = CreateWindowA("Retro-Sonic 3D: A Taxman Test", "Retro-Sonic 3D: A Taxman Test", dwStyle, 0x80000000, 0x80000000, w,
-                                  (cyMenu + cyCaption) + h, 0, 0, hInstance, 0);
-
-        if (hWnd) {
-            ShowWindow(hWnd, nCmdShow);
-            UpdateWindow(hWnd);
+        RenderDevice::HWnd = CreateWindow("Retro-Sonic 3D: A Taxman Test", "Retro-Sonic 3D: A Taxman Test", dwStyle, 0x80000000, 0x80000000, w,
+                                           (cyMenu + cyCaption) + h, 0, 0, RenderDevice::HInst, 0);
+        if (RenderDevice::HWnd != NULL) {
+            ShowWindow(RenderDevice::HWnd, nCmdShow);
+            UpdateWindow(RenderDevice::HWnd);
             SetHasGameStarted(TRUE);
-            if (InitInputDevice(hWnd, hInstance))
-                return TryInitDirectDraw(hWnd);
+            return InitInputDevice() && RenderDevice::InitGraphicsAPI();
         }
     }
     else {
