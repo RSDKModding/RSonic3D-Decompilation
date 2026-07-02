@@ -1,4 +1,6 @@
-#pragma once
+#ifndef TITLESCREEN_H
+#define TITLESCREEN_H
+
 #include "RetroEngine.hpp"
 
 extern InputData TitleInput;
@@ -21,35 +23,31 @@ extern char TxtStyle;
 extern float RysS;
 extern float SwS;
 extern int AllStages;
-extern uint8_t CodePos;
+extern byte CodePos;
 extern int SMenuY1;
 extern int SMenuY2;
 extern int MusicNo;
 extern int SStageNo;
 extern float data_4DA3A8;
 
-extern float_t data_41F59C;
-extern int32_t DebugEnabled;
-extern int32_t DebugMode;
-extern uint8_t DebugCode[12];
+extern float data_41F59C;
+extern int DebugEnabled;
+extern int DebugMode;
+extern byte DebugCode[12];
 
 void ResetTitleScreen();
 void ProcessTitleScreen();
 void TitleScrMovement();
-void DrawTitleScr(sbyte type);
+void DrawMenuBackground();
+void DrawTitleScr(sbyte id);
 void DrawGameMenu(TextMenu TextMenu, int x, int y);
 void DrawScrollingMenu(TextMenu TextMenu, int x, int y, int clipT, int clipB, int scrollPos);
 void LoadCharacterMenu(TextMenu *menu);
-void SetCharacters(int row);
-void LoadZoneMenu(TextMenu *menu);
-
-
 void SetMenuSelMode(TextMenu *menu, int id);
-
-void Zone_TitleScreen_4127E6();
-void Zone_TitleScreen_4128A3();
-void Zone_TitleScreen_4128CF();
-void Zone_TitleScreen_4129E4();
-
+void SetCharacters(int row);
 void CodeCheck();
-void DrawMenuBackground();
+void LoadZoneMenu(TextMenu *menu);
+void Zone_TitleScreen_4127E6();
+void DrawTitleModel(char type);
+
+#endif // !TITLESCREEN_H

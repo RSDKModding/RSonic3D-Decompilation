@@ -48,7 +48,7 @@ sbyte ObjectFloorCollision(float *xpos, float *ypos, float *zpos, float xdir, fl
             PlayerTargetRotationX = -ASin(normal.x);
 
             if (normal.y < 0.0f)
-                PlayerTargetRotationX = -PlayerTargetRotationX + RETRO_PI;
+                PlayerTargetRotationX = -PlayerTargetRotationX + RSDK_PI;
         }
     }
 

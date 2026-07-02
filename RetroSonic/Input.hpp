@@ -29,6 +29,17 @@ struct InputData {
 extern int InputEnabled;
 extern InputData InputPress;
 
+#if RETRO_USE_ORIGINAL_CODE
+extern IDirectInputA *DirectInput;
+extern IDirectInputDeviceA *DirectInputDevice;
+
+extern char keys[0x100];
+#elif RETRO_USE_SDL3
+extern const bool *keys;
+#elif RETRO_USE_SDL2
+extern const Uint8 *keys;
+#endif
+
 bool InitInputDevice();
 void ReleaseInputDevice();
 

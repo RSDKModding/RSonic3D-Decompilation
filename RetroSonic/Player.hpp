@@ -1,5 +1,5 @@
-#ifndef ANIMATION_H
-#define ANIMATION_H
+#ifndef PLAYER_H
+#define PLAYER_H
 
 struct PlayerObject {
     Vector3D position;
@@ -26,6 +26,10 @@ struct PlayerObject {
     uint8_t gap_54[96];
 };
 
+extern Matrix3D MatrixSonicModel;
+extern Matrix3D MatrixSonicAni_4C8990[36];
+extern Matrix3D MatrixSonicAni_4C9290[36];
+
 extern float PlayerTargetRotationZ;
 extern float PlayerTargetRotationX;
 
@@ -38,12 +42,12 @@ extern float PlayerPrevRotationX;
 extern int PlayerRotationTimerX;
 extern int PlayerRotationTimerZ;
 
+extern float data_4C9D4C;
+
 extern byte PNumber;
 extern PlayerObject Player[2];
 
-void ProcessPlayerInput();
 void ProcessPlayerCamera();
-void ProcessPlayerMovement();
 
 void LoadPlayerGfx(const char *textureName, sbyte playerID);
 
@@ -53,4 +57,4 @@ void SonicModel_405CE2(uint8_t a1, float a2);
 void ProcessPlayerAnimationLMC();
 void MightBeSonicAnim_406432();
 
-#endif // !ANIMATION_H
+#endif // !PLAYER_H

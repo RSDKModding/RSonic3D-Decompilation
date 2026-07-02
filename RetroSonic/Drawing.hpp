@@ -1,15 +1,30 @@
-#ifndef R_RENDER_H
-#define R_RENDER_H
+#ifndef DRAWING_H
+#define DRAWING_H
 
 #include "RetroEngine.hpp"
 
-#define R3D_SCALE(base, scale) (base * scale)
+#define PACK_A_I(v) ((Color)(((v) & 0xFF) << 24))
+#define PACK_R_I(v) ((Color)(((v) & 0xFF) << 16))
+#define PACK_G_I(v) ((Color)(((v) & 0xFF) << 8))
+#define PACK_B_I(v) ((Color)(((v) & 0xFF) << 0))
 
-#define TO_ARGB(a, r, g, b) ((D3DCOLOR)((((a) & 0xFF) << 24) | (((r) & 0xFF) << 16) | (((g) & 0xFF) << 8) | ((b) & 0xFF)))
+#define UNPACK_A_I(v) (((v) >> 24) & 0xFF)
+#define UNPACK_R_I(v) (((v) >> 16) & 0xFF)
+#define UNPACK_G_I(v) (((v) >> 8) & 0xFF)
+#define UNPACK_B_I(v) (((v) >> 0) & 0xFF)
 
-#define TO_ARGB_F(a, r, g, b)                                                                                                                        \
-    ((D3DCOLOR)((((DWORD)((a) * 255.0f)) & 0xFF) << 24 | (((DWORD)((r) * 255.0f)) & 0xFF) << 16 | (((DWORD)((g) * 255.0f)) & 0xFF) << 8              \
-                | (((DWORD)((b) * 255.0f)) & 0xFF)))
+#define PACK_A_F(v) (PACK_A_I((Color)((v) * 255.0f)))
+#define PACK_R_F(v) (PACK_R_I((Color)((v) * 255.0f)))
+#define PACK_G_F(v) (PACK_G_I((Color)((v) * 255.0f)))
+#define PACK_B_F(v) (PACK_B_I((Color)((v) * 255.0f)))
+
+#define UNPACK_B_F(v) ((float)(UNPACK_B_I(v)) / 255.0f)
+#define UNPACK_G_F(v) ((float)(UNPACK_G_I(v)) / 255.0f)
+#define UNPACK_R_F(v) ((float)(UNPACK_R_I(v)) / 255.0f)
+#define UNPACK_A_F(v) ((float)(UNPACK_A_I(v)) / 255.0f)
+
+#define PACK_ARGB_I(a, r, g, b) (PACK_A_I(a) | PACK_R_I(r) | PACK_G_I(g) | PACK_B_I(b))
+#define PACK_ARGB_F(a, r, g, b) (PACK_A_F(a) | PACK_R_F(r) | PACK_G_F(g) | PACK_B_F(b))
 
 enum RenderTransform {
     RENDER_TRANSFORM_WORLD,
@@ -47,50 +62,198 @@ enum TextureStageState {
 };
 
 enum TextureStageValue {
-    TEXTURE_VALUE_MODULATE,
-    TEXTURE_VALUE_SELECTARG1,
-    TEXTURE_VALUE_DISABLE,
+    TEXTURE_VALUE_DISABLE    = 1,
+    TEXTURE_VALUE_SELECTARG1 = 2,
+    TEXTURE_VALUE_MODULATE   = 4,
+
+    TEXTURE_VALUE_PASSTHRU                     = 0x00000000,
+    TEXTURE_VALUE_CAMERASPACE_NORMAL           = 0x00010000,
+    TEXTURE_VALUE_CAMERASPACE_POSITION         = 0x00020000,
+    TEXTURE_VALUE_CAMERASPACE_REFLECTIONVECTOR = 0x00030000,
 };
 
+enum TextureFormatSearchType : sbyte {
+    TEXTURE_FMT_32BIT,
+    TEXTURE_FMT_16BIT_ALPHA,
+};
+
+enum D3DZBufferResultType {
+    D3D_DEVICE_NONE,
+    D3D_DEVICE_TNL_HAL,
+    D3D_DEVICE_HAL,
+    D3D_DEVICE_RGB,
+};
+
+enum LightType {
+    LIGHT_POINT       = 1,
+    LIGHT_SPOT        = 2,
+    LIGHT_DIRECTIONAL = 3,
+    LIGHT_FORCE_S32   = 0x7FFFFFFF,
+};
+
+using Color = uint;
+
+struct ColorValue {
+    float r;
+    float g;
+    float b;
+    float a;
+};
+
+struct LVertex {
+    float x;
+    float y;
+    float z;
+    int reserved;
+    Color color;
+    Color specular;
+    float tu;
+    float tv;
+
+    LVertex() {}
+
+    LVertex(const Vector3D &v, Color color, Color specular, float tu, float tv)
+    {
+        this->x        = v.x;
+        this->y        = v.y;
+        this->z        = v.z;
+        this->reserved = 0;
+        this->color    = color;
+        this->specular = specular;
+        this->tu       = tu;
+        this->tv       = tv;
+    }
+};
+
+struct Vertex {
+    float x;
+    float y;
+    float z;
+    float nx;
+    float ny;
+    float nz;
+    float tu;
+    float tv;
+
+    Vertex() {}
+
+    Vertex(const Vector3D &v, const Vector3D &n, float tu, float tv)
+    {
+        this->x  = v.x;
+        this->y  = v.y;
+        this->z  = v.z;
+        this->nx = n.x;
+        this->ny = n.y;
+        this->nz = n.z;
+        this->tu = tu;
+        this->tv = tv;
+    }
+};
+
+struct Material {
+    ColorValue diffuse;
+    ColorValue ambient;
+    ColorValue specular;
+    ColorValue emissive;
+    float power;
+};
+
+struct Light {
+    LightType type;
+    ColorValue diffuse;
+    ColorValue specular;
+    ColorValue ambient;
+    Vector3D position;
+    Vector3D direction;
+    float range;
+    float falloff;
+    float attenuation[3];
+    float theta;
+    float phi;
+};
+
+struct Texture {
+    void *vtbl;
+    uint id;
+    int width;
+    int height;
+
+    void Release();
+};
+
+#if RETRO_USE_ORIGINAL_CODE
 extern tagRECT rect_420488;
 extern tagRECT clientRect;
 extern tagRECT windowBounds;
+#endif
 
-extern D3DMATRIX MatrixSonicModel;
-extern D3DMATRIX MatrixSonicAni_4C8990[36];
-extern D3DMATRIX MatrixSonicAni_4C9290[36];
+extern Matrix3D MatrixInversed;
+extern Matrix3D MatrixWorld;
+extern Matrix3D MatrixView;
+extern Matrix3D MatrixProjection;
+extern Matrix3D MatrixIdentity;
 
-extern D3DMATRIX MatrixInversed;
-extern D3DMATRIX MatrixWorld;
-extern D3DMATRIX MatrixView;
-extern D3DMATRIX MatrixProjection;
-extern D3DMATRIX MatrixIdentity;
-
-extern LPDIRECTDRAWSURFACE7 surfaceList[10];
-extern LPDIRECTDRAWSURFACE7 surface_4C9D3C;
-extern LPDIRECTDRAWSURFACE7 surface_439D40;
-extern LPDIRECTDRAWSURFACE7 surface_4C9D44;
-
-extern char *StrRenderFailError;
 extern TextureFormatSearchType TexFmtSearchType;
 
 extern char WindowMode;
-extern int32_t dword_41F0C4;
+extern int dword_41F0C4;
 
-extern sbyte ResX;
-extern sbyte ResY;
+extern int ResX;
+extern int ResY;
 extern sbyte ColourDepth;
 
-void UpdateWindowRect(HWND hWnd);
-void ResetWindow(HWND hWnd);
+#if RETRO_USE_ORIGINAL_CODE
+extern IDirect3D7 *D3D;
+extern IDirect3DDevice7 *D3DDevice;
+extern IDirectDraw7 *DDraw;
 
-void DrawTitleModel(char type);
-void CopyMatrix_4C9B90_4C9C50();
-void SonicMat_WorldTransform();
-void ReleaseSurfaceID(uint8_t id);
+extern IDirectDrawSurface7 *FrontBuffer;
+extern IDirectDrawSurface7 *BackBuffer;
+extern IDirectDrawSurface7 *ZBuffer;
 
-HRESULT RefreshSurfaces(HWND hWnd);
+extern int D3DSupportsZBufferFmt;
+extern byte D3DDeviceType;
+
+extern HWND HWnd;
+extern HINSTANCE HInst;
+extern int NCmdShow;
+#else
+extern SDL_Window *Window;
+extern SDL_GLContext GLContext;
+#endif
+
+extern bool EngineRunning;
+
+bool InitGraphicsAPI();
+void ReleaseGraphicsAPI();
+#if RETRO_USE_ORIGINAL_CODE
+bool InitDirect3D();
+#endif
+
+bool InitScreen();
+void FlipScreen();
+
+void SetScreenResolution(sbyte resolution, sbyte windowResolution, sbyte colourDepth);
+void ToggleScreenMode();
+void ClearScreen(Color color);
+
+void BeginScene();
+void EndScene();
+
+void SetRenderTexture(int id, Texture *pTexture);
+void SetRenderMaterial(Material *pMaterial);
+void SetRenderLight(int id, Light *pLight);
+void SetRenderTransform(RenderTransform type, Matrix3D *pMatrix);
+void SetRenderState(RenderState type, int value);
+void SetRenderTextureStageState(int stage, TextureStageState type, int value);
+void EnableLight(int id, bool enabled);
+void EnableVSync(bool enabled);
+
+void DrawIndexedPrimitive(RenderFVF type, void *pVertices, int numVertices, void *pIndices, int numIndices);
+void SetFade(float r, float g, float b, float a);
+
+void ReleaseSurfaceID(byte id);
 void ReleaseModelSurfaces();
 void ReleaseGraphicsAPI();
 
-#endif // !R_RENDER_H
+#endif // !DRAWING_H

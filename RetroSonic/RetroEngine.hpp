@@ -5,18 +5,18 @@
 // STANDARD LIBS
 // ============================
 
+#if RETRO_USE_ORIGINAL_CODE
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#endif
 
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <cstdint>
 #include <stdio.h>
+#include <cstring>
 #include <new>
 #include <math.h>
+#if RETRO_USE_ORIGINAL_CODE
 #include <mmsystem.h>
+#endif
 
 // ============================
 // STANDARD TYPES
@@ -26,15 +26,6 @@ typedef unsigned char byte;
 typedef signed char sbyte;
 typedef unsigned short ushort;
 typedef unsigned int uint;
-
-#include "resource.h"
-
-#define D3D_OVERLOADS
-#include "d3d.h"
-
-#include "coldet/src/cdmath3d.h"
-#include "coldet/src/coldet.h"
-#include "FreeImage/Dist/x32/FreeImage.h"
 
 #define SCREEN_XSIZE (320)
 #define SCREEN_YSIZE (240)
@@ -52,49 +43,60 @@ typedef unsigned int uint;
 // ENGINE INCLUDES
 // ============================
 
-#include "DX7/DX7Include.h"
+#if RETRO_USE_ORIGINAL_CODE
+#define D3D_OVERLOADS
+#include "d3d.h"
+#include "dinput.h"
+#include <FreeImage.h>
+#include "DX7/ddutil.h"
+#include "DX7/texture.h"
+#include "resource.h"
+#else
+#include "imgui.h"
+#include "imgui_impl_opengl3.h"
+#if RETRO_USE_SDL3
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_opengl.h>
+#include "imgui_impl_sdl3.h"
+#elif RETRO_USE_SDL2
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
+#include <SDL2/SDL_image.h>
+#include "imgui_impl_sdl2.h"
+#endif
+#endif
 
-#include "Player.hpp"
+#include <cdmath3d.h>
+#include <coldet.h>
+
 #include "Collision.hpp"
 #include "Drawing.hpp"
 #include "Reader.hpp"
 #include "Input.hpp"
+#include "Level.hpp"
+#include "Level.hpp"
 #include "Math.hpp"
+#include "ModAPI.hpp"
+#include "Player.hpp"
 #include "String.hpp"
 #include "Text.hpp"
-
-#include "Misc.h"
-
-#include "MainGame.hpp"
 #include "TitleScreen.hpp"
 
-extern double dbl_4DA278;
-extern double dbl_4DA280;
+extern unsigned long long Frequency;
+extern unsigned long long FrameCurrentTicks;
+extern unsigned long long FrameNextTicks;
+extern unsigned long long FrameLastTicks;
 
-extern MSG msg;
+extern int FrameTicks;
+extern double FrameSecondsPerTick;
+extern double FrameDeltaTime;
 
-extern LARGE_INTEGER frequency;
-extern LARGE_INTEGER largeInt_4DA290;
-extern LONGLONG FrameCurrentTicks;
-extern HINSTANCE hInstance;
+#if RETRO_USE_ORIGINAL_CODE
+extern MSG Message;
+extern bool UseQueryCounter;
+#endif
 
-extern uint8_t GameMode;
-extern int32_t FrameTicks;
-extern int32_t dword_4DA2C0;
-extern LARGE_INTEGER FrameNextTicks;
-
-extern float data_4C9D4C;
-extern float CameraCullX;
-extern float CameraCullZ;
-
-extern Vector3D CameraPosition;
-extern int32_t SupportsZBufferFmt;
-extern uint8_t D3DDeviceType;
-extern int32_t QuitMessage;
-extern BOOL HasGameStarted;
-
-extern HMENU hMenu;
-extern char *StrWindowClassErr;
+extern int QuitMessage;
 
 enum WindowScalingMode {
     SCALE_1X,
@@ -108,11 +110,27 @@ enum GameModeType {
     GAMEMODE_MAINGAME,
 };
 
-BOOL CreateMWindow(_In_ HINSTANCE hInstance, _In_ int nCmdShow);
+bool CreateMWindow();
+
+#if RETRO_USE_ORIGINAL_CODE
 LRESULT CALLBACK MWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK MDialogProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 
-void SetHasGameStarted(BOOL hasStarted);
-void SetShouldSkipTitle(uint8_t shouldSkip);
+void UpdateWindowRect(HWND hWnd);
+void ResetWindow(HWND hWnd);
+#else
+void SetupImGui();
+void ImGuiDoMenuBar();
+void ProcessEvents(SDL_Event &event);
+#endif
+
+void ProcessMainGame();
+void SetGameMode(int mode);
+void PauseCheck();
+void ProcessPlayerInput();
+void ProcessDebugMode();
+void ProcessPlayerMovement();
+void ProcessObjects();
+void ProcessTime();
 
 #endif // !RETROSONICENGINE_H

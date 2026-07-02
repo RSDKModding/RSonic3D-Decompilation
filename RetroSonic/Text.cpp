@@ -31,12 +31,12 @@ void SetGameText(const char *text, TextMenu *menu, int rowID, int length)
 
 void DrawMenuText(const char *text, int length, int xpos, int ypos, byte sprite)
 {
-    D3DLVERTEX vertices[20][4];
+    LVertex vertices[20][4];
     ushort indices[20][6];
 
-    ZeroMemory(vertices, sizeof(vertices));
+    MEM_ZERO(vertices, sizeof(vertices));
 
-    D3DCOLOR color = (sprite == 8) ? 0xFFFFFF00 : 0xBFFFFFFF;
+    Color color = (sprite == 8) ? 0xFFFFFF00 : 0xBFFFFFFF;
 
     for (int i = 0; i < length; ++i) {
         float texUTL = 0.0f;
@@ -75,18 +75,18 @@ void DrawMenuText(const char *text, int length, int xpos, int ypos, byte sprite)
         indices[i][5] = (4 * i) + 2;
     }
 
-    RenderDevice::BeginScene();
-    RenderDevice::SetTexture(0, surfaceMText);
-    RenderDevice::DrawIndexed(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
-    RenderDevice::EndScene();
+    BeginScene();
+    SetRenderTexture(0, surfaceMText);
+    DrawIndexedPrimitive(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
+    EndScene();
 }
 
 void DrawText_2(const char *text, int length, int xpos, int ypos)
 {
-    D3DLVERTEX vertices[20][4];
+    LVertex vertices[20][4];
     ushort indices[20][6];
 
-    ZeroMemory(vertices, sizeof(vertices));
+    MEM_ZERO(vertices, sizeof(vertices));
 
     for (int i = 0; i < length; ++i) {
         float texUTL = 0.0f;
@@ -133,27 +133,27 @@ void DrawText_2(const char *text, int length, int xpos, int ypos)
         indices[i][5] = (4 * i) + 2;
     }
 
-    RenderDevice::BeginScene();
-    RenderDevice::SetTexture(0, surfaceMText);
-    RenderDevice::DrawIndexed(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
-    RenderDevice::EndScene();
+    BeginScene();
+    SetRenderTexture(0, surfaceMText);
+    DrawIndexedPrimitive(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
+    EndScene();
 }
 
 void DrawText_3(const char *text, int length, int xpos, int ypos, byte sprite, byte alphaStrengthT, byte alphaStrengthB)
 {
-    D3DLVERTEX vertices[20][4];
+    LVertex vertices[20][4];
     ushort indices[20][6];
 
-    ZeroMemory(vertices, sizeof(vertices));
+    MEM_ZERO(vertices, sizeof(vertices));
 
     if (alphaStrengthT >= 0x10 || alphaStrengthB >= 0x10)
         return;
 
-    D3DCOLOR colorT = 0xFFFFFFFF;
-    D3DCOLOR alphaT = 0x00;
+    Color colorT = 0xFFFFFFFF;
+    Color alphaT = 0x00;
 
-    D3DCOLOR colorB = 0xFFFFFFFF;
-    D3DCOLOR alphaB = 0x00;
+    Color colorB = 0xFFFFFFFF;
+    Color alphaB = 0x00;
 
     if (alphaStrengthT <= 8 && alphaStrengthB <= 8) {
         alphaT = 0x08 - alphaStrengthT;
@@ -171,8 +171,8 @@ void DrawText_3(const char *text, int length, int xpos, int ypos, byte sprite, b
     alphaT = (alphaT * 255) / 16;
     alphaB = (alphaB * 255) / 16;
 
-    colorT = TO_ARGB(alphaT, 255, 255, 255);
-    colorB = TO_ARGB(alphaB, 255, 255, 255);
+    colorT = PACK_ARGB_I(alphaT, 255, 255, 255);
+    colorB = PACK_ARGB_I(alphaB, 255, 255, 255);
 
     for (int i = 0; i < length; ++i) {
         float texUTL = 0.0f;
@@ -211,8 +211,8 @@ void DrawText_3(const char *text, int length, int xpos, int ypos, byte sprite, b
         indices[i][5] = (4 * i) + 2;
     }
 
-    RenderDevice::BeginScene();
-    RenderDevice::SetTexture(0, surfaceMText);
-    RenderDevice::DrawIndexed(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
-    RenderDevice::EndScene();
+    BeginScene();
+    SetRenderTexture(0, surfaceMText);
+    DrawIndexedPrimitive(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
+    EndScene();
 }

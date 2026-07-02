@@ -1,15 +1,14 @@
-#pragma once
+#ifndef MATH_H
+#define MATH_H
 
-#define RETRO_PI      (3.1415927)
-#define RETRO_PI_H    (RETRO_PI / 2.0)
-#define RETRO_DEG_RAD (RETRO_PI / 180.0)
+#define RSDK_PI   (3.1415927)
+#define RSDK_PI_H (RSDK_PI / 2.0)
 
-#define TO_RADIAN(degree) ((degree) * (RETRO_PI / 180.0f))
-#define TO_DEGREE(radian) ((radian) * (180.0f / RETRO_PI))
-
+#define TO_RADIAN(degree) ((degree) * (RSDK_PI / 180.0f))
 #define CLAMP(value, minimum, maximum) (((value) < (minimum)) ? (minimum) : (((value) > (maximum)) ? (maximum) : (value)))
 
 #define UNUSED(x) (void)x
+#define MEM_ZERO(x, s) memset(x, 0, s)
 
 double Cos(float value);
 double Sin(float value);
@@ -17,7 +16,9 @@ double ASin(float value);
 double ATan(float value);
 double Sqrt(float value);
 
-void IdentityMatrix(D3DMATRIX *matrix);
-void MatrixMultiply(D3DMATRIX *dst, D3DMATRIX *src);
-void MatrixPerspective(D3DMATRIX *matrix, float w, float h, float zn, float zf);
-void MatrixInverse(D3DMATRIX *dst, D3DMATRIX *src);
+void IdentityMatrix(Matrix3D *matrix);
+void MatrixMultiply(Matrix3D *dst, Matrix3D *src);
+void MatrixPerspective(Matrix3D *matrix, float w, float h, float zn, float zf);
+void MatrixInverse(Matrix3D *dst, Matrix3D *src);
+
+#endif // !MATH_H

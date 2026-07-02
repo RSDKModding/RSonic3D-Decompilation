@@ -1,7 +1,5 @@
 #include "RetroEngine.hpp"
 
-using namespace RenderDevice; // temp
-
 InputData TitleInput;
 TextMenu TitleMenu;
 float data_4DA320;
@@ -22,7 +20,7 @@ char TxtStyle;
 float RysS;
 float SwS;
 int AllStages;
-uint8_t CodePos;
+byte CodePos;
 int SMenuY1;
 int SMenuY2;
 int MusicNo;
@@ -30,10 +28,10 @@ int SStageNo;
 float data_4DA3A8;
 
 float data_41F59C = 70.0f;
-int DebugEnabled  = TRUE;
-int DebugMode     = TRUE;
+int DebugEnabled  = true;
+int DebugMode     = true;
 
-uint8_t DebugCode[12] = { 2, 2, 3, 3, 0, 1, 0, 1, 4, 0, 0, 0 };
+byte DebugCode[12] = { 2, 2, 3, 3, 0, 1, 0, 1, 4, 0, 0, 0 };
 
 void ResetTitleScreen()
 {
@@ -49,7 +47,7 @@ void ProcessTitleScreen()
         case 0:
             ++TtlTime;
             CodeCheck();
-            RenderDevice::Clear(0x000000);
+            ClearScreen(0x000000);
 
             if (TtlTime == 240) {
                 TtlTime = 0;
@@ -80,7 +78,7 @@ void ProcessTitleScreen()
                 SwS        = 8.0f;
                 TxtStyle   = 0;
 
-                if (DebugEnabled == TRUE) {
+                if (DebugEnabled == true) {
                     TextMeDo("NEW GAME", &TitleMenu, 4, 0, 8);
                     SetGameText("CONTINUE GAME", &TitleMenu, 1, 13);
                     SetGameText("DEBUG OPTIONS", &TitleMenu, 2, 13);
@@ -95,16 +93,16 @@ void ProcessTitleScreen()
                 TitleMenu.alignment      = MENU_ALIGN_CENTER;
                 TitleMenu.selectionCount = 1;
                 TitleMenu.selection1     = 0;
-                RenderDevice::DrawFade(1.0f, 1.0f, 1.0f, 0.89999998f);
+                SetFade(1.0f, 1.0f, 1.0f, 0.89999998f);
             }
             else {
                 DrawTitleScr(0);
 
                 if (TtlTime < 61)
-                    RenderDevice::DrawFade(0.0f, 0.0f, 0.0f, 1.0f - (double)TtlTime * 0.0166f);
+                    SetFade(0.0f, 0.0f, 0.0f, 1.0f - (double)TtlTime * 0.0166f);
 
                 if (TtlTime > 179)
-                    RenderDevice::DrawFade(1.0f, 1.0f, 1.0f, (double)(TtlTime - 180) * 0.0166f);
+                    SetFade(1.0f, 1.0f, 1.0f, (double)(TtlTime - 180) * 0.0166f);
             }
             break;
 
@@ -116,7 +114,7 @@ void ProcessTitleScreen()
             DrawTitleScr(0);
 
             if (TtlTime < 61)
-                RenderDevice::DrawFade(1.0f, 1.0f, 1.0f, 1.0f - (double)TtlTime * 0.0166f);
+                SetFade(1.0f, 1.0f, 1.0f, 1.0f - (double)TtlTime * 0.0166f);
 
             if (TtlTime == 180) {
                 TtlTime = 0;
@@ -132,10 +130,10 @@ void ProcessTitleScreen()
 
             CheckInput(&TitleInput);
 
-            if (TitleInput.left == TRUE)
+            if (TitleInput.left == true)
                 data_4DA3A8 -= 0.02f;
 
-            if (TitleInput.right == TRUE)
+            if (TitleInput.right == true)
                 data_4DA3A8 += 0.02f;
 
             if (data_4DA3A8 < 0.0f)
@@ -148,13 +146,13 @@ void ProcessTitleScreen()
 
             CheckKeyPress(&TitleInput, INPUT_LEFT, INPUT_LCONTROL);
 
-            if (TitleInput.down == TRUE && TitleMenu.selection1 < TitleMenu.rowCount - 1)
+            if (TitleInput.down == true && TitleMenu.selection1 < TitleMenu.rowCount - 1)
                 TitleMenu.selection1++;
 
-            if (TitleInput.up == TRUE && TitleMenu.selection1 > 0)
+            if (TitleInput.up == true && TitleMenu.selection1 > 0)
                 TitleMenu.selection1--;
 
-            if (TitleInput.start == TRUE) {
+            if (TitleInput.start == true) {
                 switch (TitleMenu.selection1) {
                     case 0:
                         LoadCharacterMenu(&TitleMenu);
@@ -169,7 +167,7 @@ void ProcessTitleScreen()
                         break;
 
                     case 3:
-                        if (DebugEnabled == TRUE) {
+                        if (DebugEnabled == true) {
                             TextMeDo("DEBUG MENU", &TitleMenu, 12, 0, 10);
                             SetGameText(" ", &TitleMenu, 1, 1);
                             SetGameText(" ", &TitleMenu, 2, 1);
@@ -207,84 +205,84 @@ void ProcessTitleScreen()
                 }
             }
 
-            Zone_TitleScreen_4128A3();
+            DrawGameMenu(TitleMenu, 160, 184);
             break;
 
         case 3:
-            RenderDevice::Clear(0x000000);
+            ClearScreen(0x000000);
             DrawTitleScr(1);
             DrawTitleScr(0);
 
             CheckKeyPress(&TitleInput, INPUT_UP, INPUT_LCONTROL);
 
-            if (TitleInput.down == TRUE && TitleMenu.selection1 < TitleMenu.rowCount - 1)
+            if (TitleInput.down == true && TitleMenu.selection1 < TitleMenu.rowCount - 1)
                 TitleMenu.selection1++;
 
-            if (TitleInput.up == TRUE && TitleMenu.selection1 > 0)
+            if (TitleInput.up == true && TitleMenu.selection1 > 0)
                 TitleMenu.selection1--;
 
-            if (TitleInput.start == TRUE) {
+            if (TitleInput.start == true) {
                 LoadZoneMenu(&TitleMenu);
                 TitleScreenMode = 4;
             }
 
-            Zone_TitleScreen_4128CF();
+            DrawGameMenu(TitleMenu, 150, 48);
             break;
 
         case 4:
-            RenderDevice::Clear(0x000000);
+            ClearScreen(0x000000);
             DrawTitleScr(1);
             DrawTitleScr(0);
 
             CheckKeyPress(&TitleInput, INPUT_UP, INPUT_LCONTROL);
 
-            if (TitleInput.down == TRUE && TitleMenu.selection1 < TitleMenu.rowCount - 1)
+            if (TitleInput.down == true && TitleMenu.selection1 < TitleMenu.rowCount - 1)
                 ++TitleMenu.selection1;
 
-            if (TitleInput.up == TRUE && TitleMenu.selection1 > 0)
+            if (TitleInput.up == true && TitleMenu.selection1 > 0)
                 --TitleMenu.selection1;
 
-            if (TitleInput.start == TRUE) {
+            if (TitleInput.start == true) {
                 TitleScreenMode = 4;
-                SetShouldSkipTitle(TRUE);
+                SetGameMode(GAMEMODE_MAINGAME);
             }
 
             DrawMenuBackground();
             break;
 
         case 6:
-            RenderDevice::Clear(0x000000);
+            ClearScreen(0x000000);
             DrawTitleScr(1);
             DrawTitleScr(0);
 
             CheckKeyPress(&TitleInput, INPUT_LEFT, INPUT_LSHIFT);
 
-            if (TitleInput.down == TRUE && TitleMenu.selection2 < TitleMenu.rowCount - 1)
+            if (TitleInput.down == true && TitleMenu.selection2 < TitleMenu.rowCount - 1)
                 TitleMenu.selection2 += 2;
 
-            if (TitleInput.up == TRUE && TitleMenu.selection2 > 3)
+            if (TitleInput.up == true && TitleMenu.selection2 > 3)
                 TitleMenu.selection2 -= 2;
 
-            if (TitleInput.left == TRUE) {
+            if (TitleInput.left == true) {
                 switch (TitleMenu.selection2) {
                     case 3:
                         if (AllStages) {
-                            AllStages = FALSE;
+                            AllStages = false;
                             memcpy(TitleMenu.labels[3].text + 12, "\x06\x06%", 3);
                         }
                         else {
-                            AllStages = TRUE;
+                            AllStages = true;
                             strcpy(TitleMenu.labels[3].text + 12, "\x0E%");
                         }
                         break;
 
                     case 5:
                         if (DebugMode) {
-                            DebugMode = FALSE;
+                            DebugMode = false;
                             memcpy(TitleMenu.labels[5].text + 13, "\x06\x06%", 3);
                         }
                         else {
-                            DebugMode                    = TRUE;
+                            DebugMode                    = true;
                             TitleMenu.labels[5].text[13] = 14;
                             TitleMenu.labels[5].text[14] = 37;
                             TitleMenu.labels[5].text[15] = 0;
@@ -308,7 +306,7 @@ void ProcessTitleScreen()
                 }
             }
 
-            if (TitleInput.right == TRUE) {
+            if (TitleInput.right == true) {
                 switch (TitleMenu.selection2) {
                     case 3:
                         if (AllStages) {
@@ -327,13 +325,13 @@ void ProcessTitleScreen()
 
                     case 5:
                         if (DebugMode) {
-                            DebugMode                    = FALSE;
+                            DebugMode                    = false;
                             TitleMenu.labels[5].text[13] = 6;
                             TitleMenu.labels[5].text[14] = 6;
                             TitleMenu.labels[5].text[15] = 37;
                         }
                         else {
-                            DebugMode                    = TRUE;
+                            DebugMode                    = true;
                             TitleMenu.labels[5].text[13] = 14;
                             TitleMenu.labels[5].text[14] = 37;
                             TitleMenu.labels[5].text[15] = 0;
@@ -358,12 +356,12 @@ void ProcessTitleScreen()
                 }
             }
 
-            if (TitleInput.start == TRUE) {
+            if (TitleInput.start == true) {
                 if (TitleMenu.selection2 == 11)
                     TitleScreenMode = 0;
             }
 
-            Zone_TitleScreen_4129E4();
+            DrawGameMenu(TitleMenu, 160, 20);
             break;
 
         default: break;
@@ -396,31 +394,49 @@ void TitleScrMovement()
         ++TAnimation;
 }
 
-void DrawTitleScr(sbyte type)
+void DrawMenuBackground()
 {
-    switch (type) {
-        case 0:
-            RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixIdentity);
-            RenderDevice::SetTransform(RENDER_TRANSFORM_VIEW, &MatrixIdentity);
-            RenderDevice::SetTransform(RENDER_TRANSFORM_PROJECTION, &MatrixIdentity);
+    for (int i = 0; i < TitleMenu.selection1 + 1; ++i) {
+        if (TitleMenu.selMode[i] == 1)
+            TitleMenu.selection2 = i;
+    }
 
-            RenderDevice::SetRenderState(RENDER_STATE_ZENABLE, false);
-            RenderDevice::SetRenderState(RENDER_STATE_LIGHTING, false);
-            RenderDevice::SetRenderState(RENDER_STATE_SPECULARENABLE, false);
+    SMenuY1 = 10 * TitleMenu.selection1;
+
+    if (10 * TitleMenu.selection1 > SMenuY2 + 60 && SMenuY2 < 10 * TitleMenu.rowCount - 130)
+        SMenuY2++;
+
+    if (SMenuY1 < SMenuY2 + 60 && SMenuY1 > 0 && SMenuY2 > 0)
+        SMenuY2--;
+
+    DrawScrollingMenu(TitleMenu, 200, 48, 48, 160, -SMenuY2);
+}
+
+void DrawTitleScr(sbyte id)
+{
+    switch (id) {
+        case 0:
+            SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixIdentity);
+            SetRenderTransform(RENDER_TRANSFORM_VIEW, &MatrixIdentity);
+            SetRenderTransform(RENDER_TRANSFORM_PROJECTION, &MatrixIdentity);
+
+            SetRenderState(RENDER_STATE_ZENABLE, false);
+            SetRenderState(RENDER_STATE_LIGHTING, false);
+            SetRenderState(RENDER_STATE_SPECULARENABLE, false);
             break;
 
         case 1:
-            RenderDevice::SetTransform(RENDER_TRANSFORM_WORLD, &MatrixIdentity);
-            RenderDevice::SetTransform(RENDER_TRANSFORM_VIEW, &MatrixView);
-            RenderDevice::SetTransform(RENDER_TRANSFORM_PROJECTION, &MatrixProjection);
+            SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixIdentity);
+            SetRenderTransform(RENDER_TRANSFORM_VIEW, &MatrixView);
+            SetRenderTransform(RENDER_TRANSFORM_PROJECTION, &MatrixProjection);
 
-            RenderDevice::SetRenderState(RENDER_STATE_ZENABLE, true);
-            RenderDevice::SetRenderState(RENDER_STATE_LIGHTING, true);
-            RenderDevice::SetRenderState(RENDER_STATE_SPECULARENABLE, false);
+            SetRenderState(RENDER_STATE_ZENABLE, true);
+            SetRenderState(RENDER_STATE_LIGHTING, true);
+            SetRenderState(RENDER_STATE_SPECULARENABLE, false);
             break;
 
-        case 2: RenderDevice::SetRenderState(RENDER_STATE_ZENABLE, false); break;
-        case 3: RenderDevice::SetRenderState(RENDER_STATE_ZENABLE, true); break;
+        case 2: SetRenderState(RENDER_STATE_ZENABLE, false); break;
+        case 3: SetRenderState(RENDER_STATE_ZENABLE, true); break;
 
         default: break;
     }
@@ -615,6 +631,8 @@ void LoadCharacterMenu(TextMenu *menu)
     menu->selection2     = 0;
 }
 
+void SetMenuSelMode(TextMenu *menu, int id) { menu->selMode[id] = 1; }
+
 void SetCharacters(int row)
 {
     FileInfo file;
@@ -673,6 +691,48 @@ void SetCharacters(int row)
     }
 
     delete file.data;
+}
+
+void CodeCheck()
+{
+    CheckKeyPress(&TitleInput, INPUT_LEFT, INPUT_START);
+
+    if (TitleInput.up == true) {
+        if (DebugCode[CodePos] == 2)
+            ++CodePos;
+        else
+            CodePos = 0;
+    }
+
+    if (TitleInput.down == true) {
+        if (DebugCode[CodePos] == 3)
+            ++CodePos;
+        else
+            CodePos = 0;
+    }
+
+    if (TitleInput.left == true) {
+        if (DebugCode[CodePos])
+            CodePos = 0;
+        else
+            ++CodePos;
+    }
+
+    if (TitleInput.right == true) {
+        if (DebugCode[CodePos] == 1)
+            ++CodePos;
+        else
+            CodePos = 0;
+    }
+
+    if (DebugCode[CodePos] == 4) {
+        if (DebugEnabled == true)
+            DebugEnabled = false;
+        else if (DebugEnabled == false)
+            DebugEnabled = true;
+
+        CodePos = 0;
+    }
 }
 
 void LoadZoneMenu(TextMenu *menu)
@@ -735,92 +795,44 @@ void LoadZoneMenu(TextMenu *menu)
     menu->selection2     = 0;
 }
 
-void SetMenuSelMode(TextMenu *menu, int id) { menu->selMode[id] = 1; }
-
 void Zone_TitleScreen_4127E6()
 {
-    RenderDevice::Clear(0x000000);
+    ClearScreen(0x000000);
 
     data_4DA320 += 0.0049999999f;
     if (3.1415927 + 3.1415927 < data_4DA320)
         data_4DA320 = 0.0f;
 
     DrawTitleScr(2);
-    CopyMatrix_4C9B90_4C9C50();
+    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
+
     WorldMatrixRotateY(data_4DA320);
     MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+
     WorldMatrixTranslateXYZ(0.0f, 0.0f, 20.0f);
     MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
-    SonicMat_WorldTransform();
+    SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
     DrawTitleModel(0);
+
     DrawTitleScr(3);
-    CopyMatrix_4C9B90_4C9C50();
+    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
+
     WorldMatrixTranslateXYZ(0.0f, 0.0f, data_41F59C);
     MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
-    SonicMat_WorldTransform();
+    SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
     DrawTitleModel(1);
 }
 
-void Zone_TitleScreen_4128A3() { DrawGameMenu(TitleMenu, 160, 184); }
-void Zone_TitleScreen_4128CF() { DrawGameMenu(TitleMenu, 150, 48); }
-void Zone_TitleScreen_4129E4() { DrawGameMenu(TitleMenu, 160, 20); }
-
-void CodeCheck()
+void DrawTitleModel(char type)
 {
-    CheckKeyPress(&TitleInput, INPUT_LEFT, INPUT_START);
+    SetRenderMaterial(&material_420520);
 
-    if (TitleInput.up == TRUE) {
-        if (DebugCode[CodePos] == 2)
-            ++CodePos;
-        else
-            CodePos = 0;
+    if (type == 1) {
+        SetRenderTexture(0, surface3DLogo);
+        DrawIndexedPrimitive(RENDER_FVF_VERTEX, LogoMdl.vertices, LogoMdl.numVertices, LogoMdl.indices, LogoMdl.numIndices);
     }
-
-    if (TitleInput.down == TRUE) {
-        if (DebugCode[CodePos] == 3)
-            ++CodePos;
-        else
-            CodePos = 0;
+    else if (type == 0) {
+        SetRenderTexture(0, surfaceTestZoneBG);
+        DrawIndexedPrimitive(RENDER_FVF_VERTEX, BackgroundMdl.vertices, BackgroundMdl.numVertices, BackgroundMdl.indices, BackgroundMdl.numIndices);
     }
-
-    if (TitleInput.left == TRUE) {
-        if (DebugCode[CodePos])
-            CodePos = 0;
-        else
-            ++CodePos;
-    }
-
-    if (TitleInput.right == TRUE) {
-        if (DebugCode[CodePos] == 1)
-            ++CodePos;
-        else
-            CodePos = 0;
-    }
-
-    if (DebugCode[CodePos] == 4) {
-        if (DebugEnabled == TRUE)
-            DebugEnabled = FALSE;
-        else if (DebugEnabled == FALSE)
-            DebugEnabled = TRUE;
-
-        CodePos = 0;
-    }
-}
-
-void DrawMenuBackground()
-{
-    for (int32_t i = 0; i < TitleMenu.selection1 + 1; ++i) {
-        if (TitleMenu.selMode[i] == 1)
-            TitleMenu.selection2 = i;
-    }
-
-    SMenuY1 = 10 * TitleMenu.selection1;
-
-    if (10 * TitleMenu.selection1 > SMenuY2 + 60 && SMenuY2 < 10 * TitleMenu.rowCount - 130)
-        SMenuY2++;
-
-    if (SMenuY1 < SMenuY2 + 60 && SMenuY1 > 0 && SMenuY2 > 0)
-        SMenuY2--;
-
-    DrawScrollingMenu(TitleMenu, 200, 48, 48, 160, -SMenuY2);
 }

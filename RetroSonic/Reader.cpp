@@ -18,25 +18,32 @@ void LoadFile(FileInfo *file, const char *path)
     fclose(handle);
 }
 
-void LoadTexture(IDirectDrawSurface7 *&texture, const char *path, int a2)
+void LoadTexture(Texture **texture, const char *path, bool useTexMips)
 {
-    using namespace RenderDevice; // temp
+#if RETRO_USE_ORIGINAL_CODE
+    FIBITMAP *fBitmap = FreeImage_Load(FIF_PNG, path);
+    if (fBitmap == NULL)
+        return;
 
-    FIBITMAP *fBitmap   = FreeImage_Load(FIF_PNG, path);
     FIBITMAP *fBitmap32 = FreeImage_ConvertTo32Bits(fBitmap);
-    int bmWidth         = FreeImage_GetWidth(fBitmap);
-    int bmHeight        = FreeImage_GetHeight(fBitmap);
+    if (fBitmap32 == NULL) {
+        FreeImage_Unload(fBitmap);
+        return;
+    }
+
+    int bmWidth  = FreeImage_GetWidth(fBitmap);
+    int bmHeight = FreeImage_GetHeight(fBitmap);
 
     D3DDEVICEDESC7 pDesc;
     if (D3DDevice->GetCaps(&pDesc) < 0)
         return;
 
     DDSURFACEDESC2 surfaceDesc;
-    ZeroMemory(&surfaceDesc, sizeof(surfaceDesc));
+    MEM_ZERO(&surfaceDesc, sizeof(surfaceDesc));
 
     surfaceDesc.dwSize = sizeof(surfaceDesc);
 
-    if (a2 == 1) {
+    if (useTexMips == true) {
         if (bmWidth > 64) {
             switch (bmWidth) {
                 case 128:
@@ -68,12 +75,12 @@ void LoadTexture(IDirectDrawSurface7 *&texture, const char *path, int a2)
                 case 8:
                     surfaceDesc.dwFlags        = 1052679;
                     surfaceDesc.ddsCaps.dwCaps = 4096;
-                    a2                         = 0;
+                    useTexMips                 = false;
                     break;
                 case 16:
                     surfaceDesc.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
                     surfaceDesc.ddsCaps.dwCaps = 4096;
-                    a2                         = 0;
+                    useTexMips                 = false;
                     break;
                 case 32:
                     surfaceDesc.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
@@ -122,7 +129,7 @@ void LoadTexture(IDirectDrawSurface7 *&texture, const char *path, int a2)
     ppRenderTarget->GetDDInterface((LPVOID *)&DDraw);
     ppRenderTarget->Release();
 
-    if (DDraw->CreateSurface(&surfaceDesc, &texture, 0) < 0)
+    if (DDraw->CreateSurface(&surfaceDesc, (IDirectDrawSurface7 **)(texture), 0) < 0)
         return;
 
     DDSURFACEDESC2 lockDesc;
@@ -131,8 +138,8 @@ void LoadTexture(IDirectDrawSurface7 *&texture, const char *path, int a2)
 
     WORD alphaMask = (WORD)surfaceDesc.ddpfPixelFormat.dwRGBAlphaBitMask;
 
-    IDirectDrawSurface7 *surfacePtr = texture;
-    if (a2 == 1) {
+    IDirectDrawSurface7 *surfacePtr = (IDirectDrawSurface7 *)(*texture);
+    if (useTexMips == true) {
         int vSize = bmWidth;
         for (int i = 0; i < surfaceDesc.dwMipMapCount; ++i) {
             if (bmWidth > vSize && vSize > 8) {
@@ -178,13 +185,13 @@ void LoadTexture(IDirectDrawSurface7 *&texture, const char *path, int a2)
     }
     else {
         HDC hdc;
-        texture->GetDC(&hdc);
+        ((IDirectDrawSurface7 *)(*texture))->GetDC(&hdc);
         StretchDIBits(hdc, 0, 0, bmWidth, bmHeight, 0, 0, bmWidth, bmHeight, FreeImage_GetBits(fBitmap32), FreeImage_GetInfo(fBitmap32),
                       DIB_RGB_COLORS, SRCCOPY);
-        texture->ReleaseDC(hdc);
+        ((IDirectDrawSurface7 *)(*texture))->ReleaseDC(hdc);
 
         if (TexFmtSearchType == TEXTURE_FMT_16BIT_ALPHA) {
-            texture->Lock(0, &lockDesc, DDLOCK_WAIT, 0);
+            ((IDirectDrawSurface7 *)(*texture))->Lock(0, &lockDesc, DDLOCK_WAIT, 0);
 
             byte *dstRow = (byte *)lockDesc.lpSurface;
             int srcLine  = lockDesc.dwHeight - 1;
@@ -198,12 +205,58 @@ void LoadTexture(IDirectDrawSurface7 *&texture, const char *path, int a2)
                 }
             }
 
-            texture->Unlock(0);
+            ((IDirectDrawSurface7 *)(*texture))->Unlock(0);
         }
     }
 
     FreeImage_Unload(fBitmap32);
     FreeImage_Unload(fBitmap);
+#else
+#if RETRO_USE_SDL3
+    SDL_Surface *image = SDL_LoadPNG(path);
+#else
+    SDL_Surface *image = IMG_Load(path);
+#endif
+    if (image == NULL)
+        return;
+
+#if RETRO_USE_SDL3
+    SDL_Surface *image32 = SDL_ConvertSurface(image, SDL_PIXELFORMAT_BGRA32);
+    SDL_DestroySurface(image);
+#else
+    SDL_Surface *image32 = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_BGRA32, 0);
+    SDL_FreeSurface(image);
+#endif
+    if (image32 == NULL)
+        return;
+
+    (*texture) = new Texture();
+
+    (*texture)->vtbl   = NULL;
+    (*texture)->width  = image32->w;
+    (*texture)->height = image32->h;
+
+    glGenTextures(1, &(*texture)->id);
+    glBindTexture(GL_TEXTURE_2D, (*texture)->id);
+
+    if (useTexMips == true)
+        glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (*texture)->width, (*texture)->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, image32->pixels);
+
+    if (useTexMips == true)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    else
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+#if RETRO_USE_SDL3
+    SDL_DestroySurface(image32);
+#else
+    SDL_FreeSurface(image32);
+#endif
+#endif
 }
 
 void LoadLevelModel(LMF *model, const char *path)
@@ -243,15 +296,15 @@ void LoadLevelModel(LMF *model, const char *path)
                 LMFMesh *tile = &model->tiles[s][y][c];
 
                 fread(&tile->numVertices, sizeof(tile->numVertices), 1, stream);
-                tile->vertices = new D3DLVERTEX[tile->numVertices + 1]();
+                tile->vertices = new LVertex[tile->numVertices + 1]();
                 tile->colors   = new float[tile->numVertices];
 
                 for (int v = 0; v < tile->numVertices; ++v) {
                     // did you know that this is straight up allowed in C++?
-                    // LMF vertices are identical to D3DLVERTEX layout-wise
+                    // LMF vertices are identical to D3DLVERTEX/LVertex layout-wise
                     // though, we're using a seperate struct here due to color being float instead of D3DCOLOR (int)
                     struct _ {
-                        D3DVECTOR v;
+                        Vector3D v;
                         float reserved;
                         float color;
                         float specular;
@@ -265,7 +318,7 @@ void LoadLevelModel(LMF *model, const char *path)
                     vert.color *= 0.375f;
                     vert.color += 0.25f;
 
-                    D3DCOLOR color = TO_ARGB_F(1.0f, vert.color, vert.color, vert.color);
+                    Color color = PACK_ARGB_F(1.0f, vert.color, vert.color, vert.color);
 
                     tile->vertices[v] = { vert.v, color, 0, vert.tu, vert.tv };
                     tile->colors[v]   = vert.color;
@@ -412,7 +465,7 @@ void Load_TMF_File(TMF *model, const char *path)
     fseek(stream, 0, 0);
 
     fread(&model->numVertices, 2, 1, stream);
-    model->vertices = new D3DVERTEX[model->numVertices + 1];
+    model->vertices = new Vertex[model->numVertices + 1];
     if (model->vertices != NULL)
         memset(model->vertices, 0, sizeof(*model->vertices));
 
@@ -438,54 +491,54 @@ void Load_ANI_File(Animation *animation, const char *path)
     FILE *stream = fopen(path, "rb");
     fseek(stream, 0, SEEK_SET);
 
-    uint8_t frameCount;
-    uint16_t nodeCount;
-    fread(&frameCount, sizeof(uint8_t), 1, stream);
-    fread(&nodeCount, sizeof(uint16_t), 1, stream);
+    byte frameCount;
+    ushort nodeCount;
+    fread(&frameCount, sizeof(byte), 1, stream);
+    fread(&nodeCount, sizeof(ushort), 1, stream);
 
     for (int i = 0; i < frameCount; ++i) {
-        uint8_t nameLen;
-        fread(&nameLen, sizeof(uint8_t), 1, stream);
-        fread(boneName, sizeof(uint8_t), nameLen, stream);
+        byte nameLen;
+        fread(&nameLen, sizeof(byte), 1, stream);
+        fread(boneName, sizeof(byte), nameLen, stream);
 
         fread(&animation->nodes[i].position.x, sizeof(float), 1, stream);
         fread(&animation->nodes[i].position.y, sizeof(float), 1, stream);
         fread(&animation->nodes[i].position.z, sizeof(float), 1, stream);
 
-        fread(&animation->nodes[i].vertexCount, sizeof(uint16_t), 1, stream);
-        animation->nodes[i].vertexIDs = new uint16_t[animation->nodes[i].vertexCount];
+        fread(&animation->nodes[i].vertexCount, sizeof(ushort), 1, stream);
+        animation->nodes[i].vertexIDs = new ushort[animation->nodes[i].vertexCount];
 
         for (int j = 0; j < animation->nodes[i].vertexCount; ++j) {
-            fread(&animation->nodes[i].vertexIDs[j], sizeof(uint16_t), 1, stream);
+            fread(&animation->nodes[i].vertexIDs[j], sizeof(ushort), 1, stream);
         }
 
         for (int j = 0; j < nodeCount; ++j) {
-            uint8_t idk;
-            uint16_t val;
+            byte idk;
+            ushort val;
 
-            fread(&idk, sizeof(uint8_t), 1, stream);
-            fread(&val, sizeof(uint16_t), 1, stream);
-            animation->nodes[i].rotX[j] = (float)((idk ? (int)val : -(int)val) * (RETRO_PI / 180.0));
+            fread(&idk, sizeof(byte), 1, stream);
+            fread(&val, sizeof(ushort), 1, stream);
+            animation->nodes[i].rotX[j] = (float)((idk ? (int)val : -(int)val) * (RSDK_PI / 180.0));
 
-            fread(&idk, sizeof(uint8_t), 1, stream);
-            fread(&val, sizeof(uint16_t), 1, stream);
-            animation->nodes[i].rotY[j] = (float)((idk ? (int)val : -(int)val) * (RETRO_PI / 180.0));
+            fread(&idk, sizeof(byte), 1, stream);
+            fread(&val, sizeof(ushort), 1, stream);
+            animation->nodes[i].rotY[j] = (float)((idk ? (int)val : -(int)val) * (RSDK_PI / 180.0));
 
-            fread(&idk, sizeof(uint8_t), 1, stream);
-            fread(&val, sizeof(uint16_t), 1, stream);
-            animation->nodes[i].rotZ[j] = (float)((idk ? (int)val : -(int)val) * (RETRO_PI / 180.0));
+            fread(&idk, sizeof(byte), 1, stream);
+            fread(&val, sizeof(ushort), 1, stream);
+            animation->nodes[i].rotZ[j] = (float)((idk ? (int)val : -(int)val) * (RSDK_PI / 180.0));
         }
     }
 
-    fread(&animation->frameIDCount, sizeof(uint16_t), 1, stream);
+    fread(&animation->frameIDCount, sizeof(ushort), 1, stream);
     animation->frameIDs = new byte[animation->frameIDCount];
 
     for (int i = 0; i < animation->frameIDCount; ++i) {
-        fread(&animation->frameIDs[i], sizeof(uint8_t), 1, stream);
+        fread(&animation->frameIDs[i], sizeof(byte), 1, stream);
     }
 
     byte stateCount;
-    fread(&stateCount, sizeof(uint8_t), 1, stream);
+    fread(&stateCount, sizeof(byte), 1, stream);
 
     for (int i = 0; i < stateCount; ++i) {
         byte nameLen;

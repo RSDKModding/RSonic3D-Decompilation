@@ -1,13 +1,40 @@
 #include "RetroEngine.hpp"
 
-int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
+#if defined(_WIN32)
+int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
+    UNUSED(hPrevInstance);
+    UNUSED(lpCmdLine);
 
-    if (!CreateMWindow(hInstance, nCmdShow)) {
+#if RETRO_USE_ORIGINAL_CODE
+    HInst    = hInstance;
+    NCmdShow = nCmdShow;
+#else
+    UNUSED(hInstance);
+    UNUSED(nCmdShow);
+#endif
+#else
+int main(int argc, char **argv)
+{
+#endif
+#if !RETRO_USE_ORIGINAL_CODE
+#if RETRO_USE_SDL3
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+#elif RETRO_USE_SDL2
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) < 0) {
+#endif
+        char buffer[0x40];
+        snprintf(buffer, sizeof(buffer), "Failed to initialize SDL: %s", SDL_GetError());
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "SDL Initialization Error", buffer, NULL);
+        return EXIT_FAILURE;
+    }
+#endif
+
+    if (!CreateMWindow()) {
         QuitMessage = EXIT_SUCCESS;
-        PostQuitMessage(EXIT_SUCCESS);
+#if RETRO_USE_ORIGINAL_CODE
+        PostQuitMessage(QuitMessage);
+#endif
     }
 
     InitObjectModels();
@@ -16,33 +43,58 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     GameMode = GAMEMODE_MAINGAME;
 
-    if (QueryPerformanceFrequency(&frequency)) {
-        dword_4DA2C0 = 1;
-        FrameTicks   = frequency.QuadPart / 60;
-        QueryPerformanceCounter(&FrameNextTicks);
-        dbl_4DA278 = 1.0 / (double)frequency.QuadPart;
+#if RETRO_USE_ORIGINAL_CODE
+    if (QueryPerformanceFrequency((LARGE_INTEGER *)(&Frequency))) {
+        UseQueryCounter = true;
+
+        FrameTicks = Frequency / 60;
+        QueryPerformanceCounter((LARGE_INTEGER *)(&FrameNextTicks));
+        FrameSecondsPerTick = 1.0 / Frequency;
     }
     else {
-        FrameNextTicks.QuadPart = timeGetTime();
-        dbl_4DA278              = 0.001;
-    }
+        UseQueryCounter = false;
 
-    FrameCurrentTicks = FrameNextTicks.QuadPart;
+        FrameNextTicks      = timeGetTime();
+        FrameSecondsPerTick = 0.001;
+    }
+#else
+    Frequency = SDL_GetPerformanceFrequency();
+
+    FrameTicks     = Frequency / 60;
+    FrameNextTicks = SDL_GetPerformanceCounter();
+
+    FrameSecondsPerTick = 1.0 / Frequency;
+
+    SDL_Event event = {};
+#endif
+
+    FrameLastTicks = FrameNextTicks;
+
+#if RETRO_USE_ORIGINAL_CODE
     while (QuitMessage) {
-        if (PeekMessageA(&msg, 0, 0, 0, 1)) {
-            if (msg.message == 18)
-                TranslateMessage(&msg);
-            DispatchMessageA(&msg);
+#else
+    while (EngineRunning != false) {
+#endif
+
+#if RETRO_USE_ORIGINAL_CODE
+        if (PeekMessage(&Message, NULL, 0, 0, PM_REMOVE)) {
+            if (Message.message == WM_QUIT)
+                TranslateMessage(&Message);
+            DispatchMessageA(&Message);
         }
         else {
-            if (dword_4DA2C0)
-                QueryPerformanceCounter(&largeInt_4DA290);
+            if (UseQueryCounter)
+                QueryPerformanceCounter((LARGE_INTEGER *)(&FrameCurrentTicks));
             else
-                largeInt_4DA290.QuadPart = timeGetTime();
+                FrameCurrentTicks = timeGetTime();
+#else
+            ProcessEvents(event);
+            FrameCurrentTicks = SDL_GetPerformanceCounter();
+#endif
 
-            if (largeInt_4DA290.QuadPart > FrameNextTicks.QuadPart) {
-                dbl_4DA280        = (double)(largeInt_4DA290.QuadPart - FrameCurrentTicks) * dbl_4DA278;
-                FrameCurrentTicks = largeInt_4DA290.QuadPart;
+            if (FrameCurrentTicks > FrameNextTicks) {
+                FrameDeltaTime = (FrameCurrentTicks - FrameLastTicks) * FrameSecondsPerTick;
+                FrameLastTicks = FrameCurrentTicks;
 
                 switch (GameMode) {
                     case GAMEMODE_TITLESCREEN: ProcessTitleScreen(); break;
@@ -50,12 +102,20 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
                     default: break;
                 }
 
-                FrameNextTicks.QuadPart = (uint32_t)FrameTicks + largeInt_4DA290.QuadPart;
+                FrameNextTicks = FrameTicks + FrameCurrentTicks;
             }
+
+#if RETRO_USE_ORIGINAL_CODE
         }
+#endif
     }
 
     ReleaseInputDevice();
     ReleaseGraphicsAPI();
-    return msg.wParam;
+
+#if RETRO_USE_ORIGINAL_CODE
+    return Message.wParam;
+#else
+    return QuitMessage;
+#endif
 }

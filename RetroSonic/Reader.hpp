@@ -1,4 +1,6 @@
-#pragma once
+#ifndef READER_H
+#define READER_H
+
 #include "RetroEngine.hpp"
 
 struct FileInfo {
@@ -14,7 +16,7 @@ struct LevelDirectoryEntry {
 };
 
 struct LMFMesh {
-    D3DLVERTEX *vertices;
+    LVertex *vertices;
     float *colors;
     ushort numVertices;
     ushort *indices;
@@ -33,7 +35,7 @@ struct LMF {
 };
 
 struct TMF {
-    D3DVERTEX *vertices;
+    Vertex *vertices;
     ushort numVertices;
     ushort *indices;
     ushort numIndices;
@@ -72,7 +74,7 @@ extern LevelDirectoryEntry *LDirectory;
 
 void LoadFile(FileInfo *file, const char *path);
 
-void LoadTexture(IDirectDrawSurface7 *&texture, const char *path, int a2);
+void LoadTexture(Texture **texture, const char *path, bool useTexMips);
 
 void LoadLevelModel(LMF *model, const char *path);
 void SetLevelDirectory(const char *text, byte length, int index);
@@ -85,3 +87,5 @@ void CreateDirectories();
 
 void Load_TMF_File(TMF *tmf, const char *path);
 void Load_ANI_File(Animation *animation, const char *path);
+
+#endif // !READER_H

@@ -6,7 +6,7 @@ double ASin(float value) { return asin(value); }
 double ATan(float value) { return atan(value); }
 double Sqrt(float value) { return sqrt(value); }
 
-void IdentityMatrix(D3DMATRIX *dest)
+void IdentityMatrix(Matrix3D *dest)
 {
     memset(dest, 0, sizeof(*dest));
     dest->m[0][0] = 1.0f;
@@ -15,9 +15,9 @@ void IdentityMatrix(D3DMATRIX *dest)
     dest->m[3][3] = 1.0f;
 }
 
-void MatrixMultiply(D3DMATRIX *dest, D3DMATRIX *matrix)
+void MatrixMultiply(Matrix3D *dest, Matrix3D *matrix)
 {
-    D3DMATRIX temp;
+    Matrix3D temp;
     memset(&temp, 0, sizeof(temp));
 
     for (ushort i = 0; i < 4; ++i) {
@@ -28,10 +28,10 @@ void MatrixMultiply(D3DMATRIX *dest, D3DMATRIX *matrix)
         }
     }
 
-    memcpy(dest, &temp, sizeof(D3DMATRIX));
+    memcpy(dest, &temp, sizeof(*dest));
 }
 
-void MatrixPerspective(D3DMATRIX *dest, float w, float h, float zn, float zf)
+void MatrixPerspective(Matrix3D *dest, float w, float h, float zn, float zf)
 {
     if (fabs(zf - zn) >= 0.01f && fabs(Sin(w * 0.5f)) >= 0.01f) {
         memset(dest, 0, sizeof(*dest));
@@ -43,7 +43,7 @@ void MatrixPerspective(D3DMATRIX *dest, float w, float h, float zn, float zf)
     }
 }
 
-void MatrixInverse(D3DMATRIX *dest, D3DMATRIX *matrix)
+void MatrixInverse(Matrix3D *dest, Matrix3D *matrix)
 {
     fabs(matrix->m[3][3] - 1.0f);
     if (fabs(matrix->m[0][3]) <= 0.001f && fabs(matrix->m[1][3]) <= 0.001f)
