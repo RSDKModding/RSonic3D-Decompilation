@@ -34,6 +34,12 @@ int main(int argc, char **argv)
     }
 #endif
 
+#if !RETRO_USE_ORIGINAL_CODE
+    InitUserdata();
+
+    WindowMode = !Settings.startFullScreen;
+#endif
+
     if (!CreateMWindow()) {
         QuitMessage = EXIT_SUCCESS;
 #if RETRO_USE_ORIGINAL_CODE
@@ -45,7 +51,10 @@ int main(int argc, char **argv)
     LoadLevelAssets();
     LoadFontAssets();
 
-    GameMode = GAMEMODE_MAINGAME;
+#if !RETRO_USE_ORIGINAL_CODE
+    if (Settings.skipStartMenu == true)
+#endif
+        GameMode = GAMEMODE_MAINGAME;
 
 #if RETRO_USE_ORIGINAL_CODE
     if (QueryPerformanceFrequency((LARGE_INTEGER *)(&Frequency))) {
@@ -64,14 +73,14 @@ int main(int argc, char **argv)
 #elif RETRO_USE_SDL3 || RETRO_USE_SDL2
     Frequency = SDL_GetPerformanceFrequency();
 
-    FrameTicks     = Frequency / 60;
+    FrameTicks     = Frequency / Settings.refreshRate;
     FrameNextTicks = SDL_GetPerformanceCounter();
 
     FrameSecondsPerTick = 1.0 / Frequency;
 #elif RETRO_USE_SDL1
 Frequency = 1000;
 
-FrameTicks     = Frequency / 60;
+FrameTicks     = Frequency / Settings.refreshRate;
 FrameNextTicks = SDL_GetTicks();
 
 FrameSecondsPerTick = 0.001;
@@ -102,7 +111,7 @@ FrameSecondsPerTick = 0.001;
 #if RETRO_USE_SDL3 || RETRO_USE_SDL2
         FrameCurrentTicks = SDL_GetPerformanceCounter();
 #elif RETRO_USE_SDL1
-        FrameCurrentTicks = (unsigned long long)(SDL_GetTicks());
+        FrameCurrentTicks = SDL_GetTicks();
 #endif
 #endif
 
@@ -126,6 +135,10 @@ FrameSecondsPerTick = 0.001;
 
     ReleaseInputDevice();
     ReleaseGraphicsAPI();
+
+#if !RETRO_USE_ORIGINAL_CODE
+    WriteSettings();
+#endif
 
 #if RETRO_USE_ORIGINAL_CODE
     return Message.wParam;

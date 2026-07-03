@@ -31,8 +31,14 @@ typedef unsigned int uint;
 // ENGINE DEFINES
 // ============================
 
-#define SCREEN_XSIZE (320)
-#define SCREEN_YSIZE (240)
+#define DEFAULT_SCREEN_XSIZE (320)
+#define DEFAULT_SCREEN_YSIZE (240)
+
+#if RETRO_USE_ORIGINAL_CODE
+#define SCREEN_XSIZE (DEFAULT_SCREEN_XSIZE)
+#endif
+
+#define SCREEN_YSIZE (DEFAULT_SCREEN_YSIZE)
 
 #define SCREEN_XSIZE_F ((float)(SCREEN_XSIZE))
 #define SCREEN_YSIZE_F ((float)(SCREEN_YSIZE))
@@ -42,6 +48,12 @@ typedef unsigned int uint;
 
 #define SCREEN_XCENTER_F (SCREEN_XSIZE_F / 2.0f)
 #define SCREEN_YCENTER_F (SCREEN_YSIZE_F / 2.0f)
+
+#ifndef BASE_PATH
+#define BASE_PATH ""
+#endif
+
+#define DEFAULT_FULLSCREEN false
 
 // ============================
 // ENGINE INCLUDES
@@ -81,6 +93,7 @@ typedef unsigned int uint;
 #include "String.hpp"
 #include "Text.hpp"
 #include "TitleScreen.hpp"
+#include "Userdata.hpp"
 
 // ============================
 // ENGINE VARIABLES

@@ -1,5 +1,9 @@
 #include "RetroEngine.hpp"
 
+#if !RETRO_USE_ORIGINAL_CODE
+int SCREEN_XSIZE;
+#endif
+
 Matrix3D MatrixInversed;
 Matrix3D MatrixWorld;
 Matrix3D MatrixView;
@@ -372,6 +376,7 @@ void FlipScreen()
 
 void SetScreenResolution(sbyte windowResolution, sbyte fullscreenResolution, sbyte colourDepth)
 {
+#if RETRO_USE_ORIGINAL_CODE
     switch (windowResolution) {
         case SCALE_1X:
             ResX = SCREEN_XSIZE * 1;
@@ -409,6 +414,10 @@ void SetScreenResolution(sbyte windowResolution, sbyte fullscreenResolution, sby
 
         default: break;
     }
+#else
+    ResX = SCREEN_XSIZE * Settings.windowScale;
+    ResY = SCREEN_YSIZE * Settings.windowScale;
+#endif
 
     ColourDepth = colourDepth;
 }

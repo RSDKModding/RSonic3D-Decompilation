@@ -26,6 +26,10 @@
 #define PACK_ARGB_I(a, r, g, b) (PACK_A_I(a) | PACK_R_I(r) | PACK_G_I(g) | PACK_B_I(b))
 #define PACK_ARGB_F(a, r, g, b) (PACK_A_F(a) | PACK_R_F(r) | PACK_G_F(g) | PACK_B_F(b))
 
+#if !RETRO_USE_ORIGINAL_CODE
+extern int SCREEN_XSIZE;
+#endif
+
 enum RenderTransform {
     RENDER_TRANSFORM_WORLD,
     RENDER_TRANSFORM_VIEW,

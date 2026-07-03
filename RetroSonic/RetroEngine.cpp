@@ -66,7 +66,7 @@ bool CreateMWindow()
 
     return false;
 #else
-    SetScreenResolution(SCALE_3X, SCALE_2X, 0);
+    SetScreenResolution(0, 0, 0);
 
 #if RETRO_USE_SDL3
     uint flags = SDL_WINDOW_OPENGL;
@@ -89,8 +89,7 @@ bool CreateMWindow()
 #elif RETRO_USE_SDL2
     Window = SDL_CreateWindow("Retro-Sonic 3D: A Taxman Test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, ResX, ResY, flags);
 #elif RETRO_USE_SDL1
-    // TODO: VSync option
-    SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
+    SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, Settings.vsync);
     SDL_WM_SetCaption("Retro-Sonic 3D: A Taxman Test", NULL);
     Window = SDL_SetVideoMode(ResX, ResY, 32, flags);
 #endif
@@ -102,9 +101,10 @@ bool CreateMWindow()
     if (!GLContext)
         return false;
 
-    // TODO: VSync option
-    SDL_GL_SetSwapInterval(true);
-#elif RETRO_USE_SDL1
+    SDL_GL_SetSwapInterval(Settings.vsync);
+
+    if (Settings.borderless)
+        SDL_SetWindowBordered(Window, false);
 #endif
 
     EngineRunning = true;

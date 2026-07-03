@@ -80,6 +80,7 @@ set(RETRO_FILES
     RetroSonic/String.cpp
     RetroSonic/Text.cpp
     RetroSonic/TitleScreen.cpp
+    RetroSonic/Userdata.cpp
 )
 
 if(NOT PLATFORM)
