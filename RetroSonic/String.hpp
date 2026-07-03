@@ -26,6 +26,18 @@ inline bool StrComp(const char *stringA, const char *stringB)
     return match;
 }
 
+inline int StrLength(const char *string)
+{
+#ifdef USE_STDLIB
+    return (int)strlen(string);
+#else
+    int len = 0;
+    for (len = 0; string[len]; len++)
+        ;
+    return len;
+#endif
+}
+
 inline void StringLowerCase(char *dest, const char *src)
 {
     int destPos = 0;

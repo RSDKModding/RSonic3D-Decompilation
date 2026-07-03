@@ -70,6 +70,7 @@ typedef unsigned int uint;
 
 #include "Collision.hpp"
 #include "Drawing.hpp"
+#include "Ini.hpp"
 #include "Reader.hpp"
 #include "Input.hpp"
 #include "Level.hpp"

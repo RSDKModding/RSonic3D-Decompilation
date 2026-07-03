@@ -67,6 +67,8 @@ set(RETRO_FILES
     RetroSonic/DX7/texture.cpp
     RetroSonic/Collision.cpp
     RetroSonic/Drawing.cpp
+    RetroSonic/fcaseopen.c
+    RetroSonic/Ini.cpp
     RetroSonic/Input.cpp
     RetroSonic/Level.cpp
     RetroSonic/main.cpp

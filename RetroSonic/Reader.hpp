@@ -3,7 +3,7 @@
 
 #include "RetroEngine.hpp"
 
-#if defined (FORCE_CASE_INSENSITIVE) && defined (ijtorhiomjbtn)
+#if FORCE_CASE_INSENSITIVE
 #include "fcaseopen.h"
 #define FileIO                                          FILE
 #define fOpen(path, mode)                               fcaseopen(path, mode)
