@@ -193,8 +193,6 @@ extern Matrix3D MatrixView;
 extern Matrix3D MatrixProjection;
 extern Matrix3D MatrixIdentity;
 
-extern TextureFormatSearchType TexFmtSearchType;
-
 extern char WindowMode;
 
 extern int ResX;
@@ -214,9 +212,10 @@ extern tagRECT ClientRect;
 extern tagRECT WindowRect;
 extern tagRECT WindowStoreRect;
 
+extern bool D3DSupportsZBufferFmt;
 extern bool D3DUseHardwareRendering;
 extern byte D3DDeviceType;
-extern bool D3DSupportsZBufferFmt;
+extern byte D3DTexFmtSearchType;
 
 extern HWND HWnd;
 extern HMENU HMenu;

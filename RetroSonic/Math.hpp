@@ -15,6 +15,7 @@ double Sin(float value);
 double ASin(float value);
 double ATan(float value);
 double Sqrt(float value);
+double Fabs(float value);
 
 void IdentityMatrix(Matrix3D *matrix);
 void MatrixMultiply(Matrix3D *dst, Matrix3D *src);

@@ -341,9 +341,9 @@ void ProcessMainGame()
 {
     switch (MainGameMode) {
         case 0:
-            data_4C9F68.y = 10.0f;
-            data_4C9F68.z = -32.0f;
-            MainGameMode  = 2;
+            CameraTargetPosition.y = 10.0f;
+            CameraTargetPosition.z = -32.0f;
+            MainGameMode           = 2;
 
             // x-axis line of 6 rings
             for (ObjectLoop = 0; ObjectLoop < 6; ++ObjectLoop) {
@@ -379,7 +379,7 @@ void ProcessMainGame()
             }
             break;
 
-        case 1: data_4DA264 = 0; break;
+        case 1: break;
 
         case 2:
             ProcessPlayerInput();
@@ -401,8 +401,7 @@ void ProcessMainGame()
                     ProcessPlayerAnimationLMC();
                 }
 
-                PNumber     = 0;
-                data_4DA256 = 0;
+                PNumber = 0;
             }
 
             DrawMainGameGfx();
@@ -421,13 +420,10 @@ void SetGameMode(int mode) { GameMode = mode; }
 void PauseCheck()
 {
     if (MGameInput.start == true) {
-        if (PauseV) {
-            if (PauseV == 1)
-                PauseV = 0;
-        }
-        else {
-            PauseV = 1;
-        }
+        if (PauseV == true)
+            PauseV = false;
+        else if (PauseV == false)
+            PauseV == true;
     }
 }
 
@@ -450,54 +446,54 @@ void ProcessPlayerInput()
     Player[PNumber].up        = false;
     Player[PNumber].jumpPress = false;
 
-    if (!Player[PNumber].f_0x3B) {
-        Player[PNumber].f_0x2C = 0;
+    if (!Player[PNumber].disableControl) {
+        Player[PNumber].targetAngle = 0;
 
         CheckInput(&MGameInput);
 
         if (Debug) {
             if (MGameInput.left == 1) {
-                Player[0].position.x = Player[0].position.x - Cos(data_4C9F74);
-                data_4C9F68.x        = data_4C9F68.x - Cos(data_4C9F74);
-                Player[0].position.z = Player[0].position.z - Sin(data_4C9F74);
-                data_4C9F68.z        = data_4C9F68.z - Sin(data_4C9F74);
+                Player[0].position.x   = Player[0].position.x - Cos(CameraRotateY);
+                CameraTargetPosition.x = CameraTargetPosition.x - Cos(CameraRotateY);
+                Player[0].position.z   = Player[0].position.z - Sin(CameraRotateY);
+                CameraTargetPosition.z = CameraTargetPosition.z - Sin(CameraRotateY);
             }
             if (MGameInput.right == 1) {
-                Player[0].position.x = Cos(data_4C9F74) + Player[0].position.x;
-                data_4C9F68.x        = Cos(data_4C9F74) + data_4C9F68.x;
-                Player[0].position.z = Sin(data_4C9F74) + Player[0].position.z;
-                data_4C9F68.z        = Sin(data_4C9F74) + data_4C9F68.z;
+                Player[0].position.x   = Cos(CameraRotateY) + Player[0].position.x;
+                CameraTargetPosition.x = Cos(CameraRotateY) + CameraTargetPosition.x;
+                Player[0].position.z   = Sin(CameraRotateY) + Player[0].position.z;
+                CameraTargetPosition.z = Sin(CameraRotateY) + CameraTargetPosition.z;
             }
             if (MGameInput.Z) {
                 if (MGameInput.up == 1) {
                     Player[0].position.y += 1.0;
-                    data_4C9F68.y += 1.2;
+                    CameraTargetPosition.y += 1.2;
                 }
                 if (MGameInput.down == 1) {
                     Player[0].position.y -= 1.0f;
-                    data_4C9F68.y -= 1.2f;
+                    CameraTargetPosition.y -= 1.2f;
                 }
             }
             else {
                 if (MGameInput.up == 1) {
-                    v2                   = data_4C9F74 - 3.1415927 * 0.5;
-                    Player[0].position.x = Player[0].position.x - Cos(v2);
-                    v3                   = data_4C9F74 - 3.1415927 * 0.5;
-                    data_4C9F68.x        = data_4C9F68.x - Cos(v3);
-                    v4                   = data_4C9F74 - 3.1415927 * 0.5;
-                    Player[0].position.z = Player[0].position.z - Sin(v4);
-                    v5                   = data_4C9F74 - 3.1415927 * 0.5;
-                    data_4C9F68.z        = data_4C9F68.z - Sin(v5);
+                    v2                     = CameraRotateY - 3.1415927 * 0.5;
+                    Player[0].position.x   = Player[0].position.x - Cos(v2);
+                    v3                     = CameraRotateY - 3.1415927 * 0.5;
+                    CameraTargetPosition.x = CameraTargetPosition.x - Cos(v3);
+                    v4                     = CameraRotateY - 3.1415927 * 0.5;
+                    Player[0].position.z   = Player[0].position.z - Sin(v4);
+                    v5                     = CameraRotateY - 3.1415927 * 0.5;
+                    CameraTargetPosition.z = CameraTargetPosition.z - Sin(v5);
                 }
                 if (MGameInput.down == 1) {
-                    v6                   = data_4C9F74 - 3.1415927 * 0.5;
-                    Player[0].position.x = Cos(v6) + Player[0].position.x;
-                    v7                   = data_4C9F74 - 3.1415927 * 0.5;
-                    data_4C9F68.x        = Cos(v7) + data_4C9F68.x;
-                    v8                   = data_4C9F74 - 3.1415927 * 0.5;
-                    Player[0].position.z = Sin(v8) + Player[0].position.z;
-                    v9                   = data_4C9F74 - 3.1415927 * 0.5;
-                    data_4C9F68.z        = Sin(v9) + data_4C9F68.z;
+                    v6                     = CameraRotateY - 3.1415927 * 0.5;
+                    Player[0].position.x   = Cos(v6) + Player[0].position.x;
+                    v7                     = CameraRotateY - 3.1415927 * 0.5;
+                    CameraTargetPosition.x = Cos(v7) + CameraTargetPosition.x;
+                    v8                     = CameraRotateY - 3.1415927 * 0.5;
+                    Player[0].position.z   = Sin(v8) + Player[0].position.z;
+                    v9                     = CameraRotateY - 3.1415927 * 0.5;
+                    CameraTargetPosition.z = Sin(v9) + CameraTargetPosition.z;
                 }
             }
 
@@ -515,36 +511,36 @@ void ProcessPlayerInput()
         }
         else {
             if (MGameInput.left == 1) {
-                Player[PNumber].f_0x2C += 64;
-                if (Player[PNumber].f_0x28 > 192)
-                    Player[PNumber].f_0x28 -= 256;
+                Player[PNumber].targetAngle += 64;
+                if (Player[PNumber].angle > 192)
+                    Player[PNumber].angle -= 256;
                 ++v18;
             }
 
             if (MGameInput.right == 1) {
-                if (Player[PNumber].f_0x28 < 64)
-                    Player[PNumber].f_0x28 += 256;
-                Player[PNumber].f_0x2C += 192;
+                if (Player[PNumber].angle < 64)
+                    Player[PNumber].angle += 256;
+                Player[PNumber].targetAngle += 192;
                 ++v18;
             }
 
             if (MGameInput.up == 1) {
-                if (Player[PNumber].f_0x28 > 128)
-                    Player[PNumber].f_0x2C += 256;
+                if (Player[PNumber].angle > 128)
+                    Player[PNumber].targetAngle += 256;
                 ++v18;
             }
 
             if (MGameInput.down == 1) {
-                Player[PNumber].f_0x2C += 128;
+                Player[PNumber].targetAngle += 128;
                 ++v18;
             }
 
             if (v18 > 0) {
                 Player[PNumber].up = true;
-                Player[PNumber].f_0x2C /= v18;
+                Player[PNumber].targetAngle /= v18;
             }
 
-            Player[PNumber].f_0x50 = MGameInput.Z == 1;
+            Player[PNumber].z = MGameInput.Z == true;
             CheckKeyPress(&MGameInput, INPUT_START, INPUT_Z);
         }
 
@@ -567,182 +563,175 @@ void ProcessPlayerMovement()
 {
     PlayerObject *player = &Player[PNumber];
 
-    float a6; // [esp+0h] [ebp-14h]
-    float v1; // [esp+4h] [ebp-10h]
-    float v2; // [esp+4h] [ebp-10h]
-    char v3;  // [esp+8h] [ebp-Ch]
+    if (player->state == STATE_AIR && player->up == true) {
+        if (player->angle < player->targetAngle) {
+            player->angle += 6;
 
-    if (player->f_0x38 == 1 && player->up == true) {
-        if (player->f_0x28 < player->f_0x2C) {
-            player->f_0x28 += 6;
-            if (player->f_0x24 > 0.0)
-                player->f_0x24 -= 0.02;
-            if (player->f_0x28 > player->f_0x2C)
-                player->f_0x28 = player->f_0x2C;
+            if (player->speed > 0.0f)
+                player->speed -= 0.02f;
+
+            if (player->angle > player->targetAngle)
+                player->angle = player->targetAngle;
         }
 
-        if (player->f_0x28 > player->f_0x2C) {
-            player->f_0x28 -= 6;
-            if (player->f_0x24 > 0.0)
-                player->f_0x24 -= 0.02;
-            if (player->f_0x28 < player->f_0x2C)
-                player->f_0x28 = player->f_0x2C;
+        if (player->angle > player->targetAngle) {
+            player->angle -= 6;
+
+            if (player->speed > 0.0f)
+                player->speed -= 0.02;
+
+            if (player->angle < player->targetAngle)
+                player->angle = player->targetAngle;
         }
 
-        if (player->f_0x24 < 2.4000001)
-            player->f_0x24 += 0.012;
+        if (player->speed < 2.4f)
+            player->speed += 0.012f;
     }
-    else if (player->f_0x38 == 0 && player->up == true) {
-        if (player->f_0x28 < player->f_0x2C) {
-            player->f_0x28 += 8;
-            if (player->f_0x24 > 0.0)
-                player->f_0x24 -= 0.0099999998;
-            if (player->f_0x28 > player->f_0x2C)
-                player->f_0x28 = player->f_0x2C;
+    else if (player->state == STATE_GROUND && player->up == true) {
+        if (player->angle < player->targetAngle) {
+            player->angle += 8;
+
+            if (player->speed > 0.0f)
+                player->speed -= 0.01f;
+
+            if (player->angle > player->targetAngle)
+                player->angle = player->targetAngle;
         }
 
-        if (player->f_0x28 > player->f_0x2C) {
-            player->f_0x28 -= 8;
-            if (player->f_0x24 > 0.0)
-                player->f_0x24 -= 0.0099999998;
-            if (player->f_0x28 < player->f_0x2C)
-                player->f_0x28 = player->f_0x2C;
+        if (player->angle > player->targetAngle) {
+            player->angle -= 8;
+
+            if (player->speed > 0.0f)
+                player->speed -= 0.01f;
+
+            if (player->angle < player->targetAngle)
+                player->angle = player->targetAngle;
         }
 
-        if (player->f_0x24 < 2.4000001)
-            player->f_0x24 = player->f_0x24 + 0.012;
+        if (player->speed < 2.4f)
+            player->speed += 0.012f;
     }
     else {
-        if (player->f_0x24 > 0.0)
-            player->f_0x24 -= 0.012;
+        if (player->speed > 0.0f)
+            player->speed -= 0.012f;
 
-        if (player->f_0x24 > -0.050000001 && player->f_0x24 < 0.0)
-            player->f_0x24 = 0.0;
+        if (player->speed > -0.05f && player->speed < 0.0f)
+            player->speed = 0.0f;
     }
 
-    if (player->f_0x38 != 2) {
+    if (player->state != STATE_STATIC) {
         if (player->gravity == GRAVITY_AIR) {
-            player->f_0x38 = 1;
+            player->state = STATE_AIR;
 
-            player->velocity.y -= 0.050000001;
-            if (player->velocity.y > 4.0) {
-                player->velocity.y = 4.0;
+            player->velocity.y -= 0.05f;
+            if (player->velocity.y > 4.0f) {
+                player->velocity.y = 4.0f;
                 ResetPlayerRotation();
             }
 
-            v1 = player->f_0x24 * 0.40000001 + 0.40000001;
-            SonicModel_405CE2(4, v1);
+            SetPlayerAnimationID(ANI_JUMPING, (player->speed * 0.4f) + 0.4f);
         }
         else {
-            if (Player[0].f_0x24 < 0.0099999998) {
-                SonicModel_405CE2(0, 0.0);
-            }
-            else {
-                v2 = player->f_0x24 * 0.40000001;
-                SonicModel_405CE2(2, v2);
-            }
+            PlayerObject *player1 = &Player[0];
+            if (player1->speed < 0.01f)
+                SetPlayerAnimationID(ANI_STOPPED, 0.0f);
+            else
+                SetPlayerAnimationID(ANI_WALKING, player->speed * 0.4f);
 
-            player->f_0x38 = 0;
-            if (player->f_0x24 == 0.0)
-                player->gap_54[0] = 0;
+            player->state = STATE_GROUND;
+            if (player->speed == 0.0f)
+                player->unused5 = 0;
 
             if (player->jumpPress == true) {
                 player->gravity    = GRAVITY_AIR;
-                player->velocity.y = 2.0;
-                player->f_0x38     = 1;
+                player->velocity.y = 2.0f;
+                player->state      = STATE_AIR;
                 ResetPlayerRotation();
             }
         }
     }
 
-    player->velocity.x   = -Sin(player->f_0x30) * player->f_0x24;
-    player->velocity.z   = Cos(player->f_0x30) * player->f_0x24;
-    player->collideDir.x = 0.0;
-    player->collideDir.y = -4.0;
-    player->collideDir.z = 0.0;
+    player->velocity.x = -Sin(player->rotationY) * player->speed;
+    player->velocity.z = Cos(player->rotationY) * player->speed;
 
+    player->collisionPos = { 0.0f, -4.0f, 0.0f };
     if (player->gravity == GRAVITY_AIR) {
-        if (player->velocity.y < 0.0) {
-            a6 = player->velocity.y * -1.0;
-            if (ObjectFloorCollision(&player->position.x, &player->position.y, &player->position.z, player->velocity.x, a6, player->velocity.z)
-                == 1) {
-                player->velocity.y = 0.0;
+        if (player->velocity.y < 0.0f) {
+            if (ObjectFloorCollision(&player->position, { player->velocity.x, -player->velocity.y, player->velocity.z }) == true) {
+                player->velocity.y = 0.0f;
                 player->gravity    = GRAVITY_GROUND;
-                player->f_0x38     = 0;
+                player->state      = STATE_GROUND;
             }
         }
     }
     else {
-        player->velocity.y = 0.0;
+        player->velocity.y = 0.0f;
         PlayerRotationPhysics(&player->velocity.x, &player->velocity.y, &player->velocity.z);
-        player->collideDir.x = 0.0;
-        player->collideDir.y = -3.5;
-        player->collideDir.z = 0.0;
 
-        PlayerRotationPhysics(&player->collideDir.x, &player->collideDir.y, &player->collideDir.z);
+        player->collisionPos = { 0.0f, -3.5f, 0.0f };
+        PlayerRotationPhysics(&player->collisionPos.x, &player->collisionPos.y, &player->collisionPos.z);
 
-        player->position.x = player->position.x - (player->collideDir.x - player->collideDir.x * 0.25);
-        player->position.y = player->position.y - (player->collideDir.y - player->collideDir.y * 0.25);
-        player->position.z = player->position.z - (player->collideDir.z - player->collideDir.z * 0.25);
-
-        v3 = ObjectFloorCollision(&player->position.x, &player->position.y, &player->position.z, player->collideDir.x, player->collideDir.y,
-                                  player->collideDir.z);
-        if (v3) {
-            if (v3 > 0 && v3 <= 2) {
+        player->position.x -= player->collisionPos.x * 0.75f;
+        player->position.y -= player->collisionPos.y * 0.75f;
+        player->position.z -= player->collisionPos.z * 0.75f;
+        switch (ObjectFloorCollision(&player->position, player->collisionPos)) {
+            case 1:
+            case 2:
                 player->gravity = GRAVITY_GROUND;
-                player->f_0x38  = 0;
-            }
-        }
-        else {
-            player->position.x = player->collideDir.x - player->collideDir.x * 0.25 + player->position.x;
-            player->position.y = player->collideDir.y - player->collideDir.y * 0.25 + player->position.y;
-            player->position.z = player->collideDir.z - player->collideDir.z * 0.25 + player->position.z;
-            player->gravity    = GRAVITY_AIR;
+                player->state   = STATE_GROUND;
+                break;
+
+            case 0:
+                player->position.x += player->collisionPos.x * 0.75f;
+                player->position.y += player->collisionPos.y * 0.75f;
+                player->position.z += player->collisionPos.z * 0.75f;
+                player->gravity = GRAVITY_AIR;
+                break;
+
+            default: break;
         }
     }
 
-    player->position.x += player->velocity.x;
-    player->position.y += player->velocity.y;
-    player->position.z += player->velocity.z;
+    player->position += player->velocity;
     ProcessPlayerCamera();
 
     if (player->up == true)
-        player->f_0x30 = (double)player->f_0x28 / 128.0 * 3.1415927 + data_4C9F74;
+        player->rotationY = (player->angle * RSDK_PI / 128.0f) + CameraRotateY;
 
     if (player->gravity == GRAVITY_AIR) {
-        if (data_4C9F7C < 30)
-            data_4C9F7C++;
+        if (CameraAirTimer < 30)
+            CameraAirTimer++;
 
-        if (data_4C9F78 < (double)player->velocity.y) {
-            data_4C9F78 += 0.1;
-            if (data_4C9F78 > (double)player->velocity.y)
-                data_4C9F78 = player->velocity.y;
+        if (CameraRotateX < player->velocity.y) {
+            CameraRotateX += 0.1f;
+            if (CameraRotateX > player->velocity.y)
+                CameraRotateX = player->velocity.y;
         }
 
-        if (data_4C9F78 > (double)player->velocity.y) {
-            data_4C9F78 -= 0.1;
-            if (data_4C9F78 < (double)player->velocity.y)
-                data_4C9F78 = player->velocity.y;
+        if (CameraRotateX > player->velocity.y) {
+            CameraRotateX -= 0.1f;
+            if (CameraRotateX < player->velocity.y)
+                CameraRotateX = player->velocity.y;
         }
     }
     else {
-        if (data_4C9F7C > 0)
-            data_4C9F7C--;
+        if (CameraAirTimer > 0)
+            CameraAirTimer--;
 
-        if (data_4C9F78 > 0.0) {
-            data_4C9F78 -= 0.1;
-            if (data_4C9F78 < 0.0)
-                data_4C9F78 = 0.0;
+        if (CameraRotateX > 0.0f) {
+            CameraRotateX -= 0.1f;
+            if (CameraRotateX < 0.0f)
+                CameraRotateX = 0.0f;
         }
 
-        if (data_4C9F78 < 0.0) {
-            data_4C9F78 += 0.1;
-            if (data_4C9F78 > 0.0)
-                data_4C9F78 = 0.0;
+        if (CameraRotateX < 0.0f) {
+            CameraRotateX += 0.1f;
+            if (CameraRotateX > 0.0f)
+                CameraRotateX = 0.0f;
         }
     }
 
-    data_4C9F68.y = player->position.y + 15.0 - (double)data_4C9F7C * 0.25 * data_4C9F78;
+    CameraTargetPosition.y = player->position.y + 15.0f - (CameraAirTimer * 0.25f * CameraRotateX);
 }
 
 void ProcessObjects()
@@ -754,7 +743,7 @@ void ProcessObjects()
                 case OBJECT_RING: {
                     Vector3D position;
                     position.z = object->position.z - Player[0].position.z;
-                    position.y = object->position.y - Player[0].position.y + Player[0].collideDir.y;
+                    position.y = object->position.y - Player[0].position.y + Player[0].collisionPos.y;
                     position.x = object->position.x - Player[0].position.x;
 
                     if (position.Magnitude() < 6.0)
@@ -773,7 +762,7 @@ void ProcessObjects()
                 case OBJECT_SPRING: {
                     Vector3D position;
                     position.z = object->position.z - Player[0].position.z;
-                    position.y = object->position.y - Player[0].position.y + Player[0].collideDir.y;
+                    position.y = object->position.y - Player[0].position.y + Player[0].collisionPos.y;
                     position.x = object->position.x - Player[0].position.x;
 
                     if (position.Magnitude() < 6.0) {

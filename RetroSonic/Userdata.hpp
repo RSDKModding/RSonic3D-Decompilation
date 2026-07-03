@@ -11,7 +11,6 @@ struct SettingsData {
     bool startFullScreen;
     bool borderless;
     bool vsync;
-    int scalingMode;
     int windowScale;
     int screenWidth;
     int refreshRate;

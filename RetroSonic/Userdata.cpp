@@ -27,7 +27,6 @@ void InitUserdata()
         ini.SetBool("Window", "FullScreen", Settings.startFullScreen = DEFAULT_FULLSCREEN);
         ini.SetBool("Window", "Borderless", Settings.borderless = false);
         ini.SetBool("Window", "VSync", Settings.vsync = true);
-        ini.SetInteger("Window", "ScalingMode", Settings.scalingMode = 1);
         ini.SetInteger("Window", "WindowScale", Settings.windowScale = 2);
 
         ini.SetInteger("Window", "ScreenWidth", Settings.screenWidth = DEFAULT_SCREEN_XSIZE);
@@ -53,9 +52,6 @@ void InitUserdata()
 
         if (!ini.GetBool("Window", "VSync", &Settings.vsync))
             Settings.vsync = false;
-
-        if (!ini.GetInteger("Window", "ScalingMode", &Settings.scalingMode))
-            Settings.scalingMode = 0;
 
         if (!ini.GetInteger("Window", "WindowScale", &Settings.windowScale))
             Settings.windowScale = 2;
@@ -85,9 +81,6 @@ void WriteSettings()
 
     ini.SetComment("Window", "VSComment", "Determines if VSync will be active or not");
     ini.SetBool("Window", "VSync", Settings.vsync);
-
-    ini.SetComment("Window", "SMComment", "Determines what scaling is used. 0 is nearest neighbour, 1 is linear.");
-    ini.SetInteger("Window", "ScalingMode", Settings.scalingMode);
 
     ini.SetComment("Window", "WSComment", "How big the window will be");
     ini.SetInteger("Window", "WindowScale", Settings.windowScale);

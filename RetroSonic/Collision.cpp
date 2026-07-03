@@ -1,9 +1,9 @@
 #include "RetroEngine.hpp"
 
-sbyte Collided;
+byte Collided;
 CollisionModel3D ***LCollision;
 
-sbyte ObjectFloorCollision(float *xpos, float *ypos, float *zpos, float xdir, float ydir, float zdir)
+byte ObjectFloorCollision(float *xpos, float *ypos, float *zpos, float xdir, float ydir, float zdir)
 {
     Vector3D origin    = { *xpos, *ypos, *zpos };
     Vector3D direction = { xdir, ydir, zdir };

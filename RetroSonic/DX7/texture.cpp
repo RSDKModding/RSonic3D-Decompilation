@@ -38,7 +38,7 @@ HRESULT CALLBACK TextureSearchCallback(DDPIXELFORMAT *pddpf, VOID *param)
     if ((pddpf->dwFlags & DDPF_ALPHAPIXELS) == 0)
         return DDENUMRET_OK;
 
-    switch (TexFmtSearchType) {
+    switch (D3DTexFmtSearchType) {
         case TEXTURE_FMT_32BIT:
             // We only want 32-bit formats, so skip all others
             if (pddpf->dwRGBBitCount != 32)

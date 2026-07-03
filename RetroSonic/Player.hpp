@@ -15,29 +15,63 @@ enum Gravity {
     GRAVITY_AIR,
 };
 
+enum PlayerAnimationIDs {
+    ANI_STOPPED,
+    ANI_WAITING,
+    ANI_WALKING,
+    ANI_RUNNING,
+    ANI_JUMPING,
+    ANI_TITLESCREEN,
+};
+
+enum PlayerStates {
+    STATE_GROUND,
+    STATE_AIR,
+    STATE_STATIC,
+};
+
 struct PlayerObject {
     Vector3D position;
     Vector3D velocity;
-    Vector3D collideDir;
-    float f_0x24; // some acceleration/speed thing
-    int f_0x28; // seems rotation related. maybe rotation turn value
-    int f_0x2C; // seems to be a max value for f_0x28, max turn speed?
-    double f_0x30; // y rotation? result of turning?
-    byte b0;
-    byte b1;
-    byte b2;
-    byte b3;
-    byte f_0x38; // state?
-    byte b5;
-    byte b6;
-    sbyte f_0x3B; // disable inputs/movement, still allows camera turn. maybe controlMode?
-    int field_3C;
-    int field_40;
+    Vector3D collisionPos;
+    float speed;
+    int angle;
+    int targetAngle;
+    float rotationY;
+    int unused1;
+    byte state;
+    byte unused2;
+    byte disableControl;
+    int unused3;
+    int unused4;
     int gravity;
     int up;
     int jumpPress;
-    int f_0x50; // pressed Z
-    byte gap_54[96];
+    int z;
+    byte unused5;
+    int unused6;
+    int unused7;
+    int unused8;
+    int unused9;
+    int unused10;
+    int unused11;
+    int unused12;
+    int unused13;
+    int unused14;
+    int unused15;
+    int unused16;
+    int unused17;
+    int unused18;
+    int unused19;
+    int unused20;
+    int unused21;
+    int unused22;
+    int unused23;
+    int unused24;
+    int unused25;
+    int unused26;
+    int unused27;
+    int unused28;
 };
 
 extern Matrix3D MatrixSonicModel;
@@ -53,10 +87,10 @@ extern float PlayerRotationX;
 extern float PlayerPrevRotationZ;
 extern float PlayerPrevRotationX;
 
+extern float PlayerJumpRotationX;
+
 extern int PlayerRotationTimerX;
 extern int PlayerRotationTimerZ;
-
-extern float data_4C9D4C;
 
 extern byte PNumber;
 extern PlayerObject Player[2];
@@ -67,7 +101,7 @@ void LoadPlayerGfx(const char *textureName, sbyte characterID);
 
 void HandleSonicVertexPositions(int frameID);
 void HandleSonicVertexNormals(int frameID);
-void SonicModel_405CE2(byte a1, float a2);
+void SetPlayerAnimationID(byte animation, float speed);
 void ProcessPlayerAnimationLMC();
 void MightBeSonicAnim_406432();
 

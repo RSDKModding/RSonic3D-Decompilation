@@ -135,11 +135,11 @@ void LoadTexture(Texture **texturePtr, const char *path, bool useTexMips)
             ddsd.dwHeight = ddsd.dwWidth;
     }
 
-    TexFmtSearchType = TEXTURE_FMT_32BIT;
+    D3DTexFmtSearchType = TEXTURE_FMT_32BIT;
     D3DDevice->EnumTextureFormats(TextureSearchCallback, &ddsd.ddpfPixelFormat);
     if (!ddsd.ddpfPixelFormat.dwRGBBitCount) {
 
-        TexFmtSearchType = TEXTURE_FMT_16BIT_ALPHA;
+        D3DTexFmtSearchType = TEXTURE_FMT_16BIT_ALPHA;
         D3DDevice->EnumTextureFormats(TextureSearchCallback, &ddsd.ddpfPixelFormat);
         if (!ddsd.ddpfPixelFormat.dwRGBBitCount)
             return;
@@ -180,7 +180,7 @@ void LoadTexture(Texture **texturePtr, const char *path, bool useTexMips)
 
             texture->ReleaseDC(hdc);
 
-            if (TexFmtSearchType == TEXTURE_FMT_16BIT_ALPHA) {
+            if (D3DTexFmtSearchType == TEXTURE_FMT_16BIT_ALPHA) {
                 texture->Lock(0, &ddsd2, DDLOCK_WAIT, 0);
 
                 struct ColorBGRA {
@@ -222,7 +222,7 @@ void LoadTexture(Texture **texturePtr, const char *path, bool useTexMips)
 
         texture->ReleaseDC(hdc);
 
-        if (TexFmtSearchType == TEXTURE_FMT_16BIT_ALPHA) {
+        if (D3DTexFmtSearchType == TEXTURE_FMT_16BIT_ALPHA) {
             texture->Lock(NULL, &ddsd2, DDLOCK_WAIT, NULL);
 
             struct ColorBGRA {

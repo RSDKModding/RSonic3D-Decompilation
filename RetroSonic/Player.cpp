@@ -13,10 +13,10 @@ float PlayerRotationX;
 float PlayerPrevRotationZ;
 float PlayerPrevRotationX;
 
+float PlayerJumpRotationX;
+
 int PlayerRotationTimerX;
 int PlayerRotationTimerZ;
-
-float data_4C9D4C;
 
 byte PNumber;
 PlayerObject Player[2];
@@ -40,54 +40,54 @@ void ProcessPlayerCamera()
     float v14; // [esp+24h] [ebp-4h]
 
     if (MGameInput.Z == true) {
-        data_4C9F68.x = data_4C9F68.x - Player[PNumber].position.x;
-        data_4C9F68.z = data_4C9F68.z - Player[PNumber].position.z;
-        v9            = Cos(0.02) * data_4C9F68.x;
-        v12           = Sin(0.02) * data_4C9F68.z + v9;
-        v8            = -Sin(0.02) * data_4C9F68.x;
-        v10           = Cos(0.02) * data_4C9F68.z + v8;
-        data_4C9F68.x = v12 + Player[PNumber].position.x;
-        data_4C9F68.z = v10 + Player[PNumber].position.z;
+        CameraTargetPosition.x = CameraTargetPosition.x - Player[PNumber].position.x;
+        CameraTargetPosition.z = CameraTargetPosition.z - Player[PNumber].position.z;
+        v9            = Cos(0.02) * CameraTargetPosition.x;
+        v12           = Sin(0.02) * CameraTargetPosition.z + v9;
+        v8            = -Sin(0.02) * CameraTargetPosition.x;
+        v10           = Cos(0.02) * CameraTargetPosition.z + v8;
+        CameraTargetPosition.x = v12 + Player[PNumber].position.x;
+        CameraTargetPosition.z = v10 + Player[PNumber].position.z;
     }
 
     if (MGameInput.X == true) {
-        data_4C9F68.x = data_4C9F68.x - Player[PNumber].position.x;
-        data_4C9F68.z = data_4C9F68.z - Player[PNumber].position.z;
-        v7            = Cos(-0.02) * data_4C9F68.x;
-        v13           = Sin(-0.02) * data_4C9F68.z + v7;
-        v6            = -Sin(-0.02) * data_4C9F68.x;
-        v11           = Cos(-0.02) * data_4C9F68.z + v6;
-        data_4C9F68.x = v13 + Player[PNumber].position.x;
-        data_4C9F68.z = v11 + Player[PNumber].position.z;
+        CameraTargetPosition.x = CameraTargetPosition.x - Player[PNumber].position.x;
+        CameraTargetPosition.z = CameraTargetPosition.z - Player[PNumber].position.z;
+        v7            = Cos(-0.02) * CameraTargetPosition.x;
+        v13           = Sin(-0.02) * CameraTargetPosition.z + v7;
+        v6            = -Sin(-0.02) * CameraTargetPosition.x;
+        v11           = Cos(-0.02) * CameraTargetPosition.z + v6;
+        CameraTargetPosition.x = v13 + Player[PNumber].position.x;
+        CameraTargetPosition.z = v11 + Player[PNumber].position.z;
     }
 
-    if (data_4C9F68.x == Player[PNumber].position.x) {
-        if (data_4C9F68.z >= (double)Player[PNumber].position.z)
-            data_4C9F74 = 3.1415927;
+    if (CameraTargetPosition.x == Player[PNumber].position.x) {
+        if (CameraTargetPosition.z >= (double)Player[PNumber].position.z)
+            CameraRotateY = 3.1415927;
         else
-            data_4C9F74 = 0.0;
+            CameraRotateY = 0.0;
     }
     else {
-        v4 = (data_4C9F68.z - Player[PNumber].position.z) / (data_4C9F68.x - Player[PNumber].position.x);
-        if (data_4C9F68.x <= (double)Player[PNumber].position.x)
-            data_4C9F74 = ATan(v4) - 3.1415927 * 0.5;
+        v4 = (CameraTargetPosition.z - Player[PNumber].position.z) / (CameraTargetPosition.x - Player[PNumber].position.x);
+        if (CameraTargetPosition.x <= (double)Player[PNumber].position.x)
+            CameraRotateY = ATan(v4) - 3.1415927 * 0.5;
         else
-            data_4C9F74 = ATan(v4) + 3.1415927 * 0.5;
+            CameraRotateY = ATan(v4) + 3.1415927 * 0.5;
     }
 
-    v5  = Player[PNumber].position.x - data_4C9F68.x;
-    v14 = v5 / Sin(data_4C9F74);
+    v5  = Player[PNumber].position.x - CameraTargetPosition.x;
+    v14 = v5 / Sin(CameraRotateY);
     if (v14 < 0.0)
         v14 = v14 * -1.0;
 
     if (v14 < 32.0f) {
-        data_4C9F68.x = Player[PNumber].position.x - Sin(data_4C9F74) * -32.0;
-        data_4C9F68.z = Cos(data_4C9F74) * -32.0 + Player[PNumber].position.z;
+        CameraTargetPosition.x = Player[PNumber].position.x - Sin(CameraRotateY) * -32.0;
+        CameraTargetPosition.z = Cos(CameraRotateY) * -32.0 + Player[PNumber].position.z;
     }
 
     if (v14 > 60.0f) {
-        data_4C9F68.x = Player[PNumber].position.x - Sin(data_4C9F74) * -60.0;
-        data_4C9F68.z = Cos(data_4C9F74) * -60.0 + Player[PNumber].position.z;
+        CameraTargetPosition.x = Player[PNumber].position.x - Sin(CameraRotateY) * -60.0;
+        CameraTargetPosition.z = Cos(CameraRotateY) * -60.0 + Player[PNumber].position.z;
     }
 }
 
@@ -138,27 +138,39 @@ void HandleSonicVertexNormals(int frameID)
     }
 }
 
-void SonicModel_405CE2(uint8_t a1, float a2)
+void SetPlayerAnimationID(byte animation, float speed)
 {
-    if (a1 != SonicAni.field_BFAB) {
-        SonicAni.field_BFAB = a1;
+    if (animation != SonicAni.field_BFAB) {
+        SonicAni.field_BFAB = animation;
         SonicAni.field_BFB0 = 0;
         SonicAni.field_BFAE = 0;
-        if (SonicAni.field_BFAA == 4) {
+        if (SonicAni.field_BFAA == ANI_JUMPING) {
             SonicAni.field_BFAA = SonicAni.field_BFAB;
             SonicAni.field_BFAC = 0;
-            data_4C9D4C         = 0.0f;
+            PlayerJumpRotationX = 0.0f;
         }
     }
 
-    if (a1 == 2) {
-        SonicAni.states[2].frameDuration = (long)(a2 * 128.0);
-    }
-    else if (a1 == 4) {
-        data_4C9D4C = data_4C9D4C - a2 * 0.30000001f;
-        if (data_4C9D4C < 0.0f)
-            data_4C9D4C = 3.1415927f + 3.1415927f;
-        SonicAni.states[4].frameDuration = (long)(a2 * 128.0);
+    switch (animation) {
+        case ANI_WALKING: {
+            AnimationState *state = &SonicAni.states[ANI_WALKING];
+
+            state->frameDuration = (byte)(speed * 128.0f);
+            break;
+        }
+
+        case ANI_JUMPING:{
+            AnimationState *state = &SonicAni.states[ANI_JUMPING];
+
+            PlayerJumpRotationX = PlayerJumpRotationX - speed * 0.3f;
+            if (PlayerJumpRotationX < 0.0f)
+                PlayerJumpRotationX = 2 * RSDK_PI;
+
+            state->frameDuration = (byte)(speed * 128.0f);
+            break;
+        }
+
+        default: break;
     }
 }
 
@@ -277,7 +289,9 @@ void MightBeSonicAnim_406432()
 
             WorldMatrixTranslateXYZ(-node->position.x, -node->position.y, -node->position.z);
             MatrixMultiply(&MatrixSonicNodeTransform[j], &MatrixWorld);
+
             MatrixMultiply(&MatrixSonicNodeTransform[j], &MatrixSonicNodeRotation[j]);
+
             WorldMatrixTranslateXYZ(node->position.x, node->position.y, node->position.z);
             MatrixMultiply(&MatrixSonicNodeTransform[j], &MatrixWorld);
         }

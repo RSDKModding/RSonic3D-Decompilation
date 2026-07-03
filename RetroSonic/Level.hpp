@@ -39,34 +39,29 @@ extern InputData MGameInput;
 extern int GameMode;
 extern int MainGameMode;
 
-extern float RingRotationY;
 extern int Debug;
 extern int DebugEn;
-extern sbyte PauseV;
-extern short data_4DA256;
-extern short data_4DA258;
-extern sbyte TimeCount;
-extern sbyte SmallSeconds;
-extern sbyte Seconds;
-extern sbyte Minutes;
-extern int data_4DA264;
 
-extern int TempObjectPos;
-
-extern Vector3D data_4C9F68;
-
-extern float data_4C9F74;
-extern float data_4C9F78;
-extern int data_4C9F7C;
+extern byte PauseV;
+extern byte TimeCount;
+extern byte SmallSeconds;
+extern byte Seconds;
+extern byte Minutes;
 
 extern int ObjectLoop;
+extern int TempObjectPos;
 extern Object LevelObjects[1100];
 
-extern Vector3D UnusedVector;
+extern float RingRotationY;
 
+extern Vector3D UnusedVector;
 extern Vector3D CameraPosition;
+extern Vector3D CameraTargetPosition;
 extern float CameraCullX;
 extern float CameraCullZ;
+extern float CameraRotateX;
+extern float CameraRotateY;
+extern int CameraAirTimer;
 
 extern Texture *LevelTexture[10];
 extern Texture *ObjectTexture[2];
@@ -80,8 +75,6 @@ extern Texture *BGTexture;
 extern Texture *CharacterTexture[CHARACTER_COUNT];
 extern Texture *CharacterUITexture[10];
 
-extern Material ObjectMaterial;
-
 extern LMF LevelModel;
 extern TMF ObjectModel[2];
 extern TMF LogoModel;
@@ -89,7 +82,9 @@ extern TMF BGModel;
 extern TMF SonicBaseModel;
 extern TMF SonicModel;
 extern TMF BallModel;
+
 extern Animation SonicAni;
+extern Material ObjectMaterial;
 
 extern Matrix3D matrix_47A790[100][36];
 extern Matrix3D array_42C590[100][36];
@@ -98,7 +93,6 @@ void LoadObjectAssets();
 void LoadLevelAssets();
 void LoadFontAssets();
 
-void sub_40F707();
 void CreateObject(byte type, byte unused, float x, float y, float z);
 void DrawMainGameGfx();
 void DrawObjects();

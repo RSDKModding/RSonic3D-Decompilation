@@ -5,32 +5,43 @@
 
 extern InputData TitleInput;
 extern TextMenu TitleMenu;
-extern float data_4DA320;
+
+extern float BackXRotation;
 extern float backpos[10];
-extern float TYspeed;
-extern float TXspeed;
-extern float TailsY;
-extern float TailsX;
-extern int TAnimation;
-extern int SAnimation;
-extern float SYspeed;
-extern float SXspeed;
-extern float SonY;
+
 extern float SonX;
+extern float SonY;
+extern float SonZ;
+extern float SXspeed;
+extern float SYspeed;
+extern int SAnimation;
+extern float SAnimationSpeed;
+
+extern float TailsX;
+extern float TailsY;
+extern float TailsZ;
+extern float TXspeed;
+extern float TYspeed;
+extern int TAnimation;
+extern float TAnimationSpeed;
+
 extern int TitleScreenMode;
 extern int TtlTime;
+
 extern char TxtStyle;
+
 extern float RysS;
 extern float SwS;
+
 extern int AllStages;
 extern byte CodePos;
+
 extern int SMenuY1;
 extern int SMenuY2;
+
 extern int MusicNo;
 extern int SStageNo;
-extern float data_4DA3A8;
 
-extern float data_41F59C;
 extern int DebugEnabled;
 extern int DebugMode;
 extern byte DebugCode[12];

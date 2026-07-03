@@ -2,34 +2,45 @@
 
 InputData TitleInput;
 TextMenu TitleMenu;
-float data_4DA320;
+
+float BackXRotation;
 float backpos[10];
-float TYspeed;
-float TXspeed;
-float TailsY;
-float TailsX;
-int TAnimation;
-int SAnimation;
-float SYspeed;
-float SXspeed;
-float SonY;
-float SonX;
+
+float SonX     = 0.0f;
+float SonY     = 0.0f;
+float SonZ     = 70.0f;
+float SXspeed  = 0.0f;
+float SYspeed  = 0.0f;
+int SAnimation = 0;
+float SAnimationSpeed;
+
+float TailsX   = 0.0f;
+float TailsY   = 0.0f;
+float TailsZ   = 0.0f;
+float TXspeed  = 0.0f;
+float TYspeed  = 0.0f;
+int TAnimation = 0;
+float TAnimationSpeed;
+
 int TitleScreenMode;
 int TtlTime;
+
 char TxtStyle;
+
 float RysS;
 float SwS;
+
 int AllStages;
 byte CodePos;
+
 int SMenuY1;
 int SMenuY2;
+
 int MusicNo;
 int SStageNo;
-float data_4DA3A8;
 
-float data_41F59C = 70.0f;
-int DebugEnabled  = true;
-int DebugMode     = true;
+int DebugEnabled = true;
+int DebugMode    = true;
 
 byte DebugCode[12] = { 2, 2, 3, 3, 0, 1, 0, 1, 4, 0, 0, 0 };
 
@@ -37,8 +48,9 @@ void ResetTitleScreen()
 {
     TitleScreenMode = 0;
     TtlTime         = 0;
-    SAnimation      = 0;
-    TAnimation      = 0;
+
+    SAnimation = 0;
+    TAnimation = 0;
 }
 
 void ProcessTitleScreen()
@@ -52,31 +64,37 @@ void ProcessTitleScreen()
             if (TtlTime == 240) {
                 TtlTime = 0;
                 ++TitleScreenMode;
+
                 backpos[0] = -0.5f;
                 backpos[1] = -1.0f;
                 backpos[2] = -0.1f;
-                backpos[3] = -0.40000001f;
-                backpos[4] = -0.69999999f;
+                backpos[3] = -0.4f;
+                backpos[4] = -0.7f;
                 backpos[5] = -0.2f;
-                backpos[6] = -0.40000001f;
-                backpos[7] = -0.30000001f;
-                backpos[8] = -0.80000001f;
+                backpos[6] = -0.4f;
+                backpos[7] = -0.3f;
+                backpos[8] = -0.8f;
                 backpos[9] = -1.0f;
+
                 SonX       = 130.0f;
                 SonY       = 142.0f;
-                SYspeed    = -2.0f;
                 SXspeed    = 0.0f;
-                TXspeed    = 0.0f;
+                SYspeed    = -2.0f;
                 SAnimation = 0;
-                TAnimation = 0;
+
                 TailsX     = 100.0f;
                 TailsY     = 146.0f;
+                TXspeed    = 0.0f;
                 TYspeed    = -2.0f;
-                SMenuY1    = 0;
-                SMenuY2    = 0;
-                RysS       = 80.0f;
-                SwS        = 8.0f;
-                TxtStyle   = 0;
+                TAnimation = 0;
+
+                SMenuY1 = 0;
+                SMenuY2 = 0;
+
+                RysS = 80.0f;
+                SwS  = 8.0f;
+
+                TxtStyle = 0;
 
                 if (DebugEnabled == true) {
                     TextMeDo("NEW GAME", &TitleMenu, 4, 0, 8);
@@ -93,7 +111,7 @@ void ProcessTitleScreen()
                 TitleMenu.alignment      = MENU_ALIGN_CENTER;
                 TitleMenu.selectionCount = 1;
                 TitleMenu.selection1     = 0;
-                SetFade(1.0f, 1.0f, 1.0f, 0.89999998f);
+                SetFade(1.0f, 1.0f, 1.0f, 0.9f);
             }
             else {
                 DrawTitleScr(0);
@@ -108,8 +126,10 @@ void ProcessTitleScreen()
 
         case 1:
             ++TtlTime;
+
             TitleScrMovement();
             DrawTitleScr(1);
+
             Zone_TitleScreen_4127E6();
             DrawTitleScr(0);
 
@@ -125,24 +145,25 @@ void ProcessTitleScreen()
         case 2:
             TitleScrMovement();
             DrawTitleScr(1);
+
             Zone_TitleScreen_4127E6();
             DrawTitleScr(0);
 
             CheckInput(&TitleInput);
 
             if (TitleInput.left == true)
-                data_4DA3A8 -= 0.02f;
+                SAnimationSpeed -= 0.02f;
 
             if (TitleInput.right == true)
-                data_4DA3A8 += 0.02f;
+                SAnimationSpeed += 0.02f;
 
-            if (data_4DA3A8 < 0.0f)
-                data_4DA3A8 = 3.1415927f + 3.1415927f;
+            if (SAnimationSpeed < 0.0f)
+                SAnimationSpeed = 2 * RSDK_PI;
 
-            if (3.1415927f + 3.1415927f < data_4DA3A8)
-                data_4DA3A8 = 0.0f;
+            if (2 * RSDK_PI < SAnimationSpeed)
+                SAnimationSpeed = 0.0f;
 
-            SonicModel_405CE2(TitleMenu.selection1 + 2, data_4DA3A8);
+            SetPlayerAnimationID(TitleMenu.selection1 + 2, SAnimationSpeed);
 
             CheckKeyPress(&TitleInput, INPUT_LEFT, INPUT_LCONTROL);
 
@@ -197,7 +218,8 @@ void ProcessTitleScreen()
                             TitleMenu.selectionCount = 2;
                             TitleMenu.selection1     = 0;
                             TitleMenu.selection2     = 3;
-                            TitleScreenMode          = 6;
+
+                            TitleScreenMode = 6;
                         }
                         break;
 
@@ -268,24 +290,22 @@ void ProcessTitleScreen()
                     case 3:
                         if (AllStages) {
                             AllStages = false;
-                            memcpy(TitleMenu.labels[3].text + 12, "\x06\x06%", 3);
+                            strcpy(&TitleMenu.labels[3].text[12], "\x06\x06%");
                         }
                         else {
                             AllStages = true;
-                            strcpy(TitleMenu.labels[3].text + 12, "\x0E%");
+                            strcpy(&TitleMenu.labels[3].text[12], "\x0E%");
                         }
                         break;
 
                     case 5:
                         if (DebugMode) {
                             DebugMode = false;
-                            memcpy(TitleMenu.labels[5].text + 13, "\x06\x06%", 3);
+                            strcpy(&TitleMenu.labels[5].text[13], "\x06\x06%");
                         }
                         else {
-                            DebugMode                    = true;
-                            TitleMenu.labels[5].text[13] = 14;
-                            TitleMenu.labels[5].text[14] = 37;
-                            TitleMenu.labels[5].text[15] = 0;
+                            DebugMode = true;
+                            strcpy(&TitleMenu.labels[5].text[13], "\x0E%");
                         }
                         break;
 
@@ -310,31 +330,23 @@ void ProcessTitleScreen()
                 switch (TitleMenu.selection2) {
                     case 3:
                         if (AllStages) {
-                            AllStages                    = 0;
-                            TitleMenu.labels[3].text[12] = 6;
-                            TitleMenu.labels[3].text[13] = 6;
-                            TitleMenu.labels[3].text[14] = 37;
+                            AllStages = 0;
+                            strcpy(&TitleMenu.labels[3].text[12], "\x06%");
                         }
                         else {
-                            AllStages                    = 1;
-                            TitleMenu.labels[3].text[12] = 14;
-                            TitleMenu.labels[3].text[13] = 37;
-                            TitleMenu.labels[3].text[14] = 0;
+                            AllStages = 1;
+                            strcpy(&TitleMenu.labels[3].text[12], "\x0E%");
                         }
                         break;
 
                     case 5:
                         if (DebugMode) {
-                            DebugMode                    = false;
-                            TitleMenu.labels[5].text[13] = 6;
-                            TitleMenu.labels[5].text[14] = 6;
-                            TitleMenu.labels[5].text[15] = 37;
+                            DebugMode = false;
+                            strcpy(&TitleMenu.labels[5].text[13], "\x06%");
                         }
                         else {
-                            DebugMode                    = true;
-                            TitleMenu.labels[5].text[13] = 14;
-                            TitleMenu.labels[5].text[14] = 37;
-                            TitleMenu.labels[5].text[15] = 0;
+                            DebugMode = true;
+                            strcpy(&TitleMenu.labels[5].text[13], "\x0E%");
                         }
                         break;
 
@@ -373,11 +385,11 @@ void ProcessTitleScreen()
 void TitleScrMovement()
 {
     if (TtlTime > 30 && SonX < 160.0f) {
-        SXspeed     = SXspeed + 0.0099999998f;
-        SYspeed     = SYspeed + 0.02f;
-        SonX        = SonX + SXspeed;
-        SonY        = SonY + SYspeed;
-        data_41F59C = SYspeed * 0.5f + data_41F59C;
+        SXspeed = SXspeed + 0.0099999998f;
+        SYspeed = SYspeed + 0.02f;
+        SonX    = SonX + SXspeed;
+        SonY    = SonY + SYspeed;
+        SonZ    = SYspeed * 0.5f + SonZ;
     }
 
     if (SonX > 160.0f && TailsX > 78.0f) {
@@ -799,14 +811,14 @@ void Zone_TitleScreen_4127E6()
 {
     ClearScreen(0x000000);
 
-    data_4DA320 += 0.0049999999f;
-    if (3.1415927 + 3.1415927 < data_4DA320)
-        data_4DA320 = 0.0f;
+    BackXRotation += 0.0050f;
+    if (2 * RSDK_PI < BackXRotation)
+        BackXRotation = 0.0f;
 
     DrawTitleScr(2);
     memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
 
-    WorldMatrixRotateY(data_4DA320);
+    WorldMatrixRotateY(BackXRotation);
     MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
 
     WorldMatrixTranslateXYZ(0.0f, 0.0f, 20.0f);
@@ -817,7 +829,7 @@ void Zone_TitleScreen_4127E6()
     DrawTitleScr(3);
     memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
 
-    WorldMatrixTranslateXYZ(0.0f, 0.0f, data_41F59C);
+    WorldMatrixTranslateXYZ(0.0f, 0.0f, SonZ);
     MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
     SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
     DrawTitleModel(1);

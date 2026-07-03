@@ -5,36 +5,32 @@ InputData MGameInput;
 int GameMode;
 int MainGameMode;
 
-float RingRotationY;
+// Are we currently in debugmode?
+int Debug = false;
 
-int Debug;
+// Will the game allow us to use debugmode?
 int DebugEn = true;
 
-sbyte PauseV;
-short data_4DA256;
-short data_4DA258;
-sbyte TimeCount;
-sbyte SmallSeconds;
-sbyte Seconds;
-sbyte Minutes;
-int data_4DA264;
-
-int TempObjectPos = 232;
-
-Vector3D data_4C9F68;
-
-float data_4C9F74; // camera x rotation related
-float data_4C9F78; // camera y rotation related
-int data_4C9F7C;   // camera y rotation timer?
+byte PauseV;
+byte TimeCount;
+byte SmallSeconds;
+byte Seconds;
+byte Minutes;
 
 int ObjectLoop;
+int TempObjectPos = 232;
 Object LevelObjects[1100];
 
-Vector3D UnusedVector;
+float RingRotationY;
 
+Vector3D UnusedVector;
 Vector3D CameraPosition;
+Vector3D CameraTargetPosition;
 float CameraCullX;
 float CameraCullZ;
+float CameraRotateX;
+float CameraRotateY;
+int CameraAirTimer;
 
 Texture *LevelTexture[10];
 Texture *ObjectTexture[2];
@@ -48,8 +44,6 @@ Texture *BGTexture;
 Texture *CharacterTexture[CHARACTER_COUNT];
 Texture *CharacterUITexture[10];
 
-Material ObjectMaterial = {};
-
 LMF LevelModel;
 TMF ObjectModel[2];
 TMF LogoModel;
@@ -57,10 +51,14 @@ TMF BGModel;
 TMF SonicBaseModel;
 TMF SonicModel;
 TMF BallModel;
-Animation SonicAni;
 
-Matrix3D matrix_47A790[100][36]; // List of MatrixSonic copies?
-Matrix3D array_42C590[100][36];  // List of MatrixSonic copies?
+Animation SonicAni;
+Material ObjectMaterial;
+
+// i'm not sure what these are for
+// these are set but never read
+Matrix3D matrix_47A790[100][36];
+Matrix3D array_42C590[100][36];
 
 void LoadObjectAssets()
 {
@@ -110,12 +108,6 @@ void LoadLevelAssets()
 
 void LoadFontAssets() { LoadTexture(&FontTexture, "Data/Title/MText.png", false); }
 
-void sub_40F707()
-{
-    data_4DA258 = data_4DA256;
-    data_4DA256 = 0;
-}
-
 void CreateObject(byte type, byte unused, float x, float y, float z)
 {
     if (LevelObjects[TempObjectPos].type != OBJECT_NONE) {
@@ -144,8 +136,8 @@ void DrawMainGameGfx()
     ClearScreen(0x0000BE);
     DrawTitleScr(1);
 
-    Unknown_40823B(Player[0].position.x, Player[0].position.y - Player[0].collideDir.y, Player[0].position.z, data_4C9F68.x, data_4C9F68.y, data_4C9F68.z,
-                   data_4C9F74);
+    Unknown_40823B(Player[0].position.x, Player[0].position.y - Player[0].collisionPos.y, Player[0].position.z, CameraTargetPosition.x,
+                   CameraTargetPosition.y, CameraTargetPosition.z, CameraRotateY);
     DrawWorldSurface();
 
     if (Debug) {
@@ -157,7 +149,7 @@ void DrawMainGameGfx()
         DrawModelShadow(Player[0].position.x, a2a, Player[0].position.z, -30.0, 2.0, 1.0, a7a);
     }
     else {
-        v4 = Player[PNumber].f_0x30 * -1.0 + 3.1415927;
+        v4 = Player[PNumber].rotationY * -1.0 + 3.1415927;
         DrawModelSonic(Player[0].position.x, Player[0].position.y, Player[0].position.z, v4);
     }
 
@@ -246,9 +238,9 @@ void DrawWorldSurface()
                         LVertex *vert = &tile->vertices[v];
 
                         Vector3D z;
-                        z.x = vert->x - data_4C9F68.x;
-                        z.y = vert->y - data_4C9F68.y;
-                        z.z = vert->z - data_4C9F68.z;
+                        z.x = vert->x - CameraTargetPosition.x;
+                        z.y = vert->y - CameraTargetPosition.y;
+                        z.z = vert->z - CameraTargetPosition.z;
 
                         Vector3D normal = z.Normalized();
                         float distance  = z.Magnitude();
@@ -428,7 +420,7 @@ void DrawModelSonic(float x, float y, float z, float rotation)
         else {
             WorldMatrixTranslateXYZ(0.0f, -5.4000001f, 0.0f);
             MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
-            WorldMatrixRotateZ(data_4C9D4C);
+            WorldMatrixRotateZ(PlayerJumpRotationX);
             MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
             WorldMatrixTranslateXYZ(0.0f, 3.8f, 0.0f);
             MatrixMultiply(&MatrixSonicModel, &MatrixWorld);

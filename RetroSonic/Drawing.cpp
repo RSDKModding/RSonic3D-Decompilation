@@ -10,8 +10,6 @@ Matrix3D MatrixView;
 Matrix3D MatrixProjection;
 Matrix3D MatrixIdentity;
 
-TextureFormatSearchType TexFmtSearchType;
-
 char WindowMode = true;
 
 int ResX = 80;
@@ -27,9 +25,10 @@ IDirectDrawSurface7 *FrontBuffer;
 IDirectDrawSurface7 *BackBuffer;
 IDirectDrawSurface7 *ZBuffer;
 
+bool D3DSupportsZBufferFmt;
 bool D3DUseHardwareRendering = true;
 byte D3DDeviceType;
-bool D3DSupportsZBufferFmt;
+byte D3DTexFmtSearchType;
 
 tagRECT ClientRect;
 tagRECT WindowRect;
