@@ -164,7 +164,7 @@ void ModFilePath(char *buffer)
 {
     // Fixes ".ani" ".Ani" bug and any other case differences
     char pathLower[0x100];
-    memset(pathLower, 0, sizeof(char) * 0x100);
+    MEM_ZERO(pathLower, sizeof(char) * 0x100);
     for (int c = 0; c < strlen(buffer); ++c) {
         pathLower[c] = tolower(buffer[c]);
     }
@@ -230,7 +230,7 @@ void ScanModFolder(ModInfo *info)
                         std::string path(buffer);
                         std::string modPath(modBuf);
                         char pathLower[0x100];
-                        memset(pathLower, 0, sizeof(char) * 0x100);
+                        MEM_ZERO(pathLower, sizeof(char) * 0x100);
                         for (int c = 0; c < path.size(); ++c) {
                             pathLower[c] = tolower(path.c_str()[c]);
                         }

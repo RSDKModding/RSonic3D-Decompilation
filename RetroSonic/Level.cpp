@@ -464,7 +464,7 @@ void DrawModelSonic(float x, float y, float z, float rotation)
 void DrawObjectModelID(int object, float x, float y, float z, float ry, float rx, float rz)
 {
     LVertex vertices[4];
-    memset(&vertices, 0, sizeof(vertices));
+    MEM_ZERO(&vertices, sizeof(vertices));
 
     ushort indices[6] = { 0, 1, 2, 1, 3, 2 };
 

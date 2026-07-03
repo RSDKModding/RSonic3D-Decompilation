@@ -292,7 +292,7 @@ void LoadTexture(Texture **texturePtr, const char *path, bool useTexMips)
 
 void LoadLevelModel(LMF *model, const char *path)
 {
-    memset(model, 0, sizeof(*model));
+    MEM_ZERO(model, sizeof(*model));
 
 #if RETRO_USE_MOD_LOADER
     char filePathBuf[0x100];
@@ -526,7 +526,7 @@ void CreateDirectories()
 
 void Load_TMF_File(TMF *model, const char *path)
 {
-    memset(model, 0, sizeof(*model));
+    MEM_ZERO(model, sizeof(*model));
 
 #if RETRO_USE_MOD_LOADER
     char filePathBuf[0x100];
@@ -543,7 +543,7 @@ void Load_TMF_File(TMF *model, const char *path)
     fRead(&model->numVertices, 2, 1, handle);
     model->vertices = new Vertex[model->numVertices + 1];
     if (model->vertices != NULL)
-        memset(model->vertices, 0, sizeof(*model->vertices));
+        MEM_ZERO(model->vertices, sizeof(*model->vertices));
 
     for (int i = 0; i < model->numVertices; ++i) {
         fRead(&model->vertices[i], sizeof(model->vertices[i]), 1, handle);
@@ -560,7 +560,7 @@ void Load_TMF_File(TMF *model, const char *path)
 
 void Load_ANI_File(Animation *animation, const char *path)
 {
-    memset(animation, 0, sizeof(*animation));
+    MEM_ZERO(animation, sizeof(*animation));
 
     char boneName[0x100];
 

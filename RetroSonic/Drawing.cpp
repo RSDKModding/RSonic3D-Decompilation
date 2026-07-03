@@ -302,7 +302,7 @@ bool InitScreen()
     memcpy(&MatrixView, &MatrixIdentity, sizeof(MatrixView));
     SetRenderTransform(RENDER_TRANSFORM_VIEW, &MatrixView);
 
-    memset(&MatrixProjection, 0, sizeof(MatrixProjection));
+    MEM_ZERO(&MatrixProjection, sizeof(MatrixProjection));
     MatrixPerspective(&MatrixProjection, TO_RADIAN(45.0f), SCREEN_YSIZE_F / SCREEN_XSIZE_F, 1.0f, 1000.0f);
 
     Light light = {};
