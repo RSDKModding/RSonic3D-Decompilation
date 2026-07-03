@@ -1,6 +1,3 @@
 [submodule "dependencies/coldet"]
 	path = dependencies/coldet
 	url = https://github.com/amirgeva/coldet
-[submodule "dependencies/imgui"]
-	path = dependencies/imgui
-	url = https://github.com/ocornut/imgui.git

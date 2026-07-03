@@ -6,6 +6,7 @@ tagRECT clientRect;
 tagRECT windowBounds;
 #endif
 
+Matrix3D MatrixInversed;
 Matrix3D MatrixWorld;
 Matrix3D MatrixView;
 Matrix3D MatrixProjection;
@@ -13,8 +14,7 @@ Matrix3D MatrixIdentity;
 
 TextureFormatSearchType TexFmtSearchType;
 
-char WindowMode  = 1;
-int dword_41F0C4 = 1;
+char WindowMode = true;
 
 int ResX = 80;
 int ResY = 82;
@@ -29,8 +29,9 @@ IDirectDrawSurface7 *FrontBuffer;
 IDirectDrawSurface7 *BackBuffer;
 IDirectDrawSurface7 *ZBuffer;
 
-int D3DSupportsZBufferFmt;
+bool D3DUseHardwareRendering = true;
 byte D3DDeviceType;
+bool D3DSupportsZBufferFmt;
 
 HWND HWnd;
 HMENU HMenu;
@@ -46,7 +47,7 @@ bool EngineRunning = false;
 bool InitGraphicsAPI()
 {
 #if RETRO_USE_ORIGINAL_CODE
-    if (FAILED(DirectDrawCreateEx(NULL, (LPVOID *)(&DDraw), IID_IDirectDraw7, NULL))) {
+    if (FAILED(DirectDrawCreateEx(NULL, (void **)(&DDraw), IID_IDirectDraw7, NULL))) {
         MessageBox(HWnd, "DirectDrawCreate FAILED", 0, MB_ICONHAND);
         return false;
     }
@@ -64,7 +65,7 @@ void ReleaseGraphicsAPI()
 {
     ReleaseModelSurfaces();
     for (int i = 0; i < 10; ++i) {
-        ReleaseSurfaceID(i);
+        ReleaseCharacterUITexture(i);
     }
 
 #if RETRO_USE_ORIGINAL_CODE
@@ -188,89 +189,84 @@ bool InitDirect3D()
 bool InitScreen()
 {
 #if RETRO_USE_ORIGINAL_CODE
-    SupportsZBufferFmt = false;
-    if (DDraw->QueryInterface(IID_IDirect3D7, (LPVOID *)&D3D) < 0)
+    D3DSupportsZBufferFmt = false;
+    if (FAILED(DDraw->QueryInterface(IID_IDirect3D7, (void **)(&D3D))))
         return false;
 
-    DDPIXELFORMAT fmt;
-    memset(&fmt, 0, sizeof(fmt));
+    DDPIXELFORMAT format;
+    MEM_ZERO(&format, sizeof(format));
 
-    fmt.dwSize  = 32;
-    fmt.dwFlags = 1024;
+    format.dwSize  = sizeof(format);
+    format.dwFlags = DDPF_ZBUFFER;
 
-    D3D->EnumZBufferFormats(IID_IDirect3DTnLHalDevice, EnumZBufferFormatsCallback, &fmt);
+    D3D->EnumZBufferFormats(IID_IDirect3DTnLHalDevice, EnumZBufferFormatsCallback, &format);
     if (D3DSupportsZBufferFmt == true) {
         D3DDeviceType = D3D_DEVICE_TNL_HAL;
     }
     else {
-        D3D->EnumZBufferFormats(IID_IDirect3DHALDevice, EnumZBufferFormatsCallback, &fmt);
+        D3D->EnumZBufferFormats(IID_IDirect3DHALDevice, EnumZBufferFormatsCallback, &format);
         if (D3DSupportsZBufferFmt == true) {
             D3DDeviceType = D3D_DEVICE_HAL;
         }
         else {
-            D3D->EnumZBufferFormats(IID_IDirect3DRGBDevice, EnumZBufferFormatsCallback, &fmt);
+            D3D->EnumZBufferFormats(IID_IDirect3DRGBDevice, EnumZBufferFormatsCallback, &format);
             if (D3DSupportsZBufferFmt == true)
                 D3DDeviceType = D3D_DEVICE_RGB;
         }
     }
 
-    DDSURFACEDESC2 ddSurfaceDesc;
-    memset(&ddSurfaceDesc, 0, sizeof(ddSurfaceDesc));
+    DDSURFACEDESC2 description;
+    MEM_ZERO(&description, sizeof(description));
 
-    ddSurfaceDesc.dwSize  = 124;
-    ddSurfaceDesc.dwFlags = 4103;
+    description.dwSize  = sizeof(description);
+    description.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT;
 
-    if (D3DDeviceType <= -3)
-        ddSurfaceDesc.ddsCaps.dwCaps = 133120;
+    if (D3DDeviceType <= D3D_DEVICE_UNINITALIZED)
+        description.ddsCaps.dwCaps = DDSCAPS_SYSTEMMEMORY | DDSCAPS_ZBUFFER;
     else
-        ddSurfaceDesc.ddsCaps.dwCaps = 147456;
+        description.ddsCaps.dwCaps = DDSCAPS_VIDEOMEMORY | DDSCAPS_ZBUFFER;
 
-    if (WindowMode == 1) {
-        ddSurfaceDesc.dwWidth  = SCREEN_XSIZE * 2;
-        ddSurfaceDesc.dwHeight = SCREEN_YSIZE * 2;
+    if (WindowMode == true) {
+        description.dwWidth  = SCREEN_XSIZE * 2;
+        description.dwHeight = SCREEN_YSIZE * 2;
     }
-    else if (WindowMode == 0) {
-        ddSurfaceDesc.dwWidth  = ResX;
-        ddSurfaceDesc.dwHeight = ResY;
+    else if (WindowMode == false) {
+        description.dwWidth  = ResX;
+        description.dwHeight = ResY;
     }
 
-    memcpy(&ddSurfaceDesc.ddpfPixelFormat, &fmt, sizeof(ddSurfaceDesc.ddpfPixelFormat));
-    if (SUCCEEDED(DDraw->CreateSurface(&ddSurfaceDesc, &ZBuffer, 0))) {
+    memcpy(&description.ddpfPixelFormat, &format, sizeof(description.ddpfPixelFormat));
+    if (SUCCEEDED(DDraw->CreateSurface(&description, &ZBuffer, NULL)))
         BackBuffer->AddAttachedSurface(ZBuffer);
-    }
 
-    if (FAILED(D3D->CreateDevice(IID_IDirect3DTnLHalDevice, BackBuffer, &D3DDevice))) {
-        if (FAILED(D3D->CreateDevice(IID_IDirect3DHALDevice, BackBuffer, &D3DDevice))) {
-            if (FAILED(D3D->CreateDevice(IID_IDirect3DRGBDevice, BackBuffer, &D3DDevice)))
-                return false;
+    if (SUCCEEDED(D3D->CreateDevice(IID_IDirect3DTnLHalDevice, BackBuffer, &D3DDevice)))
+        D3DUseHardwareRendering = true;
+    else if (SUCCEEDED(D3D->CreateDevice(IID_IDirect3DHALDevice, BackBuffer, &D3DDevice)))
+        D3DUseHardwareRendering = true;
+    else if (SUCCEEDED(D3D->CreateDevice(IID_IDirect3DRGBDevice, BackBuffer, &D3DDevice)))
+        /* The game will most likely crash if hardware rendering isn't avaliable */
+        D3DUseHardwareRendering = false;
+    else
+        /* :skull: */
+        return false;
 
-            dword_41F0C4 = 0;
-        }
-        else {
-            dword_41F0C4 = 1;
-        }
-    }
-    else {
-        dword_41F0C4 = 1;
-    }
-
-    D3DVIEWPORT7 pViewport;
-    pViewport.dwX = 0;
-    pViewport.dwY = 0;
+    D3DVIEWPORT7 viewport;
+    viewport.dwX = 0;
+    viewport.dwY = 0;
 
     if (WindowMode) {
-        pViewport.dwWidth  = SCREEN_XSIZE * 2;
-        pViewport.dwHeight = SCREEN_YSIZE * 2;
+        viewport.dwWidth  = SCREEN_XSIZE * 2;
+        viewport.dwHeight = SCREEN_YSIZE * 2;
     }
     else {
-        pViewport.dwWidth  = ResX;
-        pViewport.dwHeight = ResY;
+        viewport.dwWidth  = ResX;
+        viewport.dwHeight = ResY;
     }
 
-    pViewport.dvMinZ = 0.0;
-    pViewport.dvMaxZ = 1.0;
+    viewport.dvMinZ = 0.0f;
+    viewport.dvMaxZ = 1.0f;
 
-    if (FAILED(D3DDevice->SetViewport(&pViewport)))
+    if (FAILED(D3DDevice->SetViewport(&viewport)))
         return false;
 #else
     glEnable(GL_CULL_FACE);
@@ -304,11 +300,11 @@ bool InitScreen()
     SetRenderLight(0, &light);
     EnableLight(0, true);
 
-    material_420520.ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
-    material_420520.diffuse = material_420520.ambient;
+    ObjectMaterial.ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
+    ObjectMaterial.diffuse = ObjectMaterial.ambient;
 
-    material_420520.specular = { 0.25f, 0.25f, 1.0f, 0.25f };
-    material_420520.power    = 80.0f;
+    ObjectMaterial.specular = { 0.25f, 0.25f, 1.0f, 0.25f };
+    ObjectMaterial.power    = 80.0f;
 
     SetRenderTransform(RENDER_TRANSFORM_PROJECTION, &MatrixProjection);
     SetRenderState(RENDER_STATE_DITHERENABLE, true);
@@ -320,14 +316,12 @@ bool InitScreen()
     SetRenderState(RENDER_STATE_ZENABLE, true);
     SetRenderState(RENDER_STATE_LIGHTING, true);
 
-    LoadTexture(&surfaceTestZoneBG, "Data/Levels/TestZone/BG.png", false);
-    LoadTexture(&surfaceSonic, "Data/Characters/Sonic.png", false);
-    LoadTexture(&surface3DLogo, "Data/Title/Logo.png", false);
-    LoadTexture(&surfaceShadow, "Data/Objects/Shadow.png", false);
+    LoadTexture(&BGTexture, "Data/Levels/TestZone/BG.png", false);
+    LoadTexture(&SonicTexture, "Data/Characters/Sonic.png", false);
+    LoadTexture(&LogoTexture, "Data/Title/Logo.png", false);
+    LoadTexture(&ShadowTexture, "Data/Objects/Shadow.png", false);
 
-    float_420428 = 4.0f;
-    float_42042C = 4.0f;
-    float_420430 = 4.0f;
+    UnusedVector = { 4.0f, 4.0f, 4.0f };
 
     SetRenderTextureStageState(0, TEXTURE_STATE_ALPHAOP, TEXTURE_VALUE_MODULATE);
     SetRenderTextureStageState(0, TEXTURE_STATE_ALPHAARG1, TEXTURE_VALUE_SELECTARG1);
@@ -342,7 +336,7 @@ bool InitScreen()
     SetRenderState(RENDER_STATE_DESTBLEND, 6);
 
 #if RETRO_USE_ORIGINAL_CODE
-    if (!dword_41F0C4)
+    if (!D3DUseHardwareRendering)
         SetRenderState(RENDER_STATE_TEXTUREPERSPECTIVE, false);
 #endif
 
@@ -358,7 +352,6 @@ void FlipScreen()
         default: break;
     }
 #else
-    ImGuiDoMenuBar();
     SDL_GL_SwapWindow(Window);
 #endif
 }
@@ -410,19 +403,14 @@ void ToggleScreenMode()
 {
 #if RETRO_USE_ORIGINAL_CODE
     DDraw->SetCooperativeLevel(HWnd, 8);
-#endif
 
     for (int i = 0; i < 10; ++i) {
-        if (surfaceCharacters2[i] != NULL) {
-            surfaceCharacters2[i]->Release();
-            surfaceCharacters2[i] = NULL;
-        }
+        ReleaseCharacterUITexture(i);
     }
 
     if (EngineRunning == true)
         ReleaseModelSurfaces();
 
-#if RETRO_USE_ORIGINAL_CODE
     if (BackBuffer != NULL) {
         BackBuffer->Release();
         BackBuffer = NULL;
@@ -746,8 +734,6 @@ void SetRenderState(RenderState type, int value)
 void SetRenderTextureStageState(int stage, TextureStageState type, int value)
 {
     switch (type) {
-        // i only did the shiny one for GL and then gave up
-        // the other ones arent too important anyways
         case TEXTURE_STATE_TEXCOORDINDEX:
 #if RETRO_USE_ORIGINAL_CODE
             D3DDevice->SetTextureStageState(stage, D3DTSS_TEXCOORDINDEX, value);
@@ -789,18 +775,36 @@ void SetRenderTextureStageState(int stage, TextureStageState type, int value)
         case TEXTURE_STATE_MINFILTER:
 #if RETRO_USE_ORIGINAL_CODE
             D3DDevice->SetTextureStageState(stage, D3DTSS_MINFILTER, value);
+#else
+            switch (value) {
+                default:
+                case TEXTURE_VALUE_SELECTARG1: glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); break;
+                case TEXTURE_VALUE_DISABLE: glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); break;
+            }
 #endif
             break;
 
         case TEXTURE_STATE_MAGFILTER:
 #if RETRO_USE_ORIGINAL_CODE
             D3DDevice->SetTextureStageState(stage, D3DTSS_MAGFILTER, value);
+#else
+            switch (value) {
+                default:
+                case TEXTURE_VALUE_SELECTARG1: glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); break;
+                case TEXTURE_VALUE_DISABLE: glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); break;
+            }
 #endif
             break;
 
         case TEXTURE_STATE_MIPFILTER:
 #if RETRO_USE_ORIGINAL_CODE
             D3DDevice->SetTextureStageState(stage, D3DTSS_MIPFILTER, value);
+#else
+            switch (value) {
+                default:
+                case TEXTURE_VALUE_SELECTARG1: glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); break;
+                case TEXTURE_VALUE_DISABLE: glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); break;
+            }
 #endif
             break;
 
@@ -926,52 +930,51 @@ void Texture::Release()
 #endif
 }
 
-// i'm not sure what this is for?
-void ReleaseSurfaceID(byte id)
+void ReleaseCharacterUITexture(byte id)
 {
-    if (surfaceCharacters2[id]) {
-        surfaceCharacters2[id]->Release();
-        surfaceCharacters2[id] = NULL;
+    if (CharacterUITexture[id]) {
+        CharacterUITexture[id]->Release();
+        CharacterUITexture[id] = NULL;
     }
 }
 
 void ReleaseModelSurfaces()
 {
-    for (int i = 0; i < 5; ++i) {
-        if (surfaceCharacters[i]) {
-            surfaceCharacters[i]->Release();
-            surfaceCharacters[i] = NULL;
+    for (int i = 0; i < CHARACTER_COUNT; ++i) {
+        if (CharacterTexture[i]) {
+            CharacterTexture[i]->Release();
+            CharacterTexture[i] = NULL;
         }
     }
 
-    if (TextureUnused != NULL) {
-        TextureUnused->Release();
-        TextureUnused = NULL;
+    if (UnusedTexture != NULL) {
+        UnusedTexture->Release();
+        UnusedTexture = NULL;
     }
 
-    if (surfaceSonic != NULL) {
-        surfaceSonic->Release();
-        surfaceSonic = NULL;
+    if (SonicTexture != NULL) {
+        SonicTexture->Release();
+        SonicTexture = NULL;
     }
 
-    if (surfaceTestZoneBG != NULL) {
-        surfaceTestZoneBG->Release();
-        surfaceTestZoneBG = NULL;
+    if (BGTexture != NULL) {
+        BGTexture->Release();
+        BGTexture = NULL;
     }
 
-    if (surface3DLogo != NULL) {
-        surface3DLogo->Release();
-        surface3DLogo = NULL;
+    if (LogoTexture != NULL) {
+        LogoTexture->Release();
+        LogoTexture = NULL;
     }
 
-    if (surfaceMText != NULL) {
-        surfaceMText->Release();
-        surfaceMText = NULL;
+    if (FontTexture != NULL) {
+        FontTexture->Release();
+        FontTexture = NULL;
     }
 
-    if (surfaceShadow != NULL) {
-        surfaceShadow->Release();
-        surfaceShadow = NULL;
+    if (ShadowTexture != NULL) {
+        ShadowTexture->Release();
+        ShadowTexture = NULL;
     }
 
 #if RETRO_USE_ORIGINAL_CODE

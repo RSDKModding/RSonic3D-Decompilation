@@ -825,14 +825,14 @@ void Zone_TitleScreen_4127E6()
 
 void DrawTitleModel(char type)
 {
-    SetRenderMaterial(&material_420520);
+    SetRenderMaterial(&ObjectMaterial);
 
     if (type == 1) {
-        SetRenderTexture(0, surface3DLogo);
-        DrawIndexedPrimitive(RENDER_FVF_VERTEX, LogoMdl.vertices, LogoMdl.numVertices, LogoMdl.indices, LogoMdl.numIndices);
+        SetRenderTexture(0, LogoTexture);
+        DrawIndexedPrimitive(RENDER_FVF_VERTEX, LogoModel.vertices, LogoModel.numVertices, LogoModel.indices, LogoModel.numIndices);
     }
     else if (type == 0) {
-        SetRenderTexture(0, surfaceTestZoneBG);
-        DrawIndexedPrimitive(RENDER_FVF_VERTEX, BackgroundMdl.vertices, BackgroundMdl.numVertices, BackgroundMdl.indices, BackgroundMdl.numIndices);
+        SetRenderTexture(0, BGTexture);
+        DrawIndexedPrimitive(RENDER_FVF_VERTEX, BGModel.vertices, BGModel.numVertices, BGModel.indices, BGModel.numIndices);
     }
 }

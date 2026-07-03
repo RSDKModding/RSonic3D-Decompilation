@@ -40,9 +40,9 @@ void DDLoadBitmap(LPCSTR szBitmap, int id)
     ddsd.dwWidth        = bm.bmWidth;
     ddsd.dwHeight       = bm.bmHeight;
 
-    DDraw->CreateSurface(&ddsd, (IDirectDrawSurface7 **)(&surfaceCharacters2[id]), NULL);
+    DDraw->CreateSurface(&ddsd, (IDirectDrawSurface7 **)(&CharacterUITexture[id]), NULL);
 
-    DDCopyBitmap((IDirectDrawSurface7 *)(surfaceCharacters2[id]), hbm, ddsd.dwWidth, ddsd.dwHeight, 0, 0);
+    DDCopyBitmap((IDirectDrawSurface7 *)(CharacterUITexture[id]), hbm, ddsd.dwWidth, ddsd.dwHeight, 0, 0);
     DeleteObject(hbm);
 }
 

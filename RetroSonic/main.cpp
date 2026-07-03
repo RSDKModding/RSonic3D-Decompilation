@@ -37,9 +37,9 @@ int main(int argc, char **argv)
 #endif
     }
 
-    InitObjectModels();
-    InitZoneSurface();
-    InitMTextSurface();
+    LoadObjectAssets();
+    LoadLevelAssets();
+    LoadFontAssets();
 
     GameMode = GAMEMODE_MAINGAME;
 

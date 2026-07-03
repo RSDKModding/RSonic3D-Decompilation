@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(RetroEngine)
 
-set(DECOMP_VERSION 1.0.0)
-
 option(RETRO_FORCE_CASE_INSENSITIVE "Forces case insensivity." OFF)
 option(RETRO_MOD_LOADER "Enables or disables the mod loader." ON)
 option(RETRO_ORIGINAL_CODE "Removes any change that differs from the original code." OFF)
@@ -10,7 +8,7 @@ option(RETRO_ORIGINAL_CODE "Removes any change that differs from the original co
 set(RETRO_SDL_VERSION 3 CACHE STRING "Select between SDL1, SDL2 and SDL3, defaults to SDL3")
 set(RETRO_OUTPUT_NAME "RSonic3D" CACHE STRING "The exported name of the executable.")
 
-if(NOT WIN32 OR NOT RETRO_USE_ORIGINAL_CODE)
+if(NOT WIN32 OR NOT RETRO_ORIGINAL_CODE)
     find_package(OpenGL REQUIRED)
 
     if(RETRO_SDL_VERSION EQUAL 3)
@@ -34,9 +32,7 @@ if(NOT WIN32 OR NOT RETRO_USE_ORIGINAL_CODE)
     endif()
 endif()
 
-if(WIN32 AND RETRO_USE_ORIGINAL_CODE)
-    set(RETRO_SUBSYSTEM "DX7")
-
+if(WIN32 AND RETRO_ORIGINAL_CODE)
     find_package(freeimage CONFIG QUIET)
     if(freeimage_FOUND)
         message(STATUS "Found FreeImage")
@@ -47,8 +43,6 @@ if(WIN32 AND RETRO_USE_ORIGINAL_CODE)
             message(FATAL_ERROR "FreeImage not found")
         endif()
     endif()
-else()
-    set(RETRO_SUBSYSTEM "SDL${RETRO_SDL_VERSION}/OGL")
 endif()
 
 set(RETRO_FILES
@@ -78,22 +72,6 @@ set(RETRO_FILES
     RetroSonic/TitleScreen.cpp
 )
 
-if (NOT RETRO_USE_ORIGINAL_CODE)
-    list(APPEND RETRO_FILES
-        dependencies/imgui/imgui.cpp
-        dependencies/imgui/imgui_draw.cpp
-        dependencies/imgui/imgui_tables.cpp
-        dependencies/imgui/imgui_widgets.cpp
-        dependencies/imgui/backends/imgui_impl_opengl3.cpp
-    )
-
-    if(RETRO_SDL_VERSION EQUAL 3)
-        list(APPEND RETRO_FILES dependencies/imgui/backends/imgui_impl_sdl3.cpp)
-    else()
-        list(APPEND RETRO_FILES dependencies/imgui/backends/imgui_impl_sdl2.cpp)
-    endif()
-endif()
-
 if(NOT PLATFORM)
     if(WIN32)
         set(PLATFORM "Windows" CACHE STRING "The platform to compile for.")
@@ -106,7 +84,7 @@ endif()
 
 add_executable(RetroEngine WIN32 ${RETRO_FILES} RetroSonic/RetroSonic.rc)
 
-target_compile_definitions(RetroEngine PRIVATE _CRT_SECURE_NO_WARNINGS SDL_MAIN_HANDLED)
+target_compile_definitions(RetroEngine PRIVATE _CRT_SECURE_NO_WARNINGS D3D_OVERLOADS SDL_MAIN_HANDLED)
 set_target_properties(RetroEngine PROPERTIES OUTPUT_NAME ${RETRO_OUTPUT_NAME})
 
 if (MSVC)
@@ -119,14 +97,12 @@ target_include_directories(RetroEngine PRIVATE
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/dependencies
     ${CMAKE_SOURCE_DIR}/dependencies/coldet/src
-    ${CMAKE_SOURCE_DIR}/dependencies/imgui
-    ${CMAKE_SOURCE_DIR}/dependencies/imgui/backends
     ${CMAKE_SOURCE_DIR}/RetroSonic
     ${FREEIMAGE_INCLUDE_DIR}
 )
 
-if(WIN32 AND RETRO_USE_ORIGINAL_CODE)
-    ## i dunno the correct way to check for the DX7SDK's install directory so
+if(WIN32 AND RETRO_ORIGINAL_CODE)
+    ## i dunno the correct way to check for the DX7SDK's install directory
     target_include_directories(RetroEngine PRIVATE C:\\DX7SDK\\include)
     target_link_directories(RetroEngine PRIVATE C:\\DX7SDK\\lib)
     target_link_libraries(RetroEngine PRIVATE dinput dxguid ddraw winmm)
@@ -167,8 +143,4 @@ target_compile_definitions(RetroEngine PRIVATE
     RETRO_USE_ORIGINAL_CODE=$<BOOL:${RETRO_ORIGINAL_CODE}>
     FORCE_CASE_INSENSITIVE=$<BOOL:${RETRO_FORCE_CASE_INSENSITIVE}>
     RETRO_USE_SDL${RETRO_SDL_VERSION}=1
-
-    RETRO_DEV_EXTRA="${PLATFORM} - ${CMAKE_CXX_COMPILER_ID}"
-    RETRO_SUBSYSTEM="${RETRO_SUBSYSTEM}"
-    DECOMP_VERSION="${DECOMP_VERSION}"
 )

@@ -126,7 +126,7 @@ void LoadTexture(Texture **texture, const char *path, bool useTexMips)
 
     IDirectDrawSurface7 *ppRenderTarget;
     D3DDevice->GetRenderTarget(&ppRenderTarget);
-    ppRenderTarget->GetDDInterface((LPVOID *)&DDraw);
+    ppRenderTarget->GetDDInterface((void **)(&DDraw));
     ppRenderTarget->Release();
 
     if (DDraw->CreateSurface(&surfaceDesc, (IDirectDrawSurface7 **)(texture), 0) < 0)

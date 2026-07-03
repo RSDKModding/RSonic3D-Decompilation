@@ -2,25 +2,36 @@
 #define LEVEL_H
 
 #include "RetroEngine.hpp"
+#include "Player.hpp"
 
-enum ObjectID {
-    OBJECT_ID_RING,
-    OBJECT_ID_SPRING,
-    OBJECT_ID_RING_SPARKLE,
+enum ObjectTypes {
+    OBJECT_NONE,
+    OBJECT_RING,
+    OBJECT_UNUSED,
+    OBJECT_RING_SPARKLE,
+    OBJECT_SPRING,
+};
+
+enum ObjectModelIDs {
+    MODEL_ID_RING,
+    MODEL_ID_SPRING,
+    MODEL_ID_RING_SPARKLE,
 };
 
 struct Object {
-    uint8_t field_0;
-    uint8_t field_1;
+    byte type;
+    byte unused1;
     Vector3D position;
-    uint8_t gap_10[12];
-    int32_t field_1C;
-    int32_t field_20;
-    int32_t field_24;
-    int32_t field_28;
-    int32_t field_2C;
-    int32_t field_30;
-    int32_t field_34;
+    int unused2;
+    int unused3;
+    int unused4;
+    int timer;
+    int unused5;
+    int unused6;
+    int unused7;
+    int unused8;
+    int unused9;
+    int enabled;
 };
 
 extern InputData MGameInput;
@@ -28,71 +39,67 @@ extern InputData MGameInput;
 extern int GameMode;
 extern int MainGameMode;
 
-extern float_t data_4DA248;
-extern int32_t Debug;
-extern int8_t PauseV;
-extern int16_t data_4DA256;
-extern int16_t data_4DA258;
-extern int8_t TimeCount;
-extern int8_t SmallSeconds;
-extern int8_t Seconds;
-extern int8_t Minutes;
-extern int32_t data_4DA264;
+extern float RingRotationY;
+extern int Debug;
+extern int DebugEn;
+extern sbyte PauseV;
+extern short data_4DA256;
+extern short data_4DA258;
+extern sbyte TimeCount;
+extern sbyte SmallSeconds;
+extern sbyte Seconds;
+extern sbyte Minutes;
+extern int data_4DA264;
 
-extern int32_t TempObjectPos;
-extern int32_t dword_41F480;
+extern int TempObjectPos;
 
 extern Vector3D data_4C9F68;
 
-extern float_t data_4C9F74;
-extern float_t data_4C9F78;
-extern int32_t data_4C9F7C;
+extern float data_4C9F74;
+extern float data_4C9F78;
+extern int data_4C9F7C;
 
-extern int32_t ObjectLoop;
+extern int ObjectLoop;
 extern Object LevelObjects[1100];
 
-extern char byte_420510[12];
-
-extern float float_420428;
-extern float float_42042C;
-extern float float_420430;
+extern Vector3D UnusedVector;
 
 extern Vector3D CameraPosition;
 extern float CameraCullX;
 extern float CameraCullZ;
 
+extern Texture *LevelTexture[10];
+extern Texture *ObjectTexture[2];
+extern Texture *SparkleTexture;
+extern Texture *ShadowTexture;
+extern Texture *FontTexture;
+extern Texture *LogoTexture;
+extern Texture *UnusedTexture;
+extern Texture *SonicTexture;
+extern Texture *BGTexture;
+extern Texture *CharacterTexture[CHARACTER_COUNT];
+extern Texture *CharacterUITexture[10];
+
+extern Material ObjectMaterial;
+
 extern LMF LevelModel;
-extern Texture *LevelTextureList[10];
-extern Texture *stageObjectTextures[2];
-extern Texture *sparkleTexture;
-extern Texture *surfaceShadow;
-extern Texture *surfaceMText;
-extern Texture *surface3DLogo;
-extern Texture *surfaceSonic;
-extern Texture *surfaceTestZoneBG;
-extern Texture *surfaceCharacters[5];
-extern Texture *surfaceCharacters2[10];
-extern Texture *TextureUnused;
-
-extern Material material_420520;
-
-extern TMF StageObjMdl[2];
-extern TMF LogoMdl;
-extern TMF BackgroundMdl;
-extern TMF SonicBaseMdl;
-extern TMF SonicMdl;
-extern TMF BallMdl;
+extern TMF ObjectModel[2];
+extern TMF LogoModel;
+extern TMF BGModel;
+extern TMF SonicBaseModel;
+extern TMF SonicModel;
+extern TMF BallModel;
 extern Animation SonicAni;
 
 extern Matrix3D matrix_47A790[100][36];
 extern Matrix3D array_42C590[100][36];
 
-void InitObjectModels();
-void InitZoneSurface();
-void InitMTextSurface();
+void LoadObjectAssets();
+void LoadLevelAssets();
+void LoadFontAssets();
 
 void sub_40F707();
-void CreateObject(char a1, char a2, float x, float y, float z);
+void CreateObject(byte type, byte unused, float x, float y, float z);
 void DrawMainGameGfx();
 void DrawObjects();
 void DrawWorldSurface();
@@ -106,7 +113,6 @@ void DrawObjectModelID(int object, float x, float y, float z, float ry, float rx
 
 void PlayerRotationPhysics(float *a1, float *a2, float *a3);
 void ResetPlayerRotation();
-
 
 void WorldMatrixTranslateXYZ(float x, float y, float z);
 void WorldMatrixRotateZ(float value);

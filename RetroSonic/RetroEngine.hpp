@@ -44,26 +44,19 @@ typedef unsigned int uint;
 // ============================
 
 #if RETRO_USE_ORIGINAL_CODE
-#define D3D_OVERLOADS
 #include "d3d.h"
 #include "dinput.h"
 #include <FreeImage.h>
 #include "DX7/ddutil.h"
 #include "DX7/texture.h"
 #include "resource.h"
-#else
-#include "imgui.h"
-#include "imgui_impl_opengl3.h"
-#if RETRO_USE_SDL3
+#elif RETRO_USE_SDL3
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
-#include "imgui_impl_sdl3.h"
 #elif RETRO_USE_SDL2
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_image.h>
-#include "imgui_impl_sdl2.h"
-#endif
 #endif
 
 #include <cdmath3d.h>
@@ -119,8 +112,6 @@ INT_PTR CALLBACK MDialogProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 void UpdateWindowRect(HWND hWnd);
 void ResetWindow(HWND hWnd);
 #else
-void SetupImGui();
-void ImGuiDoMenuBar();
 void ProcessEvents(SDL_Event &event);
 #endif
 

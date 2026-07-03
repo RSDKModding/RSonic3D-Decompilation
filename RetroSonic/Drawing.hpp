@@ -82,6 +82,8 @@ enum D3DZBufferResultType {
     D3D_DEVICE_TNL_HAL,
     D3D_DEVICE_HAL,
     D3D_DEVICE_RGB,
+
+    D3D_DEVICE_UNINITALIZED = -3,
 };
 
 enum LightType {
@@ -196,7 +198,6 @@ extern Matrix3D MatrixIdentity;
 extern TextureFormatSearchType TexFmtSearchType;
 
 extern char WindowMode;
-extern int dword_41F0C4;
 
 extern int ResX;
 extern int ResY;
@@ -211,8 +212,9 @@ extern IDirectDrawSurface7 *FrontBuffer;
 extern IDirectDrawSurface7 *BackBuffer;
 extern IDirectDrawSurface7 *ZBuffer;
 
-extern int D3DSupportsZBufferFmt;
+extern bool D3DUseHardwareRendering;
 extern byte D3DDeviceType;
+extern bool D3DSupportsZBufferFmt;
 
 extern HWND HWnd;
 extern HINSTANCE HInst;
@@ -252,7 +254,7 @@ void EnableVSync(bool enabled);
 void DrawIndexedPrimitive(RenderFVF type, void *pVertices, int numVertices, void *pIndices, int numIndices);
 void SetFade(float r, float g, float b, float a);
 
-void ReleaseSurfaceID(byte id);
+void ReleaseCharacterUITexture(byte id);
 void ReleaseModelSurfaces();
 void ReleaseGraphicsAPI();
 

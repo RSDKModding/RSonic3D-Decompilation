@@ -68,6 +68,8 @@ bool CreateMWindow()
     if (WindowMode == 0)
         flags |= SDL_WINDOW_FULLSCREEN;
 
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
 #if RETRO_USE_SDL3
     Window = SDL_CreateWindow("Retro-Sonic 3D: A Taxman Test", ResX, ResY, flags);
 #elif RETRO_USE_SDL2
@@ -81,7 +83,6 @@ bool CreateMWindow()
         return false;
 
     EnableVSync(true);
-    SetupImGui();
 
     EngineRunning = true;
     return InitInputDevice() && InitGraphicsAPI();
@@ -120,16 +121,16 @@ LRESULT CALLBACK MWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                     ResetTitleScreen();
 
                     for (int i = 0; i < 6; ++i) {
-                        ReleaseSurfaceID(i);
+                        ReleaseCharacterUITexture(i);
                     }
 
-                    InitMTextSurface();
+                    LoadFontAssets();
                     break;
 
                 case VK_F4:
                     ResetWindow(hWnd);
                     if (GameMode == GAMEMODE_TITLESCREEN)
-                        InitMTextSurface();
+                        LoadFontAssets();
                     break;
 
                 case VK_F5: DialogBoxParamA(HInst, "DMSelect", hWnd, MDialogProc, 0); break;
@@ -156,7 +157,7 @@ LRESULT CALLBACK MWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                 case IDM_OPT_FULLSCREEN:
                     ResetWindow(hWnd);
                     if (GameMode == GAMEMODE_TITLESCREEN)
-                        InitMTextSurface();
+                        LoadFontAssets();
                     break;
 
                 case IDM_ERASE_SAVE: break;
@@ -235,172 +236,9 @@ void ResetWindow(HWND hWnd)
     ToggleScreenMode();
 }
 #else
-void SetupImGui()
-{
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-
-    ImGuiIO &io    = ImGui::GetIO();
-    io.IniFilename = NULL;
-    io.Fonts->AddFontDefault();
-
-#if RETRO_USE_SDL3
-    ImGui_ImplSDL3_InitForOpenGL(Window, GLContext);
-#elif RETRO_USE_SDL2
-    ImGui_ImplSDL2_InitForOpenGL(Window, GLContext);
-#endif
-
-    ImGui_ImplOpenGL3_Init();
-}
-
-bool ShowAboutDialog = false;
-
-void ImGuiDoMenuBar()
-{
-#if false
-    if (WindowMode == false)
-        return;
-#endif
-
-    ImGui_ImplOpenGL3_NewFrame();
-
-#if RETRO_USE_SDL3
-    ImGui_ImplSDL3_NewFrame();
-#elif RETRO_USE_SDL2
-    ImGui_ImplSDL2_NewFrame();
-#endif
-
-    ImGui::NewFrame();
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-
-    if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("Game")) {
-            if (ImGui::MenuItem("Reset", "F2")) {
-                GameMode = GAMEMODE_TITLESCREEN;
-                ResetTitleScreen();
-                for (int i = 0; i < 6; ++i) {
-                    ReleaseSurfaceID(i);
-                }
-                InitMTextSurface();
-            }
-
-            ImGui::Separator();
-
-            if (ImGui::MenuItem("Quit", "ESC"))
-                EngineRunning = false;
-
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("Options")) {
-            if (ImGui::MenuItem("Fullscreen", "F4", (WindowMode == 0))) {
-                ToggleScreenMode();
-                if (GameMode == GAMEMODE_TITLESCREEN)
-                    InitMTextSurface();
-            }
-
-            ImGui::Separator();
-
-            int w = -1;
-            int f = -1;
-
-            if (ImGui::BeginMenu("Windowed Resolution")) {
-                for (int i = 0; i < 4; ++i) {
-                    if (ImGui::MenuItem(ResolutionOptions[i]))
-                        w = i;
-                }
-
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("Fullscreen Resolution")) {
-                for (int i = 0; i < 2; ++i) {
-                    if (ImGui::MenuItem(ResolutionOptions[i]))
-                        f = i;
-                }
-
-                ImGui::EndMenu();
-            }
-
-            // TODO: half works for fullscreen
-            if (w != -1 || f != -1) {
-                SetScreenResolution(w, f, 0);
-                glViewport(0, 0, ResX, ResY);
-                SDL_SetWindowSize(Window, ResX, ResY);
-                ReleaseModelSurfaces();
-                InitScreen();
-            }
-
-            // TODO: idk? remove?
-            if (ImGui::BeginMenu("Render Settings")) {
-                if (ImGui::MenuItem("Center Screen")) {
-                }
-
-                if (ImGui::MenuItem("Stretch to fit")) {
-                }
-
-                if (ImGui::MenuItem("2xSAI")) {
-                }
-
-                ImGui::EndMenu();
-            }
-
-            ImGui::Separator();
-
-            if (ImGui::BeginMenu("Mods")) {
-
-                ImGui::EndMenu();
-            }
-
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("Help")) {
-            ImGui::MenuItem("About", NULL, &ShowAboutDialog);
-            ImGui::EndMenu();
-        }
-
-        ImGui::EndMainMenuBar();
-    }
-
-    if (ShowAboutDialog)
-        ImGui::OpenPopup("About Retro-Sonic");
-
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, { 0.5f, 0.5f });
-    if (ImGui::BeginPopupModal("About Retro-Sonic", &ShowAboutDialog, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse)) {
-        ImGui::Text("Retro-Sonic 3D: Sky Worlds");
-        ImGui::Text("Programmed by \"The Taxman\" 2005");
-        ImGui::Text(RETRO_DEV_EXTRA);
-        ImGui::Text(RETRO_SUBSYSTEM);
-        ImGui::Text(DECOMP_VERSION);
-
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        if (ImGui::Button("OK", { 50, 0 })) {
-            ShowAboutDialog = false;
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::EndPopup();
-    }
-
-    ImGui::PopStyleVar();
-    ImGui::Render();
-
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
 void ProcessEvents(SDL_Event &event)
 {
     while (SDL_PollEvent(&event)) {
-#if RETRO_USE_SDL3
-        ImGui_ImplSDL3_ProcessEvent(&event);
-#elif RETRO_USE_SDL2
-        ImGui_ImplSDL2_ProcessEvent(&event);
-#endif
-
         switch (event.type) {
 #if RETRO_USE_SDL3
             case SDL_EVENT_QUIT:
@@ -437,16 +275,18 @@ void ProcessEvents(SDL_Event &event)
                     case SDLK_F2:
                         GameMode = GAMEMODE_TITLESCREEN;
                         ResetTitleScreen();
+
                         for (int i = 0; i < 6; ++i) {
-                            ReleaseSurfaceID(i);
+                            ReleaseCharacterUITexture(i);
                         }
-                        InitMTextSurface();
+
+                        LoadFontAssets();
                         break;
 
                     case SDLK_F4:
                         ToggleScreenMode();
                         if (GameMode == GAMEMODE_TITLESCREEN)
-                            InitMTextSurface();
+                            LoadFontAssets();
                         break;
 
                     default: break;
@@ -467,28 +307,37 @@ void ProcessMainGame()
             data_4C9F68.z = -32.0f;
             MainGameMode  = 2;
 
+            // x-axis line of 6 rings
             for (ObjectLoop = 0; ObjectLoop < 6; ++ObjectLoop) {
-                LevelObjects[ObjectLoop].field_0    = 1;
-                LevelObjects[ObjectLoop].field_34   = 1;
-                LevelObjects[ObjectLoop].position.x = (double)ObjectLoop * -8.0 - 10.0;
-                LevelObjects[ObjectLoop].position.z = -20.0;
-                LevelObjects[ObjectLoop].position.y = 5.0;
+                Object *ring = &LevelObjects[ObjectLoop];
+
+                ring->type       = OBJECT_RING;
+                ring->enabled    = true;
+                ring->position.x = (double)ObjectLoop * -8.0 - 10.0;
+                ring->position.z = -20.0f;
+                ring->position.y = 5.0f;
             }
 
+            // z-axis line of 4 rings
             for (ObjectLoop = 10; ObjectLoop < 14; ++ObjectLoop) {
-                LevelObjects[ObjectLoop].field_0    = 1;
-                LevelObjects[ObjectLoop].field_34   = 1;
-                LevelObjects[ObjectLoop].position.z = (double)ObjectLoop * 8.0 - 60.0;
-                LevelObjects[ObjectLoop].position.x = -50.0;
-                LevelObjects[ObjectLoop].position.y = 12.0;
+                Object *ring = &LevelObjects[ObjectLoop];
+
+                ring->type       = OBJECT_RING;
+                ring->enabled    = true;
+                ring->position.z = (double)ObjectLoop * 8.0f - 60.0f;
+                ring->position.x = -50.0f;
+                ring->position.y = 12.0f;
             }
 
+            // 1-element for loop that spawns the spring object, lol
             for (ObjectLoop = 14; ObjectLoop < 15; ++ObjectLoop) {
-                LevelObjects[ObjectLoop].field_0    = 4;
-                LevelObjects[ObjectLoop].field_34   = 1;
-                LevelObjects[ObjectLoop].position.z = 50.0;
-                LevelObjects[ObjectLoop].position.x = -80.0;
-                LevelObjects[ObjectLoop].position.y = 1.5;
+                Object *spring = &LevelObjects[ObjectLoop];
+
+                spring->type       = OBJECT_SPRING;
+                spring->enabled    = true;
+                spring->position.z = 50.0f;
+                spring->position.x = -80.0f;
+                spring->position.y = 1.5f;
             }
             break;
 
@@ -529,10 +378,7 @@ void ProcessMainGame()
     }
 }
 
-void SetGameMode(int mode)
-{
-    GameMode = mode;
-}
+void SetGameMode(int mode) { GameMode = mode; }
 
 void PauseCheck()
 {
@@ -561,9 +407,11 @@ void ProcessPlayerInput()
     float v9;  // [esp+4h] [ebp-134h]
     int v18;   // [esp+134h] [ebp-4h]
 
-    v18                    = 0;
-    Player[PNumber].f_0x48 = 0;
-    Player[PNumber].f_0x4C = 0;
+    v18 = 0;
+
+    Player[PNumber].up        = false;
+    Player[PNumber].jumpPress = false;
+
     if (!Player[PNumber].f_0x3B) {
         Player[PNumber].f_0x2C = 0;
 
@@ -654,7 +502,7 @@ void ProcessPlayerInput()
             }
 
             if (v18 > 0) {
-                Player[PNumber].f_0x48 = 1;
+                Player[PNumber].up = true;
                 Player[PNumber].f_0x2C /= v18;
             }
 
@@ -662,11 +510,11 @@ void ProcessPlayerInput()
             CheckKeyPress(&MGameInput, INPUT_START, INPUT_Z);
         }
 
-        if (MGameInput.control == 1)
-            Player[PNumber].f_0x4C = 1;
+        if (MGameInput.control == true)
+            Player[PNumber].jumpPress = true;
 
-        if (MGameInput.shift == 1 && dword_41F480 == 1)
-            Debug = Debug == 0;
+        if (MGameInput.shift == true && DebugEn == true)
+            Debug ^= true;
     }
 
     CheckInput(&MGameInput);
@@ -686,7 +534,7 @@ void ProcessPlayerMovement()
     float v2; // [esp+4h] [ebp-10h]
     char v3;  // [esp+8h] [ebp-Ch]
 
-    if (player->f_0x38 == 1 && player->f_0x48 == 1) {
+    if (player->f_0x38 == 1 && player->up == true) {
         if (player->f_0x28 < player->f_0x2C) {
             player->f_0x28 += 6;
             if (player->f_0x24 > 0.0)
@@ -706,7 +554,7 @@ void ProcessPlayerMovement()
         if (player->f_0x24 < 2.4000001)
             player->f_0x24 += 0.012;
     }
-    else if (player->f_0x38 == 0 && player->f_0x48 == 1) {
+    else if (player->f_0x38 == 0 && player->up == true) {
         if (player->f_0x28 < player->f_0x2C) {
             player->f_0x28 += 8;
             if (player->f_0x24 > 0.0)
@@ -735,7 +583,7 @@ void ProcessPlayerMovement()
     }
 
     if (player->f_0x38 != 2) {
-        if (player->f_0x44 == true) {
+        if (player->gravity == GRAVITY_AIR) {
             player->f_0x38 = 1;
 
             player->velocity.y -= 0.050000001;
@@ -760,8 +608,8 @@ void ProcessPlayerMovement()
             if (player->f_0x24 == 0.0)
                 player->gap_54[0] = 0;
 
-            if (player->f_0x4C == 1) {
-                player->f_0x44     = true;
+            if (player->jumpPress == true) {
+                player->gravity    = GRAVITY_AIR;
                 player->velocity.y = 2.0;
                 player->f_0x38     = 1;
                 ResetPlayerRotation();
@@ -769,19 +617,19 @@ void ProcessPlayerMovement()
         }
     }
 
-    player->velocity.x = -Sin(player->f_0x30) * player->f_0x24;
-    player->velocity.z = Cos(player->f_0x30) * player->f_0x24;
-    player->f_0x18.x   = 0.0;
-    player->f_0x18.y   = -4.0;
-    player->f_0x18.z   = 0.0;
+    player->velocity.x   = -Sin(player->f_0x30) * player->f_0x24;
+    player->velocity.z   = Cos(player->f_0x30) * player->f_0x24;
+    player->collideDir.x = 0.0;
+    player->collideDir.y = -4.0;
+    player->collideDir.z = 0.0;
 
-    if (player->f_0x44 == true) {
+    if (player->gravity == GRAVITY_AIR) {
         if (player->velocity.y < 0.0) {
             a6 = player->velocity.y * -1.0;
             if (ObjectFloorCollision(&player->position.x, &player->position.y, &player->position.z, player->velocity.x, a6, player->velocity.z)
                 == 1) {
                 player->velocity.y = 0.0;
-                player->f_0x44     = false;
+                player->gravity    = GRAVITY_GROUND;
                 player->f_0x38     = 0;
             }
         }
@@ -789,27 +637,29 @@ void ProcessPlayerMovement()
     else {
         player->velocity.y = 0.0;
         PlayerRotationPhysics(&player->velocity.x, &player->velocity.y, &player->velocity.z);
-        player->f_0x18.x = 0.0;
-        player->f_0x18.y = -3.5;
-        player->f_0x18.z = 0.0;
-        PlayerRotationPhysics(&player->f_0x18.x, &player->f_0x18.y, &player->f_0x18.z);
-        player->position.x = player->position.x - (player->f_0x18.x - player->f_0x18.x * 0.25);
-        player->position.y = player->position.y - (player->f_0x18.y - player->f_0x18.y * 0.25);
-        player->position.z = player->position.z - (player->f_0x18.z - player->f_0x18.z * 0.25);
+        player->collideDir.x = 0.0;
+        player->collideDir.y = -3.5;
+        player->collideDir.z = 0.0;
 
-        v3 =
-            ObjectFloorCollision(&player->position.x, &player->position.y, &player->position.z, player->f_0x18.x, player->f_0x18.y, player->f_0x18.z);
+        PlayerRotationPhysics(&player->collideDir.x, &player->collideDir.y, &player->collideDir.z);
+
+        player->position.x = player->position.x - (player->collideDir.x - player->collideDir.x * 0.25);
+        player->position.y = player->position.y - (player->collideDir.y - player->collideDir.y * 0.25);
+        player->position.z = player->position.z - (player->collideDir.z - player->collideDir.z * 0.25);
+
+        v3 = ObjectFloorCollision(&player->position.x, &player->position.y, &player->position.z, player->collideDir.x, player->collideDir.y,
+                                  player->collideDir.z);
         if (v3) {
             if (v3 > 0 && v3 <= 2) {
-                player->f_0x44 = false;
-                player->f_0x38 = 0;
+                player->gravity = GRAVITY_GROUND;
+                player->f_0x38  = 0;
             }
         }
         else {
-            player->position.x = player->f_0x18.x - player->f_0x18.x * 0.25 + player->position.x;
-            player->position.y = player->f_0x18.y - player->f_0x18.y * 0.25 + player->position.y;
-            player->position.z = player->f_0x18.z - player->f_0x18.z * 0.25 + player->position.z;
-            player->f_0x44     = true;
+            player->position.x = player->collideDir.x - player->collideDir.x * 0.25 + player->position.x;
+            player->position.y = player->collideDir.y - player->collideDir.y * 0.25 + player->position.y;
+            player->position.z = player->collideDir.z - player->collideDir.z * 0.25 + player->position.z;
+            player->gravity    = GRAVITY_AIR;
         }
     }
 
@@ -818,10 +668,10 @@ void ProcessPlayerMovement()
     player->position.z += player->velocity.z;
     ProcessPlayerCamera();
 
-    if (player->f_0x48 == 1)
+    if (player->up == true)
         player->f_0x30 = (double)player->f_0x28 / 128.0 * 3.1415927 + data_4C9F74;
 
-    if (player->f_0x44 == true) {
+    if (player->gravity == GRAVITY_AIR) {
         if (data_4C9F7C < 30)
             data_4C9F7C++;
 
@@ -860,34 +710,37 @@ void ProcessPlayerMovement()
 void ProcessObjects()
 {
     for (ObjectLoop = 0; ObjectLoop < 1100; ++ObjectLoop) {
-        if (LevelObjects[ObjectLoop].field_34 > 0) {
-            switch (LevelObjects[ObjectLoop].field_0) {
-                case 1: {
+        Object *object = &LevelObjects[ObjectLoop];
+        if (object->enabled > 0) {
+            switch (object->type) {
+                case OBJECT_RING: {
                     Vector3D position;
-                    position.z = LevelObjects[ObjectLoop].position.z - Player[0].position.z;
-                    position.y = LevelObjects[ObjectLoop].position.y - Player[0].position.y + Player[0].f_0x18.y;
-                    position.x = LevelObjects[ObjectLoop].position.x - Player[0].position.x;
+                    position.z = object->position.z - Player[0].position.z;
+                    position.y = object->position.y - Player[0].position.y + Player[0].collideDir.y;
+                    position.x = object->position.x - Player[0].position.x;
 
                     if (position.Magnitude() < 6.0)
-                        LevelObjects[ObjectLoop].field_0 = 3;
+                        object->type = OBJECT_RING_SPARKLE;
                     break;
                 }
-                case 3: {
-                    if (++LevelObjects[ObjectLoop].field_1C > 15) {
-                        LevelObjects[ObjectLoop].field_1C = 0;
-                        LevelObjects[ObjectLoop].field_0  = 0;
+
+                case OBJECT_RING_SPARKLE: {
+                    if (++object->timer > 15) {
+                        object->timer = 0;
+                        object->type  = OBJECT_NONE;
                     }
                     break;
                 }
-                case 4: { // spring
+
+                case OBJECT_SPRING: {
                     Vector3D position;
-                    position.z = LevelObjects[ObjectLoop].position.z - Player[0].position.z;
-                    position.y = LevelObjects[ObjectLoop].position.y - Player[0].position.y + Player[0].f_0x18.y;
-                    position.x = LevelObjects[ObjectLoop].position.x - Player[0].position.x;
+                    position.z = object->position.z - Player[0].position.z;
+                    position.y = object->position.y - Player[0].position.y + Player[0].collideDir.y;
+                    position.x = object->position.x - Player[0].position.x;
 
                     if (position.Magnitude() < 6.0) {
                         Player[PNumber].velocity.y = 4.0;
-                        Player[PNumber].f_0x44     = 1;
+                        Player[PNumber].gravity    = GRAVITY_AIR;
                     }
                     break;
                 }
@@ -895,9 +748,9 @@ void ProcessObjects()
         }
     }
 
-    data_4DA248 += 0.050000001;
-    if (RSDK_PI + RSDK_PI < data_4DA248)
-        data_4DA248 -= (RSDK_PI + RSDK_PI);
+    RingRotationY += 0.05f;
+    if (RingRotationY > RSDK_PI * 2)
+        RingRotationY -= RSDK_PI * 2;
 }
 
 void ProcessTime()

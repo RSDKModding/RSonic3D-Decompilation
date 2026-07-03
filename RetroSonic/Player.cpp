@@ -1,9 +1,8 @@
 #include "RetroEngine.hpp"
 
-Matrix3D MatrixSonicAni_4C8990[36];
-Matrix3D MatrixSonicAni_4C9290[36];
 Matrix3D MatrixSonicModel;
-Matrix3D MatrixInversed;
+Matrix3D MatrixSonicNodeRotation[36];
+Matrix3D MatrixSonicNodeTransform[36];
 
 float PlayerTargetRotationZ;
 float PlayerTargetRotationX;
@@ -92,19 +91,19 @@ void ProcessPlayerCamera()
     }
 }
 
-void LoadPlayerGfx(const char *textureName, sbyte playerID)
+void LoadPlayerGfx(const char *textureName, sbyte characterID)
 {
 #if RETRO_USE_ORIGINAL_CODE
     char name[64];
     lstrcpy(name, "Data/Characters/");
     lstrcat(name, textureName);
 
-    if (surfaceCharacters[playerID] != NULL)
-        surfaceCharacters[playerID]->Release();
+    if (CharacterTexture[characterID] != NULL)
+        CharacterTexture[characterID]->Release();
 
-    surfaceCharacters[playerID] = (Texture *)CreateTexture(D3DDevice, name);
+    CharacterTexture[characterID] = (Texture *)(CreateTexture(D3DDevice, name));
 
-    if (playerID == 0)
+    if (characterID == CHARACTER_SONIC_TAILS)
         DDLoadBitmap(name, 0);
 #endif
 }
@@ -113,16 +112,14 @@ void HandleSonicVertexPositions(int frameID)
 {
     AnimationNode *node = &SonicAni.nodes[frameID];
 
+    Matrix3D *matrix = &MatrixSonicModel;
     for (int i = 0; i < node->vertexCount; ++i) {
-        Vertex *vert = &SonicMdl.vertices[node->vertexIDs[i]];
-        Vertex *base = &SonicBaseMdl.vertices[node->vertexIDs[i]];
+        Vertex *vert = &SonicModel.vertices[node->vertexIDs[i]];
+        Vertex *base = &SonicBaseModel.vertices[node->vertexIDs[i]];
 
-        vert->x =
-            MatrixSonicModel.m[0][0] * base->x + MatrixSonicModel.m[1][0] * base->y + MatrixSonicModel.m[2][0] * base->z + MatrixSonicModel.m[3][0];
-        vert->y =
-            MatrixSonicModel.m[0][1] * base->x + MatrixSonicModel.m[1][1] * base->y + MatrixSonicModel.m[2][1] * base->z + MatrixSonicModel.m[3][1];
-        vert->z =
-            MatrixSonicModel.m[0][2] * base->x + MatrixSonicModel.m[1][2] * base->y + MatrixSonicModel.m[2][2] * base->z + MatrixSonicModel.m[3][2];
+        vert->x = matrix->m[0][0] * base->x + matrix->m[1][0] * base->y + matrix->m[2][0] * base->z + matrix->m[3][0];
+        vert->y = matrix->m[0][1] * base->x + matrix->m[1][1] * base->y + matrix->m[2][1] * base->z + matrix->m[3][1];
+        vert->z = matrix->m[0][2] * base->x + matrix->m[1][2] * base->y + matrix->m[2][2] * base->z + matrix->m[3][2];
     }
 }
 
@@ -130,16 +127,14 @@ void HandleSonicVertexNormals(int frameID)
 {
     AnimationNode *node = &SonicAni.nodes[frameID];
 
+    Matrix3D *matrix = &MatrixSonicModel;
     for (int i = 0; i < node->vertexCount; ++i) {
-        Vertex *vert = &SonicMdl.vertices[node->vertexIDs[i]];
-        Vertex *base = &SonicBaseMdl.vertices[node->vertexIDs[i]];
+        Vertex *vert = &SonicModel.vertices[node->vertexIDs[i]];
+        Vertex *base = &SonicBaseModel.vertices[node->vertexIDs[i]];
 
-        vert->nx = MatrixSonicModel.m[0][0] * base->nx + MatrixSonicModel.m[1][0] * base->ny + MatrixSonicModel.m[2][0] * base->nz
-                   + MatrixSonicModel.m[3][0];
-        vert->ny = MatrixSonicModel.m[0][1] * base->nx + MatrixSonicModel.m[1][1] * base->ny + MatrixSonicModel.m[2][1] * base->nz
-                   + MatrixSonicModel.m[3][1];
-        vert->nz = MatrixSonicModel.m[0][2] * base->nx + MatrixSonicModel.m[1][2] * base->ny + MatrixSonicModel.m[2][2] * base->nz
-                   + MatrixSonicModel.m[3][2];
+        vert->nx = matrix->m[0][0] * base->nx + matrix->m[1][0] * base->ny + matrix->m[2][0] * base->nz + matrix->m[3][0];
+        vert->ny = matrix->m[0][1] * base->nx + matrix->m[1][1] * base->ny + matrix->m[2][1] * base->nz + matrix->m[3][1];
+        vert->nz = matrix->m[0][2] * base->nx + matrix->m[1][2] * base->ny + matrix->m[2][2] * base->nz + matrix->m[3][2];
     }
 }
 
@@ -204,24 +199,23 @@ void ProcessPlayerAnimationLMC()
         ushort BFAA_BFAC = AB90_BFAA->array_2[SonicAni.field_BFAC];
         ushort BFAB_BFAE = AB90_BFAB->array_2[SonicAni.field_BFAE];
 
-        memcpy(&MatrixSonicAni_4C8990[i], &MatrixIdentity, sizeof(Matrix3D));
-
+        memcpy(&MatrixSonicNodeRotation[i], &MatrixIdentity, sizeof(Matrix3D));
         WorldMatrixRotateZ((1.0 - F_BFB0) * node->rotX[BFAA_BFAC] + F_BFB0 * node->rotX[BFAB_BFAE]);
-        MatrixMultiply(&MatrixSonicAni_4C8990[i], &MatrixWorld);
+        MatrixMultiply(&MatrixSonicNodeRotation[i], &MatrixWorld);
 
         WorldMatrixRotateY((1.0 - F_BFB0) * node->rotY[BFAA_BFAC] + F_BFB0 * node->rotY[BFAB_BFAE]);
-        MatrixMultiply(&MatrixSonicAni_4C8990[i], &MatrixWorld);
+        MatrixMultiply(&MatrixSonicNodeRotation[i], &MatrixWorld);
 
         WorldMatrixRotateX((1.0 - F_BFB0) * node->rotZ[BFAA_BFAC] + F_BFB0 * node->rotZ[BFAB_BFAE]);
-        MatrixMultiply(&MatrixSonicAni_4C8990[i], &MatrixWorld);
+        MatrixMultiply(&MatrixSonicNodeRotation[i], &MatrixWorld);
 
-        memcpy(&MatrixSonicAni_4C9290[i], &MatrixIdentity, sizeof(Matrix3D));
+        memcpy(&MatrixSonicNodeTransform[i], &MatrixIdentity, sizeof(Matrix3D));
         WorldMatrixTranslateXYZ(-node->position.x, -node->position.y, -node->position.z);
-        MatrixMultiply(&MatrixSonicAni_4C9290[i], &MatrixWorld);
+        MatrixMultiply(&MatrixSonicNodeTransform[i], &MatrixWorld);
 
-        MatrixMultiply(&MatrixSonicAni_4C9290[i], &MatrixSonicAni_4C8990[i]);
+        MatrixMultiply(&MatrixSonicNodeTransform[i], &MatrixSonicNodeRotation[i]);
         WorldMatrixTranslateXYZ(node->position.x, node->position.y, node->position.z);
-        MatrixMultiply(&MatrixSonicAni_4C9290[i], &MatrixWorld);
+        MatrixMultiply(&MatrixSonicNodeTransform[i], &MatrixWorld);
     }
 
     for (int j = 0; j < SonicAni.frameIDCount; ++j) {
@@ -233,13 +227,13 @@ void ProcessPlayerAnimationLMC()
                 default:
                     memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
                     for (int k = j; SonicAni.frameIDs[k] < 254; ++k) {
-                        MatrixMultiply(&MatrixSonicModel, &MatrixSonicAni_4C9290[SonicAni.frameIDs[k]]);
+                        MatrixMultiply(&MatrixSonicModel, &MatrixSonicNodeTransform[SonicAni.frameIDs[k]]);
                     }
                     HandleSonicVertexPositions(SonicAni.frameIDs[j]);
 
                     memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
                     for (int l = j; SonicAni.frameIDs[l] < 254; ++l) {
-                        MatrixMultiply(&MatrixSonicModel, &MatrixSonicAni_4C8990[SonicAni.frameIDs[l]]);
+                        MatrixMultiply(&MatrixSonicModel, &MatrixSonicNodeRotation[SonicAni.frameIDs[l]]);
                     }
                     HandleSonicVertexNormals(SonicAni.frameIDs[j]);
                     break;
@@ -251,10 +245,10 @@ void ProcessPlayerAnimationLMC()
                 case 255: v7 = false; break;
 
                 default:
-                    memcpy(&MatrixSonicModel, &MatrixSonicAni_4C9290[SonicAni.frameIDs[j]], sizeof(MatrixSonicModel));
+                    memcpy(&MatrixSonicModel, &MatrixSonicNodeTransform[SonicAni.frameIDs[j]], sizeof(MatrixSonicModel));
                     HandleSonicVertexPositions(SonicAni.frameIDs[j]);
 
-                    memcpy(&MatrixSonicModel, &MatrixSonicAni_4C8990[SonicAni.frameIDs[j]], sizeof(MatrixSonicModel));
+                    memcpy(&MatrixSonicModel, &MatrixSonicNodeRotation[SonicAni.frameIDs[j]], sizeof(MatrixSonicModel));
                     HandleSonicVertexNormals(SonicAni.frameIDs[j]);
                     break;
             }
@@ -269,23 +263,23 @@ void MightBeSonicAnim_406432()
         for (int j = 0; j < 36; ++j) {
             AnimationNode *node = &SonicAni.nodes[j];
 
-            memcpy(&MatrixSonicAni_4C8990[j], &MatrixIdentity, sizeof(Matrix3D));
+            memcpy(&MatrixSonicNodeRotation[j], &MatrixIdentity, sizeof(Matrix3D));
             WorldMatrixRotateZ(node->rotX[i]);
 
-            MatrixMultiply(&MatrixSonicAni_4C8990[j], &MatrixWorld);
+            MatrixMultiply(&MatrixSonicNodeRotation[j], &MatrixWorld);
             WorldMatrixRotateY(node->rotY[i]);
 
-            MatrixMultiply(&MatrixSonicAni_4C8990[j], &MatrixWorld);
+            MatrixMultiply(&MatrixSonicNodeRotation[j], &MatrixWorld);
             WorldMatrixRotateX(node->rotZ[i]);
 
-            MatrixMultiply(&MatrixSonicAni_4C8990[j], &MatrixWorld);
-            memcpy(&MatrixSonicAni_4C9290[j], &MatrixIdentity, sizeof(Matrix3D));
+            MatrixMultiply(&MatrixSonicNodeRotation[j], &MatrixWorld);
+            memcpy(&MatrixSonicNodeTransform[j], &MatrixIdentity, sizeof(Matrix3D));
 
             WorldMatrixTranslateXYZ(-node->position.x, -node->position.y, -node->position.z);
-            MatrixMultiply(&MatrixSonicAni_4C9290[j], &MatrixWorld);
-            MatrixMultiply(&MatrixSonicAni_4C9290[j], &MatrixSonicAni_4C8990[j]);
+            MatrixMultiply(&MatrixSonicNodeTransform[j], &MatrixWorld);
+            MatrixMultiply(&MatrixSonicNodeTransform[j], &MatrixSonicNodeRotation[j]);
             WorldMatrixTranslateXYZ(node->position.x, node->position.y, node->position.z);
-            MatrixMultiply(&MatrixSonicAni_4C9290[j], &MatrixWorld);
+            MatrixMultiply(&MatrixSonicNodeTransform[j], &MatrixWorld);
         }
 
         for (int k = 0; k < SonicAni.frameIDCount; ++k) {
@@ -297,13 +291,13 @@ void MightBeSonicAnim_406432()
                     default:
                         memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
                         for (int m = k; SonicAni.frameIDs[m] < 254; ++m) {
-                            MatrixMultiply(&MatrixSonicModel, &MatrixSonicAni_4C9290[SonicAni.frameIDs[m]]);
+                            MatrixMultiply(&MatrixSonicModel, &MatrixSonicNodeTransform[SonicAni.frameIDs[m]]);
                         }
                         memcpy(&matrix_47A790[k][i], &MatrixSonicModel, sizeof(matrix_47A790[k][i]));
 
                         memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
                         for (int n = k; SonicAni.frameIDs[n] < 254; ++n) {
-                            MatrixMultiply(&MatrixSonicModel, &MatrixSonicAni_4C8990[SonicAni.frameIDs[n]]);
+                            MatrixMultiply(&MatrixSonicModel, &MatrixSonicNodeRotation[SonicAni.frameIDs[n]]);
                         }
                         memcpy(&array_42C590[k][i], &MatrixSonicModel, sizeof(array_42C590[k][i]));
                         break;
@@ -315,10 +309,10 @@ void MightBeSonicAnim_406432()
                     case 255: v6 = false; break;
 
                     default:
-                        memcpy(&MatrixSonicModel, &MatrixSonicAni_4C9290[SonicAni.frameIDs[k]], sizeof(MatrixSonicModel));
+                        memcpy(&MatrixSonicModel, &MatrixSonicNodeTransform[SonicAni.frameIDs[k]], sizeof(MatrixSonicModel));
                         HandleSonicVertexPositions(SonicAni.frameIDs[k]);
 
-                        memcpy(&MatrixSonicModel, &MatrixSonicAni_4C8990[SonicAni.frameIDs[k]], sizeof(MatrixSonicModel));
+                        memcpy(&MatrixSonicModel, &MatrixSonicNodeRotation[SonicAni.frameIDs[k]], sizeof(MatrixSonicModel));
                         HandleSonicVertexNormals(SonicAni.frameIDs[k]);
                         break;
                 }

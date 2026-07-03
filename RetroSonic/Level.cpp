@@ -5,82 +5,80 @@ InputData MGameInput;
 int GameMode;
 int MainGameMode;
 
-float_t data_4DA248;
-int32_t Debug;
-int8_t PauseV;
-int16_t data_4DA256;
-int16_t data_4DA258;
-int8_t TimeCount;
-int8_t SmallSeconds;
-int8_t Seconds;
-int8_t Minutes;
-int32_t data_4DA264;
+float RingRotationY;
 
-int32_t TempObjectPos = 232;
-int32_t dword_41F480  = 1;
+int Debug;
+int DebugEn = true;
+
+sbyte PauseV;
+short data_4DA256;
+short data_4DA258;
+sbyte TimeCount;
+sbyte SmallSeconds;
+sbyte Seconds;
+sbyte Minutes;
+int data_4DA264;
+
+int TempObjectPos = 232;
 
 Vector3D data_4C9F68;
 
-float data_4C9F74;
-float_t data_4C9F78;
-int32_t data_4C9F7C;
+float data_4C9F74; // camera x rotation related
+float data_4C9F78; // camera y rotation related
+int data_4C9F7C;   // camera y rotation timer?
 
-int32_t ObjectLoop;
+int ObjectLoop;
 Object LevelObjects[1100];
 
-char byte_420510[12];
-
-float float_420428;
-float float_42042C;
-float float_420430;
+Vector3D UnusedVector;
 
 Vector3D CameraPosition;
 float CameraCullX;
 float CameraCullZ;
 
+Texture *LevelTexture[10];
+Texture *ObjectTexture[2];
+Texture *SparkleTexture;
+Texture *ShadowTexture;
+Texture *FontTexture;
+Texture *LogoTexture;
+Texture *UnusedTexture;
+Texture *SonicTexture;
+Texture *BGTexture;
+Texture *CharacterTexture[CHARACTER_COUNT];
+Texture *CharacterUITexture[10];
+
+Material ObjectMaterial = {};
+
 LMF LevelModel;
-Texture *LevelTextureList[10];
-Texture *stageObjectTextures[2];
-Texture *sparkleTexture;
-Texture *surfaceShadow;
-Texture *surfaceMText;
-Texture *surface3DLogo;
-Texture *surfaceSonic;
-Texture *surfaceTestZoneBG;
-Texture *surfaceCharacters[5];
-Texture *surfaceCharacters2[10];
-Texture *TextureUnused;
-
-Material material_420520 = {};
-
-TMF StageObjMdl[2];
-TMF LogoMdl;
-TMF BackgroundMdl;
-TMF SonicBaseMdl;
-TMF SonicMdl;
-TMF BallMdl;
+TMF ObjectModel[2];
+TMF LogoModel;
+TMF BGModel;
+TMF SonicBaseModel;
+TMF SonicModel;
+TMF BallModel;
 Animation SonicAni;
 
-Matrix3D matrix_47A790[100][36];
-Matrix3D array_42C590[100][36]; // TODO: Correct size?
+Matrix3D matrix_47A790[100][36]; // List of MatrixSonic copies?
+Matrix3D array_42C590[100][36];  // List of MatrixSonic copies?
 
-void InitObjectModels()
+void LoadObjectAssets()
 {
-    Load_TMF_File(&LogoMdl, "Data/Title/Logo.tmf");
-    Load_TMF_File(&BackgroundMdl, "Data/Levels/TestZone/BG.tmf");
-    Load_TMF_File(&SonicBaseMdl, "Data/Characters/Sonic.tmf");
-    Load_TMF_File(&SonicMdl, "Data/Characters/Sonic.tmf");
-    Load_TMF_File(&BallMdl, "Data/Characters/Ball.tmf");
+    Load_TMF_File(&LogoModel, "Data/Title/Logo.tmf");
+    Load_TMF_File(&BGModel, "Data/Levels/TestZone/BG.tmf");
+    Load_TMF_File(&SonicBaseModel, "Data/Characters/Sonic.tmf");
+    Load_TMF_File(&SonicModel, "Data/Characters/Sonic.tmf");
+    Load_TMF_File(&BallModel, "Data/Characters/Ball.tmf");
     Load_ANI_File(&SonicAni, "Data/Characters/Sonic.ani");
     MightBeSonicAnim_406432();
 
-    Load_TMF_File(&StageObjMdl[0], "Data/Objects/General/Ring.tmf");
-    LoadTexture(&stageObjectTextures[0], "Data/Objects/General/Ring.png", false);
+    Load_TMF_File(&ObjectModel[0], "Data/Objects/General/Ring.tmf");
+    LoadTexture(&ObjectTexture[0], "Data/Objects/General/Ring.png", false);
 
-    Load_TMF_File(&StageObjMdl[1], "Data/Objects/General/Spring.tmf");
-    LoadTexture(&stageObjectTextures[1], "Data/Objects/General/Spring.png", false);
+    Load_TMF_File(&ObjectModel[1], "Data/Objects/General/Spring.tmf");
+    LoadTexture(&ObjectTexture[1], "Data/Objects/General/Spring.png", false);
 
-    LoadTexture(&sparkleTexture, "Data/Objects/General/Sparkle.png", false);
+    LoadTexture(&SparkleTexture, "Data/Objects/General/Sparkle.png", false);
 
     SonicAni.field_BFAB = 5;
     SonicAni.field_BFAA = 5;
@@ -89,28 +87,28 @@ void InitObjectModels()
     SonicAni.field_BFAE = 0;
 }
 
-void InitZoneSurface()
+void LoadLevelAssets()
 {
     LoadLevelModel(&LevelModel, "Data/Levels/TestZone/Act1.lmf");
 
     for (int i = 0; i < 6; ++i) {
         switch (i) {
-            case 0: LoadTexture(&LevelTextureList[i], "Data/Levels/TestZone/Lev01.png", true); break;
-            case 1: LoadTexture(&LevelTextureList[i], "Data/Levels/TestZone/Lev02.png", true); break;
-            case 2: LoadTexture(&LevelTextureList[i], "Data/Levels/TestZone/Lev03.png", true); break;
-            case 3: LoadTexture(&LevelTextureList[i], "Data/Levels/TestZone/Lev04.png", true); break;
-            case 4: LoadTexture(&LevelTextureList[i], "Data/Levels/TestZone/Lev05.png", true); break;
-            case 5: LoadTexture(&LevelTextureList[i], "Data/Levels/TestZone/Lev06.png", true); break;
-            case 6: LoadTexture(&LevelTextureList[i], "Data/Levels/TestZone/Lev07.png", true); break;
-            case 7: LoadTexture(&LevelTextureList[i], "Data/Levels/TestZone/Lev08.png", true); break;
-            case 8: LoadTexture(&LevelTextureList[i], "Data/Levels/TestZone/Lev09.png", true); break;
-            case 9: LoadTexture(&LevelTextureList[i], "Data/Levels/TestZone/Lev10.png", true); break;
+            case 0: LoadTexture(&LevelTexture[i], "Data/Levels/TestZone/Lev01.png", true); break;
+            case 1: LoadTexture(&LevelTexture[i], "Data/Levels/TestZone/Lev02.png", true); break;
+            case 2: LoadTexture(&LevelTexture[i], "Data/Levels/TestZone/Lev03.png", true); break;
+            case 3: LoadTexture(&LevelTexture[i], "Data/Levels/TestZone/Lev04.png", true); break;
+            case 4: LoadTexture(&LevelTexture[i], "Data/Levels/TestZone/Lev05.png", true); break;
+            case 5: LoadTexture(&LevelTexture[i], "Data/Levels/TestZone/Lev06.png", true); break;
+            case 6: LoadTexture(&LevelTexture[i], "Data/Levels/TestZone/Lev07.png", true); break;
+            case 7: LoadTexture(&LevelTexture[i], "Data/Levels/TestZone/Lev08.png", true); break;
+            case 8: LoadTexture(&LevelTexture[i], "Data/Levels/TestZone/Lev09.png", true); break;
+            case 9: LoadTexture(&LevelTexture[i], "Data/Levels/TestZone/Lev10.png", true); break;
             default: continue;
         }
     }
 }
 
-void InitMTextSurface() { LoadTexture(&surfaceMText, "Data/Title/MText.png", false); }
+void LoadFontAssets() { LoadTexture(&FontTexture, "Data/Title/MText.png", false); }
 
 void sub_40F707()
 {
@@ -118,25 +116,19 @@ void sub_40F707()
     data_4DA256 = 0;
 }
 
-void CreateObject(char a1, char a2, float x, float y, float z)
+void CreateObject(byte type, byte unused, float x, float y, float z)
 {
-    if (LevelObjects[TempObjectPos].field_0 != 0) {
+    if (LevelObjects[TempObjectPos].type != OBJECT_NONE) {
         if (++TempObjectPos >= 1100)
             TempObjectPos = 1000;
     }
 
-    LevelObjects[TempObjectPos].field_0    = a1;
-    LevelObjects[TempObjectPos].field_34   = 1;
-    LevelObjects[TempObjectPos].field_1    = a2;
-    LevelObjects[TempObjectPos].position.x = x;
-    LevelObjects[TempObjectPos].position.y = y;
-    LevelObjects[TempObjectPos].position.z = z;
-    LevelObjects[TempObjectPos].field_1C   = 0;
-    LevelObjects[TempObjectPos].field_20   = 0;
-    LevelObjects[TempObjectPos].field_24   = 0;
-    LevelObjects[TempObjectPos].field_28   = 0;
-    LevelObjects[TempObjectPos].field_2C   = 0;
-    LevelObjects[TempObjectPos].field_30   = 0;
+    MEM_ZERO(&LevelObjects[TempObjectPos], sizeof(Object));
+
+    LevelObjects[TempObjectPos].type     = type;
+    LevelObjects[TempObjectPos].unused1  = unused;
+    LevelObjects[TempObjectPos].position = { x, y, z };
+    LevelObjects[TempObjectPos].enabled  = true;
 }
 
 void DrawMainGameGfx()
@@ -152,7 +144,7 @@ void DrawMainGameGfx()
     ClearScreen(0x0000BE);
     DrawTitleScr(1);
 
-    Unknown_40823B(Player[0].position.x, Player[0].position.y - Player[0].f_0x18.y, Player[0].position.z, data_4C9F68.x, data_4C9F68.y, data_4C9F68.z,
+    Unknown_40823B(Player[0].position.x, Player[0].position.y - Player[0].collideDir.y, Player[0].position.z, data_4C9F68.x, data_4C9F68.y, data_4C9F68.z,
                    data_4C9F74);
     DrawWorldSurface();
 
@@ -176,45 +168,39 @@ void DrawMainGameGfx()
 void DrawObjects()
 {
     for (ObjectLoop = 0; ObjectLoop < 1100; ++ObjectLoop) {
-        if (LevelObjects[ObjectLoop].field_34 > 0) {
-            switch (LevelObjects[ObjectLoop].field_0) {
+        Object *object = &LevelObjects[ObjectLoop];
+        if (object->enabled > 0) {
+            switch (object->type) {
                 case 1:
-                    DrawObjectModelID(OBJECT_ID_RING, LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y,
-                                      LevelObjects[ObjectLoop].position.z, data_4DA248, 0.0f, 0.0f);
-                    DrawModelShadow(LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y, LevelObjects[ObjectLoop].position.z,
-                                    -30.0f, 2.0f, 1.0f, data_4DA248);
+                    DrawObjectModelID(MODEL_ID_RING, object->position.x, object->position.y, object->position.z, RingRotationY, 0.0f, 0.0f);
+                    DrawModelShadow(object->position.x, object->position.y, object->position.z, -30.0f, 2.0f, 1.0f, RingRotationY);
                     break;
 
                 case 3:
-                    switch (LevelObjects[ObjectLoop].field_1C >> 2) {
+                    switch (object->timer >> 2) {
                         case 0:
-                            DrawObjectModelID(OBJECT_ID_RING_SPARKLE, LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y,
-                                              LevelObjects[ObjectLoop].position.z, 0.0, 0.0, 0.0f);
+                            DrawObjectModelID(MODEL_ID_RING_SPARKLE, object->position.x, object->position.y, object->position.z, 0.0, 0.0, 0.0f);
                             break;
 
                         case 1:
-                            DrawObjectModelID(OBJECT_ID_RING_SPARKLE, LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y,
-                                              LevelObjects[ObjectLoop].position.z, 0.0, 0.0, 1.5700001f);
+                            DrawObjectModelID(MODEL_ID_RING_SPARKLE, object->position.x, object->position.y, object->position.z, 0.0, 0.0,
+                                              1.5700001f);
                             break;
 
                         case 2:
-                            DrawObjectModelID(OBJECT_ID_RING_SPARKLE, LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y,
-                                              LevelObjects[ObjectLoop].position.z, 0.0f, 0.0f, RSDK_PI);
+                            DrawObjectModelID(MODEL_ID_RING_SPARKLE, object->position.x, object->position.y, object->position.z, 0.0f, 0.0f, RSDK_PI);
                             break;
 
                         case 3:
-                            DrawObjectModelID(OBJECT_ID_RING_SPARKLE, LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y,
-                                              LevelObjects[ObjectLoop].position.z, 0.0f, 0.0f, RSDK_PI + 1.5700001f);
+                            DrawObjectModelID(MODEL_ID_RING_SPARKLE, object->position.x, object->position.y, object->position.z, 0.0f, 0.0f,
+                                              RSDK_PI + 1.5700001f);
                             break;
 
                         default: continue;
                     }
                     break;
 
-                case 4:
-                    DrawObjectModelID(OBJECT_ID_SPRING, LevelObjects[ObjectLoop].position.x, LevelObjects[ObjectLoop].position.y,
-                                      LevelObjects[ObjectLoop].position.z, 0.0f, 0.0f, 0.0f);
-                    break;
+                case 4: DrawObjectModelID(MODEL_ID_SPRING, object->position.x, object->position.y, object->position.z, 0.0f, 0.0f, 0.0f); break;
             }
         }
     }
@@ -231,25 +217,25 @@ void DrawWorldSurface()
     int minCol = CLAMP(c - 12, 0, LevelModel.columns);
     int maxCol = CLAMP(c + 12, 0, LevelModel.columns);
 
-    SetRenderMaterial(&material_420520);
+    SetRenderMaterial(&ObjectMaterial);
     SetRenderState(RENDER_STATE_LIGHTING, false);
     SetRenderState(RENDER_STATE_ZENABLE, false);
-    SetRenderTexture(0, surfaceTestZoneBG);
+    SetRenderTexture(0, BGTexture);
 
     WorldMatrixSetTranslateXYZ(CameraPosition.x, CameraPosition.y, CameraPosition.z);
 
     SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixWorld);
-    DrawIndexedPrimitive(RENDER_FVF_VERTEX, BackgroundMdl.vertices, BackgroundMdl.numVertices, BackgroundMdl.indices, BackgroundMdl.numIndices);
+    DrawIndexedPrimitive(RENDER_FVF_VERTEX, BGModel.vertices, BGModel.numVertices, BGModel.indices, BGModel.numIndices);
 
     SetRenderState(RENDER_STATE_ZENABLE, true);
     SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixIdentity);
-    SetRenderTexture(0, LevelTextureList[LevelModel.surfaceID[0]]);
+    SetRenderTexture(0, LevelTexture[LevelModel.surfaceID[0]]);
 
     byte id = LevelModel.surfaceID[0];
     for (int s = 0; s < LevelModel.surfaceCount; ++s) {
         if (id != LevelModel.surfaceID[s]) {
             id = LevelModel.surfaceID[s];
-            SetRenderTexture(0, LevelTextureList[id]);
+            SetRenderTexture(0, LevelTexture[id]);
         }
 
         for (int y = minRow; y < maxRow; ++y) {
@@ -419,14 +405,14 @@ void DrawModelShadow(float x, float y, float z, float magnitude, float sx, float
         MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
 
         SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
-        SetRenderTexture(0, surfaceShadow);
+        SetRenderTexture(0, ShadowTexture);
         DrawIndexedPrimitive(RENDER_FVF_LVERTEX, vertices, 4, indices, 6);
     }
 }
 
 void DrawModelSonic(float x, float y, float z, float rotation)
 {
-    SetRenderTexture(0, surfaceSonic);
+    SetRenderTexture(0, SonicTexture);
     SetRenderState(RENDER_STATE_SPECULARENABLE, true);
     memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
 
@@ -437,7 +423,7 @@ void DrawModelSonic(float x, float y, float z, float rotation)
             WorldMatrixTranslateXYZ(x, y, z);
             MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
             SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
-            DrawIndexedPrimitive(RENDER_FVF_VERTEX, BallMdl.vertices, BallMdl.numVertices, BallMdl.indices, BallMdl.numIndices);
+            DrawIndexedPrimitive(RENDER_FVF_VERTEX, BallModel.vertices, BallModel.numVertices, BallModel.indices, BallModel.numIndices);
         }
         else {
             WorldMatrixTranslateXYZ(0.0f, -5.4000001f, 0.0f);
@@ -452,18 +438,18 @@ void DrawModelSonic(float x, float y, float z, float rotation)
             MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
 
             SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
-            DrawIndexedPrimitive(RENDER_FVF_VERTEX, SonicMdl.vertices, SonicMdl.numVertices, SonicMdl.indices, SonicMdl.numIndices);
-            material_420520.diffuse.a = 0.25f;
-            SetRenderMaterial(&material_420520);
+            DrawIndexedPrimitive(RENDER_FVF_VERTEX, SonicModel.vertices, SonicModel.numVertices, SonicModel.indices, SonicModel.numIndices);
+            ObjectMaterial.diffuse.a = 0.25f;
+            SetRenderMaterial(&ObjectMaterial);
             memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
             WorldMatrixSetRotateY(rotation);
             MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
             WorldMatrixTranslateXYZ(x, y, z);
             MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
             SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
-            DrawIndexedPrimitive(RENDER_FVF_VERTEX, BallMdl.vertices, BallMdl.numVertices, BallMdl.indices, BallMdl.numIndices);
-            material_420520.diffuse.a = 1.0f;
-            SetRenderMaterial(&material_420520);
+            DrawIndexedPrimitive(RENDER_FVF_VERTEX, BallModel.vertices, BallModel.numVertices, BallModel.indices, BallModel.numIndices);
+            ObjectMaterial.diffuse.a = 1.0f;
+            SetRenderMaterial(&ObjectMaterial);
         }
     }
     else {
@@ -476,7 +462,7 @@ void DrawModelSonic(float x, float y, float z, float rotation)
         WorldMatrixTranslateXYZ(x, y, z);
         MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
         SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
-        DrawIndexedPrimitive(RENDER_FVF_VERTEX, SonicMdl.vertices, SonicMdl.numVertices, SonicMdl.indices, SonicMdl.numIndices);
+        DrawIndexedPrimitive(RENDER_FVF_VERTEX, SonicModel.vertices, SonicModel.numVertices, SonicModel.indices, SonicModel.numIndices);
     }
 
     SetRenderState(RENDER_STATE_SPECULARENABLE, false);
@@ -488,7 +474,7 @@ void DrawObjectModelID(int object, float x, float y, float z, float ry, float rx
     LVertex vertices[4];
     memset(&vertices, 0, sizeof(vertices));
 
-    uint16_t indices[6] = { 0, 1, 2, 1, 3, 2 };
+    ushort indices[6] = { 0, 1, 2, 1, 3, 2 };
 
     memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
 
@@ -505,22 +491,22 @@ void DrawObjectModelID(int object, float x, float y, float z, float ry, float rx
     MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
 
     switch (object) {
-        case 0: {
-            TMF *model = &StageObjMdl[object];
+        case MODEL_ID_RING: {
+            TMF *model = &ObjectModel[object];
 
             SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
-            SetRenderTexture(0, stageObjectTextures[object]);
+            SetRenderTexture(0, ObjectTexture[object]);
             SetRenderTextureStageState(0, TEXTURE_STATE_TEXCOORDINDEX, TEXTURE_VALUE_CAMERASPACE_REFLECTIONVECTOR);
             DrawIndexedPrimitive(RENDER_FVF_VERTEX, model->vertices, model->numVertices, model->indices, model->numIndices);
             SetRenderTextureStageState(0, TEXTURE_STATE_TEXCOORDINDEX, TEXTURE_VALUE_PASSTHRU);
             break;
         }
 
-        case 2: {
-            vertices[0] = LVertex({ -2.0f, 2.0f, 0.0f }, 0xFFFFFFFF, 0, 0.05f, 0.05f);
-            vertices[1] = LVertex({ 2.0f, 2.0f, 0.0f }, 0xFFFFFFFF, 0, 0.99f, 0.05f);
-            vertices[2] = LVertex({ -2.0f, -2.0f, 0.0f }, 0xFFFFFFFF, 0, 0.05f, 0.99f);
-            vertices[3] = LVertex({ 2.0f, -2.0f, 0.0f }, 0xFFFFFFFF, 0, 0.99f, 0.99f);
+        case MODEL_ID_RING_SPARKLE: {
+            vertices[0] = { { -2.0f, 2.0f, 0.0f }, 0xFFFFFFFF, 0, 0.05f, 0.05f };
+            vertices[1] = { { 2.0f, 2.0f, 0.0f }, 0xFFFFFFFF, 0, 0.99f, 0.05f };
+            vertices[2] = { { -2.0f, -2.0f, 0.0f }, 0xFFFFFFFF, 0, 0.05f, 0.99f };
+            vertices[3] = { { 2.0f, -2.0f, 0.0f }, 0xFFFFFFFF, 0, 0.99f, 0.99f };
 
             memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
             WorldMatrixRotateX(rz);
@@ -530,7 +516,7 @@ void DrawObjectModelID(int object, float x, float y, float z, float ry, float rx
             MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
 
             SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
-            SetRenderTexture(0, sparkleTexture);
+            SetRenderTexture(0, SparkleTexture);
             SetRenderState(RENDER_STATE_LIGHTING, 0);
             DrawIndexedPrimitive(RENDER_FVF_LVERTEX, vertices, 4, indices, 6);
             SetRenderState(RENDER_STATE_LIGHTING, 1);
@@ -539,9 +525,9 @@ void DrawObjectModelID(int object, float x, float y, float z, float ry, float rx
 
         default:
             SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
-            SetRenderTexture(0, stageObjectTextures[object]);
-            DrawIndexedPrimitive(RENDER_FVF_VERTEX, StageObjMdl[object].vertices, StageObjMdl[object].numVertices, StageObjMdl[object].indices,
-                                      StageObjMdl[object].numIndices);
+            SetRenderTexture(0, ObjectTexture[object]);
+            DrawIndexedPrimitive(RENDER_FVF_VERTEX, ObjectModel[object].vertices, ObjectModel[object].numVertices, ObjectModel[object].indices,
+                                 ObjectModel[object].numIndices);
             break;
     }
 }
