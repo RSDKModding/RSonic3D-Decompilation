@@ -27,11 +27,15 @@ typedef signed char sbyte;
 typedef unsigned short ushort;
 typedef unsigned int uint;
 
+// ============================
+// ENGINE DEFINES
+// ============================
+
 #define SCREEN_XSIZE (320)
 #define SCREEN_YSIZE (240)
 
-#define SCREEN_XSIZE_F (320.0f)
-#define SCREEN_YSIZE_F (240.0f)
+#define SCREEN_XSIZE_F ((float)(SCREEN_XSIZE))
+#define SCREEN_YSIZE_F ((float)(SCREEN_YSIZE))
 
 #define SCREEN_XCENTER (SCREEN_XSIZE / 2)
 #define SCREEN_YCENTER (SCREEN_YSIZE / 2)
@@ -56,7 +60,9 @@ typedef unsigned int uint;
 #elif RETRO_USE_SDL2
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
-#include <SDL2/SDL_image.h>
+#elif RETRO_USE_SDL1
+#include <SDL.h>
+#include <SDL_opengl.h>
 #endif
 
 #include <cdmath3d.h>
@@ -75,6 +81,10 @@ typedef unsigned int uint;
 #include "Text.hpp"
 #include "TitleScreen.hpp"
 
+// ============================
+// ENGINE VARIABLES
+// ============================
+
 extern unsigned long long Frequency;
 extern unsigned long long FrameCurrentTicks;
 extern unsigned long long FrameNextTicks;
@@ -87,6 +97,8 @@ extern double FrameDeltaTime;
 #if RETRO_USE_ORIGINAL_CODE
 extern MSG Message;
 extern bool UseQueryCounter;
+#else
+extern SDL_Event SDLEvent;
 #endif
 
 extern int QuitMessage;
@@ -103,6 +115,10 @@ enum GameModeType {
     GAMEMODE_MAINGAME,
 };
 
+// ============================
+// ENGINE FUNCTIONS
+// ============================
+
 bool CreateMWindow();
 
 #if RETRO_USE_ORIGINAL_CODE
@@ -112,7 +128,7 @@ INT_PTR CALLBACK MDialogProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 void UpdateWindowRect(HWND hWnd);
 void ResetWindow(HWND hWnd);
 #else
-void ProcessEvents(SDL_Event &event);
+void ProcessEvents();
 #endif
 
 void ProcessMainGame();

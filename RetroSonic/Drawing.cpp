@@ -1,11 +1,5 @@
 #include "RetroEngine.hpp"
 
-#if RETRO_USE_ORIGINAL_CODE
-tagRECT rect_420488;
-tagRECT clientRect;
-tagRECT windowBounds;
-#endif
-
 Matrix3D MatrixInversed;
 Matrix3D MatrixWorld;
 Matrix3D MatrixView;
@@ -33,13 +27,20 @@ bool D3DUseHardwareRendering = true;
 byte D3DDeviceType;
 bool D3DSupportsZBufferFmt;
 
+tagRECT ClientRect;
+tagRECT WindowRect;
+tagRECT WindowStoreRect;
+
 HWND HWnd;
 HMENU HMenu;
+
 HINSTANCE HInst;
 int NCmdShow;
-#else
+#elif RETRO_USE_SDL3 || RETRO_USE_SDL2
 SDL_Window *Window;
 SDL_GLContext GLContext;
+#elif RETRO_USE_SDL1
+SDL_Surface *Window;
 #endif
 
 bool EngineRunning = false;
@@ -87,14 +88,18 @@ void ReleaseGraphicsAPI()
     // Non-original, but this is apparently required for FreeImage's static library to work on Windows
     FreeImage_DeInitialise();
 #else
-    if (GLContext != NULL) {
+
 #if RETRO_USE_SDL3
+    if (GLContext != NULL) {
         SDL_GL_DestroyContext(GLContext);
-#elif RETRO_USE_SDL2
-        SDL_GL_DeleteContext(GLContext);
-#endif
         GLContext = NULL;
     }
+#elif RETRO_USE_SDL2
+    if (GLContext != NULL) {
+        SDL_GL_DeleteContext(GLContext);
+        GLContext = NULL;
+    }
+#endif
 
     SDL_Quit();
 #endif
@@ -103,82 +108,90 @@ void ReleaseGraphicsAPI()
 #if RETRO_USE_ORIGINAL_CODE
 bool InitDirect3D()
 {
-    BOOL result;
-    HRESULT r;
-    IDirectDrawClipper *ddclipper;
-    DDSURFACEDESC2 surfaceDesc_1;
-    DDSURFACEDESC2 surfaceDesc_2;
-    DDSCAPS2 caps;
-    DDBLTFX bltFx_1;
-    DDBLTFX bltFx_2;
+    DDSURFACEDESC2 ddsdf;
+    DDSURFACEDESC2 ddsdb;
 
-    if (WindowMode == 1) {
-        r = DDraw->SetCooperativeLevel(HWnd, 8);
+    if (WindowMode == true) {
+        DDraw->SetCooperativeLevel(HWnd, DDSCL_NORMAL);
         UpdateWindowRect(HWnd);
 
-        memset(&surfaceDesc_1, 0, sizeof(surfaceDesc_1));
-        surfaceDesc_1.dwSize         = 124;
-        surfaceDesc_1.dwFlags        = 1;
-        surfaceDesc_1.ddsCaps.dwCaps = 8704;
+        MEM_ZERO(&ddsdf, sizeof(ddsdf));
 
-        r = DDraw->CreateSurface(&surfaceDesc_1, &FrontBuffer, NULL);
-        r = DDraw->CreateClipper(0, &ddclipper, 0);
+        ddsdf.dwSize = sizeof(ddsdf);
 
-        ddclipper->SetHWnd(0, HWnd);
-        FrontBuffer->SetClipper(ddclipper);
+        ddsdf.dwFlags        = DDSD_CAPS;
+        ddsdf.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_3DDEVICE;
 
-        ddclipper->Release();
-        ddclipper = NULL;
+        DDraw->CreateSurface(&ddsdf, &FrontBuffer, NULL);
 
-        memset(&surfaceDesc_2, 0, sizeof(surfaceDesc_2));
-        surfaceDesc_2.dwSize         = 124;
-        surfaceDesc_2.dwFlags        = 7;
-        surfaceDesc_2.ddsCaps.dwCaps = 8256;
-        surfaceDesc_2.dwWidth        = SCREEN_XSIZE * 2;
-        surfaceDesc_2.dwHeight       = SCREEN_YSIZE * 2;
+        IDirectDrawClipper *DDClipper;
+        DDraw->CreateClipper(0, &DDClipper, NULL);
 
-        r = DDraw->CreateSurface(&surfaceDesc_2, &BackBuffer, NULL);
+        DDClipper->SetHWnd(0, HWnd);
+        FrontBuffer->SetClipper(DDClipper);
+
+        DDClipper->Release();
+        DDClipper = NULL;
+
+        MEM_ZERO(&ddsdb, sizeof(ddsdb));
+
+        ddsdb.dwSize = sizeof(ddsdb);
+
+        ddsdb.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
+        ddsdb.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE;
+
+        ddsdb.dwWidth  = SCREEN_XSIZE * 2;
+        ddsdb.dwHeight = SCREEN_YSIZE * 2;
+
+        DDraw->CreateSurface(&ddsdb, &BackBuffer, NULL);
     }
     else {
-        r = DDraw->SetCooperativeLevel(HWnd, 17);
-        r = DDraw->SetDisplayMode(ResX, ResY, 32, 0, 0);
+        DDraw->SetCooperativeLevel(HWnd, DDSCL_FULLSCREEN | DDSCL_EXCLUSIVE);
+        DDraw->SetDisplayMode(ResX, ResY, 32, 0, 0);
 
-        memset(&surfaceDesc_1, 0, sizeof(surfaceDesc_1));
-        surfaceDesc_1.dwSize            = 124;
-        surfaceDesc_1.dwFlags           = 33;
-        surfaceDesc_1.ddsCaps.dwCaps    = 8728;
-        surfaceDesc_1.dwBackBufferCount = 1;
+        MEM_ZERO(&ddsdf, sizeof(ddsdf));
 
-        r = DDraw->CreateSurface(&surfaceDesc_1, &FrontBuffer, 0);
+        ddsdf.dwSize = sizeof(ddsdf);
 
-        caps.dwCaps  = 4;
-        caps.dwCaps2 = 0;
-        caps.dwCaps3 = 0;
-        caps.dwCaps4 = 0;
+        ddsdf.dwFlags           = DDSD_CAPS | DDSD_BACKBUFFERCOUNT;
+        ddsdf.ddsCaps.dwCaps    = DDSCAPS_PRIMARYSURFACE | DDSCAPS_COMPLEX | DDSCAPS_FLIP | DDSCAPS_3DDEVICE;
+        ddsdf.dwBackBufferCount = 1;
 
-        r = FrontBuffer->GetAttachedSurface(&caps, &BackBuffer);
+        DDraw->CreateSurface(&ddsdf, &FrontBuffer, 0);
 
-        memset(&bltFx_1, 0, sizeof(bltFx_1));
-        bltFx_1.dwSize      = 100;
-        bltFx_1.dwFillColor = 0;
+        DDSCAPS2 ddcaps;
+        MEM_ZERO(&ddcaps, sizeof(ddcaps));
 
-        BackBuffer->Blt(0, 0, 0, 16778240, &bltFx_1);
+        ddcaps.dwCaps = DDSCAPS_BACKBUFFER;
+
+        FrontBuffer->GetAttachedSurface(&ddcaps, &BackBuffer);
+
+        DDBLTFX ddbltfx;
+        MEM_ZERO(&ddbltfx, sizeof(ddbltfx));
+
+        ddbltfx.dwSize      = sizeof(ddbltfx);
+        ddbltfx.dwFillColor = 0;
+
+        BackBuffer->Blt(NULL, NULL, NULL, DDBLT_WAIT | DDBLT_COLORFILL, &ddbltfx);
     }
 
-    DDraw->GetDisplayMode(&surfaceDesc_1);
+    DDraw->GetDisplayMode(&ddsdf);
 
-    if (surfaceDesc_1.ddpfPixelFormat.dwRGBBitCount == 24 || surfaceDesc_1.ddpfPixelFormat.dwRGBBitCount == 8) {
-        MessageBoxA(HWnd, "This Colour Depth is not suitable for Retro-Sonic. Please use either 16bit or 32bit colour mode", "Colour Depth", 0x10);
+    if (ddsdf.ddpfPixelFormat.dwRGBBitCount == 24 || ddsdf.ddpfPixelFormat.dwRGBBitCount == 8) {
+        MessageBox(HWnd, "This Colour Depth is not suitable for Retro-Sonic. Please use either 16bit or 32bit colour mode", "Colour Depth",
+                   MB_ICONERROR);
     }
     else {
-        memset(&bltFx_2, 0, sizeof(bltFx_2));
-        bltFx_2.dwSize      = 100;
-        bltFx_2.dwFillColor = 0;
+        DDBLTFX ddbltfx;
+        MEM_ZERO(&ddbltfx, sizeof(ddbltfx));
 
-        BackBuffer->Blt(0, 0, 0, 16778240, &bltFx_2);
+        ddbltfx.dwSize      = sizeof(ddbltfx);
+        ddbltfx.dwFillColor = 0;
 
-        if (EngineRunning != true || InitScreen() != false) {
-            // nothing
+        BackBuffer->Blt(NULL, NULL, NULL, DDBLT_WAIT | DDBLT_COLORFILL, &ddbltfx);
+
+        if (!EngineRunning || InitScreen()) {
+            // this branch is empty for an amazing reason
         }
     }
 
@@ -287,7 +300,7 @@ bool InitScreen()
     SetRenderTransform(RENDER_TRANSFORM_VIEW, &MatrixView);
 
     memset(&MatrixProjection, 0, sizeof(MatrixProjection));
-    MatrixPerspective(&MatrixProjection, TO_RADIAN(45.0f), 0.75f, 1.0f, 1000.0f);
+    MatrixPerspective(&MatrixProjection, TO_RADIAN(45.0f), SCREEN_YSIZE_F / SCREEN_XSIZE_F, 1.0f, 1000.0f);
 
     Light light = {};
     light.type  = LIGHT_DIRECTIONAL;
@@ -346,13 +359,14 @@ bool InitScreen()
 void FlipScreen()
 {
 #if RETRO_USE_ORIGINAL_CODE
-    switch (WindowMode) {
-        case 0: FrontBuffer->Flip(NULL, DDFLIP_WAIT); break;
-        case 1: FrontBuffer->Blt(&windowBounds, BackBuffer, NULL, DDBLT_WAIT, NULL); break;
-        default: break;
-    }
-#else
+    if (WindowMode == true)
+        FrontBuffer->Blt(&WindowRect, BackBuffer, NULL, DDBLT_WAIT, NULL);
+    else if (WindowMode == false)
+        FrontBuffer->Flip(NULL, DDFLIP_WAIT);
+#elif RETRO_USE_SDL3 || RETRO_USE_SDL2
     SDL_GL_SwapWindow(Window);
+#elif RETRO_USE_SDL1
+    SDL_GL_SwapBuffers();
 #endif
 }
 
@@ -402,7 +416,7 @@ void SetScreenResolution(sbyte windowResolution, sbyte fullscreenResolution, sby
 void ToggleScreenMode()
 {
 #if RETRO_USE_ORIGINAL_CODE
-    DDraw->SetCooperativeLevel(HWnd, 8);
+    DDraw->SetCooperativeLevel(HWnd, DDSCL_NORMAL);
 
     for (int i = 0; i < 10; ++i) {
         ReleaseCharacterUITexture(i);
@@ -417,33 +431,72 @@ void ToggleScreenMode()
     }
 #endif
 
-    switch (WindowMode) {
-        case 0: WindowMode = 1;
+    if (WindowMode == true) {
+        WindowMode = false;
 #if RETRO_USE_ORIGINAL_CODE
-            ShowWindow(HWnd, SW_HIDE);
-            SetWindowLongA(HWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW);
-            SetMenu(HWnd, HMenu);
-            ShowCursor(true);
-#else
-            SDL_SetWindowFullscreen(Window, 0);
-            SDL_SetWindowSize(Window, ResX, ResY);
-#endif
-            break;
+        ShowWindow(HWnd, SW_HIDE);
+        SetWindowLongA(HWnd, GWL_STYLE, WS_POPUP);
 
-        case 1: WindowMode = 0;
+        HMenu = GetMenu(HWnd);
+        SetMenu(HWnd, NULL);
+        ShowCursor(false);
+#elif RETRO_USE_SDL3 || RETRO_USE_SDL2
+        SDL_SetWindowFullscreen(Window, true);
+
+#if RETRO_USE_SDL3
+        SDL_HideCursor();
+#else
+        SDL_ShowCursor(SDL_DISABLE);
+#endif
+
+        int w = 0;
+        int h = 0;
+        SDL_GetWindowSizeInPixels(Window, &w, &h);
+        glViewport(0, 0, w, h);
+#elif RETRO_USE_SDL1
+        Window = SDL_SetVideoMode(ResX, ResY, 32, SDL_OPENGL | SDL_FULLSCREEN);
+        SDL_ShowCursor(SDL_DISABLE);
+        glViewport(0, 0, ResX, ResY);
+
+        // Textures need to be reloaded
+        InitScreen();
+        LoadObjectAssets();
+        LoadLevelAssets();
+        LoadFontAssets();
+#endif
+    }
+    else if (WindowMode == false) {
+        WindowMode = true;
 #if RETRO_USE_ORIGINAL_CODE
-            ShowWindow(HWnd, SW_HIDE);
-            SetWindowLongA(HWnd, GWL_STYLE, WS_POPUP);
-            HMenu = GetMenu(HWnd);
-            SetMenu(HWnd, NULL);
-            ShowCursor(false);
-#else
-            SDL_SetWindowFullscreen(Window, SDL_WINDOW_FULLSCREEN);
-            SDL_SetWindowSize(Window, ResX, ResY);
-#endif
-            break;
+        ShowWindow(HWnd, SW_HIDE);
+        SetWindowLongA(HWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW);
 
-        default: break;
+        SetMenu(HWnd, HMenu);
+        ShowCursor(true);
+#elif RETRO_USE_SDL3 || RETRO_USE_SDL2
+        SDL_SetWindowFullscreen(Window, false);
+
+#if RETRO_USE_SDL3
+        SDL_ShowCursor();
+#else
+        SDL_ShowCursor(SDL_ENABLE);
+#endif
+
+        int w = ResX;
+        int h = ResY;
+        glViewport(0, 0, w, h);
+#elif RETRO_USE_SDL1
+        Window = SDL_SetVideoMode(ResX, ResY, 32, SDL_OPENGL);
+        SDL_ShowCursor(SDL_ENABLE);
+
+        glViewport(0, 0, ResX, ResY);
+
+        // Textures need to be reloaded
+        InitScreen();
+        LoadObjectAssets();
+        LoadLevelAssets();
+        LoadFontAssets();
+#endif
     }
 
 #if RETRO_USE_ORIGINAL_CODE
@@ -454,14 +507,12 @@ void ToggleScreenMode()
         FrontBuffer = NULL;
     }
 
-    if (WindowMode == 1) {
-        SetWindowPos(HWnd, HWND_NOTOPMOST, rect_420488.left, rect_420488.top, rect_420488.right - rect_420488.left,
-                     rect_420488.bottom - rect_420488.top, 0x40);
+    if (WindowMode == true) {
+        tagRECT *rect = &WindowStoreRect;
+        SetWindowPos(HWnd, HWND_NOTOPMOST, rect->left, rect->top, rect->right - rect->left, rect->bottom - rect->top, SWP_SHOWWINDOW);
     }
 
     InitDirect3D();
-#else
-    InitScreen();
 #endif
 }
 
@@ -842,13 +893,6 @@ void EnableLight(int id, bool enabled)
 #endif
 }
 
-void EnableVSync(bool enabled)
-{
-#if !RETRO_USE_ORIGINAL_CODE
-    SDL_GL_SetSwapInterval(enabled);
-#endif
-}
-
 void DrawIndexedPrimitive(RenderFVF type, void *pVertices, int numVertices, void *pIndices, int numIndices)
 {
 #if RETRO_USE_ORIGINAL_CODE
@@ -923,7 +967,8 @@ void SetFade(float r, float g, float b, float a)
 void Texture::Release()
 {
 #if RETRO_USE_ORIGINAL_CODE
-    ((IDirectDrawSurface7 *)(this))->Release();
+    IDirectDrawSurface7 *texture = (IDirectDrawSurface7 *)(this);
+    texture->Release();
 #else
     glDeleteTextures(1, &this->id);
     this->id = 0;

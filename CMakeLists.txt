@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
 project(RetroEngine)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 option(RETRO_FORCE_CASE_INSENSITIVE "Forces case insensivity." OFF)
 option(RETRO_MOD_LOADER "Enables or disables the mod loader." ON)
 option(RETRO_ORIGINAL_CODE "Removes any change that differs from the original code." OFF)
 
-set(RETRO_SDL_VERSION 3 CACHE STRING "Select between SDL1, SDL2 and SDL3, defaults to SDL3")
 set(RETRO_OUTPUT_NAME "RSonic3D" CACHE STRING "The exported name of the executable.")
 
 if(NOT WIN32 OR NOT RETRO_ORIGINAL_CODE)
@@ -28,6 +30,12 @@ if(NOT WIN32 OR NOT RETRO_ORIGINAL_CODE)
         if(NOT SDL2_image_FOUND)
             find_package(PkgConfig REQUIRED)
             pkg_check_modules(SDL2_IMAGE REQUIRED IMPORTED_TARGET SDL2_image)
+        endif()
+    elseif(RETRO_SDL_VERSION EQUAL 1)
+        find_package(SDL)
+        if(NOT SDL_FOUND)
+            find_package(PkgConfig REQUIRED)
+            pkg_check_modules(SDL REQUIRED IMPORTED_TARGET sdl)
         endif()
     endif()
 endif()
@@ -99,6 +107,7 @@ target_include_directories(RetroEngine PRIVATE
     ${CMAKE_SOURCE_DIR}/dependencies/coldet/src
     ${CMAKE_SOURCE_DIR}/RetroSonic
     ${FREEIMAGE_INCLUDE_DIR}
+    ${SDL_INCLUDE_DIR}
 )
 
 if(WIN32 AND RETRO_ORIGINAL_CODE)
@@ -123,7 +132,7 @@ else()
         else()
             target_link_libraries(RetroEngine PRIVATE PkgConfig::SDL3)
         endif()
-    else()
+    elseif(RETRO_SDL_VERSION EQUAL 2)
         if(TARGET SDL2::SDL2)
             target_link_libraries(RetroEngine PRIVATE SDL2::SDL2)
         else()
@@ -134,6 +143,17 @@ else()
             target_link_libraries(RetroEngine PRIVATE SDL2_image::SDL2_image)
         elseif(TARGET SDL2_image::SDL2_image-static)
             target_link_libraries(RetroEngine PRIVATE SDL2_image::SDL2_image-static)
+        endif()
+    elseif(RETRO_SDL_VERSION EQUAL 1)
+        if(TARGET SDL::SDL)
+            target_link_libraries(RetroEngine PRIVATE SDL::SDL)
+        else()
+            target_link_libraries(RetroEngine PRIVATE PkgConfig::SDL)
+        endif()
+
+        if(WIN32)
+            ## Why?
+            target_link_libraries(RetroEngine PRIVATE winmm dxguid)
         endif()
     endif()
 endif()

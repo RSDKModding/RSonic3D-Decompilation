@@ -22,10 +22,14 @@ int main(int argc, char **argv)
     if (!SDL_Init(SDL_INIT_VIDEO)) {
 #elif RETRO_USE_SDL2
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) < 0) {
+#elif RETRO_USE_SDL1
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
 #endif
+#if RETRO_USE_SDL3 || RETRO_USE_SDL2
         char buffer[0x40];
         snprintf(buffer, sizeof(buffer), "Failed to initialize SDL: %s", SDL_GetError());
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "SDL Initialization Error", buffer, NULL);
+#endif
         return EXIT_FAILURE;
     }
 #endif
@@ -57,15 +61,20 @@ int main(int argc, char **argv)
         FrameNextTicks      = timeGetTime();
         FrameSecondsPerTick = 0.001;
     }
-#else
+#elif RETRO_USE_SDL3 || RETRO_USE_SDL2
     Frequency = SDL_GetPerformanceFrequency();
 
     FrameTicks     = Frequency / 60;
     FrameNextTicks = SDL_GetPerformanceCounter();
 
     FrameSecondsPerTick = 1.0 / Frequency;
+#elif RETRO_USE_SDL1
+Frequency = 1000;
 
-    SDL_Event event = {};
+FrameTicks     = Frequency / 60;
+FrameNextTicks = SDL_GetTicks();
+
+FrameSecondsPerTick = 0.001;
 #endif
 
     FrameLastTicks = FrameNextTicks;
@@ -88,8 +97,13 @@ int main(int argc, char **argv)
             else
                 FrameCurrentTicks = timeGetTime();
 #else
-            ProcessEvents(event);
-            FrameCurrentTicks = SDL_GetPerformanceCounter();
+        ProcessEvents();
+
+#if RETRO_USE_SDL3 || RETRO_USE_SDL2
+        FrameCurrentTicks = SDL_GetPerformanceCounter();
+#elif RETRO_USE_SDL1
+        FrameCurrentTicks = (unsigned long long)(SDL_GetTicks());
+#endif
 #endif
 
             if (FrameCurrentTicks > FrameNextTicks) {

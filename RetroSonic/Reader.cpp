@@ -1,261 +1,275 @@
 #include "RetroEngine.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb-image/stb_image.h>
+
 LevelDirectoryEntry *LDirectory;
 
 void LoadFile(FileInfo *file, const char *path)
 {
-    FILE *handle = fopen(path, "rb");
-    fseek(handle, 0, 2);
+    FileIO *handle = fOpen(path, "rb");
+    fSeek(handle, 0, 2);
 
-    file->size = ftell(handle);
+    file->size = fTell(handle);
     file->data = new byte[file->size + 1];
-    fseek(handle, 0, 0);
+    fSeek(handle, 0, 0);
 
     for (int i = 0; i < file->size; ++i) {
-        fread(&file->data[i], 1, 1, handle);
+        fRead(&file->data[i], 1, 1, handle);
     }
 
-    fclose(handle);
+    fClose(handle);
 }
 
-void LoadTexture(Texture **texture, const char *path, bool useTexMips)
+void LoadTexture(Texture **texturePtr, const char *path, bool useTexMips)
 {
 #if RETRO_USE_ORIGINAL_CODE
-    FIBITMAP *fBitmap = FreeImage_Load(FIF_PNG, path);
-    if (fBitmap == NULL)
+    FIBITMAP *image = FreeImage_Load(FIF_PNG, path);
+    if (image == NULL)
         return;
 
-    FIBITMAP *fBitmap32 = FreeImage_ConvertTo32Bits(fBitmap);
-    if (fBitmap32 == NULL) {
-        FreeImage_Unload(fBitmap);
+    FIBITMAP *image32 = FreeImage_ConvertTo32Bits(image);
+    if (image32 == NULL) {
+        FreeImage_Unload(image);
         return;
     }
 
-    int bmWidth  = FreeImage_GetWidth(fBitmap);
-    int bmHeight = FreeImage_GetHeight(fBitmap);
+    int width  = FreeImage_GetWidth(image);
+    int height = FreeImage_GetHeight(image);
 
-    D3DDEVICEDESC7 pDesc;
-    if (D3DDevice->GetCaps(&pDesc) < 0)
+    D3DDEVICEDESC7 d3dd;
+    if (D3DDevice->GetCaps(&d3dd) < 0)
         return;
 
-    DDSURFACEDESC2 surfaceDesc;
-    MEM_ZERO(&surfaceDesc, sizeof(surfaceDesc));
+    DDSURFACEDESC2 ddsd;
+    MEM_ZERO(&ddsd, sizeof(ddsd));
 
-    surfaceDesc.dwSize = sizeof(surfaceDesc);
+    ddsd.dwSize = sizeof(ddsd);
 
     if (useTexMips == true) {
-        if (bmWidth > 64) {
-            switch (bmWidth) {
-                case 128:
-                    surfaceDesc.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
-                    surfaceDesc.ddsCaps.dwCaps = 4198408;
-                    surfaceDesc.dwMipMapCount  = 4;
-                    break;
+        switch (width) {
+            case 8:
+                ddsd.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_TEXTURESTAGE;
+                ddsd.ddsCaps.dwCaps = DDSCAPS_TEXTURE;
 
-                case 256:
-                    surfaceDesc.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
-                    surfaceDesc.ddsCaps.dwCaps = 4198408;
-                    surfaceDesc.dwMipMapCount  = 5;
-                    break;
+                useTexMips = false;
+                break;
 
-                case 512:
-                    surfaceDesc.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
-                    surfaceDesc.ddsCaps.dwCaps = 4198408;
-                    surfaceDesc.dwMipMapCount  = 6;
-                    break;
-            }
-        }
-        else {
-            switch (bmWidth) {
-                case 64:
-                    surfaceDesc.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
-                    surfaceDesc.ddsCaps.dwCaps = 4198408;
-                    surfaceDesc.dwMipMapCount  = 3;
-                    break;
-                case 8:
-                    surfaceDesc.dwFlags        = 1052679;
-                    surfaceDesc.ddsCaps.dwCaps = 4096;
-                    useTexMips                 = false;
-                    break;
-                case 16:
-                    surfaceDesc.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
-                    surfaceDesc.ddsCaps.dwCaps = 4096;
-                    useTexMips                 = false;
-                    break;
-                case 32:
-                    surfaceDesc.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
-                    surfaceDesc.ddsCaps.dwCaps = 4198408;
-                    surfaceDesc.dwMipMapCount  = 2;
-                    break;
-            }
+            case 16:
+                ddsd.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
+                ddsd.ddsCaps.dwCaps = DDSCAPS_TEXTURE;
+
+                useTexMips = false;
+                break;
+
+            case 32:
+                ddsd.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
+                ddsd.ddsCaps.dwCaps = DDSCAPS_TEXTURE | DDSCAPS_MIPMAP | DDSCAPS_COMPLEX;
+                ddsd.dwMipMapCount  = 2;
+                break;
+
+            case 64:
+                ddsd.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
+                ddsd.ddsCaps.dwCaps = DDSCAPS_TEXTURE | DDSCAPS_MIPMAP | DDSCAPS_COMPLEX;
+                ddsd.dwMipMapCount  = 3;
+                break;
+
+            case 128:
+                ddsd.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
+                ddsd.ddsCaps.dwCaps = DDSCAPS_TEXTURE | DDSCAPS_MIPMAP | DDSCAPS_COMPLEX;
+                ddsd.dwMipMapCount  = 4;
+                break;
+
+            case 256:
+                ddsd.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
+                ddsd.ddsCaps.dwCaps = DDSCAPS_TEXTURE | DDSCAPS_MIPMAP | DDSCAPS_COMPLEX;
+                ddsd.dwMipMapCount  = 5;
+                break;
+
+            case 512:
+                ddsd.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT | DDSD_TEXTURESTAGE;
+                ddsd.ddsCaps.dwCaps = DDSCAPS_TEXTURE | DDSCAPS_MIPMAP | DDSCAPS_COMPLEX;
+                ddsd.dwMipMapCount  = 6;
+                break;
+
+            default: break;
         }
     }
     else {
-        surfaceDesc.dwFlags        = 1052679;
-        surfaceDesc.ddsCaps.dwCaps = 4096;
+        ddsd.dwFlags        = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_TEXTURESTAGE;
+        ddsd.ddsCaps.dwCaps = DDSCAPS_TEXTURE;
     }
 
-    surfaceDesc.dwWidth  = bmWidth;
-    surfaceDesc.dwHeight = bmHeight;
+    ddsd.dwWidth  = width;
+    ddsd.dwHeight = height;
 
-    if (pDesc.deviceGUID == IID_IDirect3DHALDevice || pDesc.deviceGUID == IID_IDirect3DTnLHalDevice)
-        surfaceDesc.ddsCaps.dwCaps2 = 16;
+    if (d3dd.deviceGUID == IID_IDirect3DHALDevice || d3dd.deviceGUID == IID_IDirect3DTnLHalDevice)
+        ddsd.ddsCaps.dwCaps2 = DDSCAPS_FLIP;
     else
-        surfaceDesc.ddsCaps.dwCaps |= DDSCAPS_TEXTURE;
+        ddsd.ddsCaps.dwCaps |= DDSCAPS_TEXTURE;
 
-    if (pDesc.dpcTriCaps.dwTextureCaps & D3DPTEXTURECAPS_POW2) {
-        for (surfaceDesc.dwWidth = 1; bmWidth > surfaceDesc.dwWidth; surfaceDesc.dwWidth <<= 1);
-        for (surfaceDesc.dwHeight = 1; bmHeight > surfaceDesc.dwHeight; surfaceDesc.dwHeight <<= 1);
+    if (d3dd.dpcTriCaps.dwTextureCaps & D3DPTEXTURECAPS_POW2) {
+        ddsd.dwWidth = 1;
+        while (width > ddsd.dwWidth) {
+            ddsd.dwWidth = ddsd.dwWidth * 2;
+        }
+
+        ddsd.dwHeight = 1;
+        while (height > ddsd.dwHeight) {
+            ddsd.dwHeight = ddsd.dwHeight * 2;
+        }
     }
 
-    if (pDesc.dpcTriCaps.dwTextureCaps & D3DPTEXTURECAPS_SQUAREONLY) {
-        if (surfaceDesc.dwWidth <= surfaceDesc.dwHeight)
-            surfaceDesc.dwWidth = surfaceDesc.dwHeight;
+    if (d3dd.dpcTriCaps.dwTextureCaps & D3DPTEXTURECAPS_SQUAREONLY) {
+        if (ddsd.dwWidth <= ddsd.dwHeight)
+            ddsd.dwWidth = ddsd.dwHeight;
         else
-            surfaceDesc.dwHeight = surfaceDesc.dwWidth;
+            ddsd.dwHeight = ddsd.dwWidth;
     }
 
     TexFmtSearchType = TEXTURE_FMT_32BIT;
-    D3DDevice->EnumTextureFormats(TextureSearchCallback, &surfaceDesc.ddpfPixelFormat);
-    if (!surfaceDesc.ddpfPixelFormat.dwRGBBitCount) {
+    D3DDevice->EnumTextureFormats(TextureSearchCallback, &ddsd.ddpfPixelFormat);
+    if (!ddsd.ddpfPixelFormat.dwRGBBitCount) {
+
         TexFmtSearchType = TEXTURE_FMT_16BIT_ALPHA;
-        D3DDevice->EnumTextureFormats(TextureSearchCallback, &surfaceDesc.ddpfPixelFormat);
-        if (!surfaceDesc.ddpfPixelFormat.dwRGBBitCount)
+        D3DDevice->EnumTextureFormats(TextureSearchCallback, &ddsd.ddpfPixelFormat);
+        if (!ddsd.ddpfPixelFormat.dwRGBBitCount)
             return;
     }
 
-    IDirectDrawSurface7 *ppRenderTarget;
-    D3DDevice->GetRenderTarget(&ppRenderTarget);
-    ppRenderTarget->GetDDInterface((void **)(&DDraw));
-    ppRenderTarget->Release();
+    IDirectDrawSurface7 *D3DRenderTarget;
+    D3DDevice->GetRenderTarget(&D3DRenderTarget);
 
-    if (DDraw->CreateSurface(&surfaceDesc, (IDirectDrawSurface7 **)(texture), 0) < 0)
+    D3DRenderTarget->GetDDInterface((void **)(&DDraw));
+    D3DRenderTarget->Release();
+
+    if (FAILED(DDraw->CreateSurface(&ddsd, (IDirectDrawSurface7 **)(texturePtr), 0)))
         return;
 
-    DDSURFACEDESC2 lockDesc;
-    memset(&lockDesc, 0, sizeof(lockDesc));
-    lockDesc.dwSize = sizeof(lockDesc);
+    DDSURFACEDESC2 ddsd2;
+    MEM_ZERO(&ddsd2, sizeof(ddsd2));
 
-    WORD alphaMask = (WORD)surfaceDesc.ddpfPixelFormat.dwRGBAlphaBitMask;
+    ddsd2.dwSize = sizeof(ddsd2);
 
-    IDirectDrawSurface7 *surfacePtr = (IDirectDrawSurface7 *)(*texture);
+    short alphaBitMask = ddsd.ddpfPixelFormat.dwRGBAlphaBitMask;
+
+    IDirectDrawSurface7 *texture = (IDirectDrawSurface7 *)(*texturePtr);
     if (useTexMips == true) {
-        int vSize = bmWidth;
-        for (int i = 0; i < surfaceDesc.dwMipMapCount; ++i) {
-            if (bmWidth > vSize && vSize > 8) {
-                fBitmap32 = FreeImage_Rescale(fBitmap32, vSize, vSize, FREE_IMAGE_FILTER::FILTER_BOX);
-                bmWidth   = vSize;
-                bmHeight  = vSize;
+        int texMipSize = width;
+        for (int i = 0; i < ddsd.dwMipMapCount; ++i) {
+            if (width > texMipSize && texMipSize > 8) {
+                image32 = FreeImage_Rescale(image32, texMipSize, texMipSize, FREE_IMAGE_FILTER::FILTER_BOX);
+                width   = texMipSize;
+                height  = texMipSize;
             }
 
             HDC hdc;
-            surfacePtr->GetDC(&hdc);
-            StretchDIBits(hdc, 0, 0, bmWidth, bmHeight, 0, 0, bmWidth, bmHeight, FreeImage_GetBits(fBitmap32), FreeImage_GetInfo(fBitmap32),
-                          DIB_RGB_COLORS, SRCCOPY);
-            surfacePtr->ReleaseDC(hdc);
+            texture->GetDC(&hdc);
+
+            byte *data       = FreeImage_GetBits(image32);
+            BITMAPINFO *info = FreeImage_GetInfo(image32);
+            StretchDIBits(hdc, 0, 0, width, height, 0, 0, width, height, data, info, DIB_RGB_COLORS, SRCCOPY);
+
+            texture->ReleaseDC(hdc);
 
             if (TexFmtSearchType == TEXTURE_FMT_16BIT_ALPHA) {
-                surfacePtr->Lock(0, &lockDesc, DDLOCK_WAIT, 0);
-                DWORD pitch = lockDesc.lPitch;
-                BYTE *dst   = (BYTE *)lockDesc.lpSurface;
-                int srcLine = vSize - 1;
+                texture->Lock(0, &ddsd2, DDLOCK_WAIT, 0);
 
-                for (DWORD y = 0; y < bmHeight; ++y) {
-                    WORD *p   = (WORD *)(dst + pitch * y);
-                    BYTE *src = FreeImage_GetScanLine(fBitmap32, srcLine--);
-                    for (DWORD x = 0; x < bmWidth; ++x) {
-                        if (src[3] == 255)
-                            *p |= alphaMask;
-                        else
-                            *p = 0;
-                        ++p;
-                        src += 4;
+                struct ColorBGRA {
+                    byte b;
+                    byte g;
+                    byte r;
+                    byte a;
+                };
+
+                int line = texMipSize - 1;
+                for (int y = 0; y < height; ++y) {
+                    auto *dst = (short *)((byte *)(ddsd2.lpSurface) + ddsd2.lPitch * y);
+                    auto *src = (ColorBGRA *)(FreeImage_GetScanLine(image32, line--));
+
+                    for (int x = 0; x < width; ++x) {
+                        dst[x] = 0;
+                        if (src[x].a == 0xFF)
+                            dst[x] |= alphaBitMask;
                     }
                 }
 
-                surfacePtr->Unlock(0);
+                texture->Unlock(0);
             }
 
             DDSCAPS2 caps = { DDSCAPS_TEXTURE };
-            if (surfacePtr->GetAttachedSurface(&caps, &surfacePtr) >= 0)
-                surfacePtr->Release();
+            if (texture->GetAttachedSurface(&caps, &texture) >= 0)
+                texture->Release();
 
-            vSize >>= 1;
+            texMipSize >>= 1;
         }
     }
     else {
         HDC hdc;
-        ((IDirectDrawSurface7 *)(*texture))->GetDC(&hdc);
-        StretchDIBits(hdc, 0, 0, bmWidth, bmHeight, 0, 0, bmWidth, bmHeight, FreeImage_GetBits(fBitmap32), FreeImage_GetInfo(fBitmap32),
-                      DIB_RGB_COLORS, SRCCOPY);
-        ((IDirectDrawSurface7 *)(*texture))->ReleaseDC(hdc);
+        texture->GetDC(&hdc);
+
+        byte *data       = FreeImage_GetBits(image32);
+        BITMAPINFO *info = FreeImage_GetInfo(image32);
+        StretchDIBits(hdc, 0, 0, width, height, 0, 0, width, height, data, info, DIB_RGB_COLORS, SRCCOPY);
+
+        texture->ReleaseDC(hdc);
 
         if (TexFmtSearchType == TEXTURE_FMT_16BIT_ALPHA) {
-            ((IDirectDrawSurface7 *)(*texture))->Lock(0, &lockDesc, DDLOCK_WAIT, 0);
+            texture->Lock(NULL, &ddsd2, DDLOCK_WAIT, NULL);
 
-            byte *dstRow = (byte *)lockDesc.lpSurface;
-            int srcLine  = lockDesc.dwHeight - 1;
+            struct ColorBGRA {
+                byte b;
+                byte g;
+                byte r;
+                byte a;
+            };
 
-            for (int y = 0; y < lockDesc.dwHeight; ++y, --srcLine, dstRow += lockDesc.lPitch) {
-                ushort *p = (ushort *)dstRow;
-                byte *src = FreeImage_GetScanLine(fBitmap32, srcLine);
+            int line = ddsd2.dwHeight - 1;
+            for (int y = 0; y < ddsd2.dwHeight; ++y) {
+                auto *dst = (short *)((byte *)(ddsd2.lpSurface) + ddsd2.lPitch * y);
+                auto *src = (ColorBGRA *)(FreeImage_GetScanLine(image32, line--));
 
-                for (int x = 0; x < lockDesc.dwWidth; ++x, ++p, src += 4) {
-                    *p = (src[3] == 255) ? (*p | alphaMask) : 0;
+                for (int x = 0; x < ddsd2.dwWidth; ++x) {
+                    dst[x] = 0;
+                    if (src[x].a == 0xFF)
+                        dst[x] |= alphaBitMask;
                 }
             }
 
-            ((IDirectDrawSurface7 *)(*texture))->Unlock(0);
+            texture->Unlock(NULL);
         }
     }
 
-    FreeImage_Unload(fBitmap32);
-    FreeImage_Unload(fBitmap);
+    FreeImage_Unload(image32);
+    FreeImage_Unload(image);
 #else
-#if RETRO_USE_SDL3
-    SDL_Surface *image = SDL_LoadPNG(path);
-#else
-    SDL_Surface *image = IMG_Load(path);
-#endif
-    if (image == NULL)
-        return;
+    int width    = 0;
+    int height   = 0;
+    int channels = 0;
+    if (stbi_uc *data = stbi_load(path, &width, &height, &channels, 4)) {
+        Texture *texture = (*texturePtr) = new Texture();
 
-#if RETRO_USE_SDL3
-    SDL_Surface *image32 = SDL_ConvertSurface(image, SDL_PIXELFORMAT_BGRA32);
-    SDL_DestroySurface(image);
-#else
-    SDL_Surface *image32 = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_BGRA32, 0);
-    SDL_FreeSurface(image);
-#endif
-    if (image32 == NULL)
-        return;
+        texture->vtbl   = NULL;
+        texture->width  = width;
+        texture->height = height;
 
-    (*texture) = new Texture();
+        glGenTextures(1, &texture->id);
+        glBindTexture(GL_TEXTURE_2D, texture->id);
 
-    (*texture)->vtbl   = NULL;
-    (*texture)->width  = image32->w;
-    (*texture)->height = image32->h;
+        if (useTexMips == true)
+            glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 
-    glGenTextures(1, &(*texture)->id);
-    glBindTexture(GL_TEXTURE_2D, (*texture)->id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, texture->width, texture->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
-    if (useTexMips == true)
-        glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+        if (useTexMips == true)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        else
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (*texture)->width, (*texture)->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, image32->pixels);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    if (useTexMips == true)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    else
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-#if RETRO_USE_SDL3
-    SDL_DestroySurface(image32);
-#else
-    SDL_FreeSurface(image32);
-#endif
+        stbi_image_free(data);
+    }
 #endif
 }
 
@@ -263,16 +277,16 @@ void LoadLevelModel(LMF *model, const char *path)
 {
     memset(model, 0, sizeof(*model));
 
-    FILE *stream = fopen(path, "rb");
-    fread(&model->surfaceCount, sizeof(model->surfaceCount), 1, stream);
-    fread(&model->columns, sizeof(model->columns), 1, stream);
-    fread(&model->rows, sizeof(model->rows), 1, stream);
-    fread(&model->startX, sizeof(model->startX), 1, stream);
-    fread(&model->startZ, sizeof(model->startZ), 1, stream);
-    fread(&model->unused, sizeof(model->unused), 1, stream);
+    FileIO *stream = fOpen(path, "rb");
+    fRead(&model->surfaceCount, sizeof(model->surfaceCount), 1, stream);
+    fRead(&model->columns, sizeof(model->columns), 1, stream);
+    fRead(&model->rows, sizeof(model->rows), 1, stream);
+    fRead(&model->startX, sizeof(model->startX), 1, stream);
+    fRead(&model->startZ, sizeof(model->startZ), 1, stream);
+    fRead(&model->unused, sizeof(model->unused), 1, stream);
 
     for (int i = 0; i < model->surfaceCount; ++i) {
-        fread(&model->surfaceID[i], sizeof(model->surfaceID[i]), 1, stream);
+        fRead(&model->surfaceID[i], sizeof(model->surfaceID[i]), 1, stream);
     }
 
     LCollision = new CollisionModel3D **[model->rows];
@@ -295,7 +309,7 @@ void LoadLevelModel(LMF *model, const char *path)
             for (int s = 0; s < model->surfaceCount; ++s) {
                 LMFMesh *tile = &model->tiles[s][y][c];
 
-                fread(&tile->numVertices, sizeof(tile->numVertices), 1, stream);
+                fRead(&tile->numVertices, sizeof(tile->numVertices), 1, stream);
                 tile->vertices = new LVertex[tile->numVertices + 1]();
                 tile->colors   = new float[tile->numVertices];
 
@@ -312,7 +326,7 @@ void LoadLevelModel(LMF *model, const char *path)
                         float tv;
                     } vert;
 
-                    fread(&vert, sizeof(vert), 1, stream);
+                    fRead(&vert, sizeof(vert), 1, stream);
 
                     vert.color += 1.0f;
                     vert.color *= 0.375f;
@@ -324,11 +338,11 @@ void LoadLevelModel(LMF *model, const char *path)
                     tile->colors[v]   = vert.color;
                 }
 
-                fread(&tile->numIndices, sizeof(tile->numIndices), 1, stream);
+                fRead(&tile->numIndices, sizeof(tile->numIndices), 1, stream);
                 tile->indices = new ushort[tile->numIndices];
 
                 for (int v = 0; v < tile->numIndices; ++v) {
-                    fread(&tile->indices[v], sizeof(tile->indices[v]), 1, stream);
+                    fRead(&tile->indices[v], sizeof(tile->indices[v]), 1, stream);
                 }
 
                 for (int t = 0; t < tile->numIndices; t += 3) {
@@ -345,7 +359,7 @@ void LoadLevelModel(LMF *model, const char *path)
         }
     }
 
-    fclose(stream);
+    fClose(stream);
 }
 
 void SetLevelDirectory(const char *text, byte length, int index)
@@ -461,25 +475,25 @@ void Load_TMF_File(TMF *model, const char *path)
 {
     memset(model, 0, sizeof(*model));
 
-    FILE *stream = fopen(path, "rb");
-    fseek(stream, 0, 0);
+    FileIO *stream = fopen(path, "rb");
+    fSeek(stream, 0, 0);
 
-    fread(&model->numVertices, 2, 1, stream);
+    fRead(&model->numVertices, 2, 1, stream);
     model->vertices = new Vertex[model->numVertices + 1];
     if (model->vertices != NULL)
         memset(model->vertices, 0, sizeof(*model->vertices));
 
     for (int i = 0; i < model->numVertices; ++i) {
-        fread(&model->vertices[i], sizeof(model->vertices[i]), 1, stream);
+        fRead(&model->vertices[i], sizeof(model->vertices[i]), 1, stream);
     }
 
-    fread(&model->numIndices, sizeof(model->numIndices), 1, stream);
+    fRead(&model->numIndices, sizeof(model->numIndices), 1, stream);
     model->indices = new ushort[model->numIndices + 2];
     for (int i = 0; i < model->numIndices; ++i) {
-        fread(&model->indices[i], sizeof(model->indices[i]), 1, stream);
+        fRead(&model->indices[i], sizeof(model->indices[i]), 1, stream);
     }
 
-    fclose(stream);
+    fClose(stream);
 }
 
 void Load_ANI_File(Animation *animation, const char *path)
@@ -488,76 +502,76 @@ void Load_ANI_File(Animation *animation, const char *path)
 
     char boneName[256];
 
-    FILE *stream = fopen(path, "rb");
-    fseek(stream, 0, SEEK_SET);
+    FileIO *stream = fopen(path, "rb");
+    fSeek(stream, 0, SEEK_SET);
 
     byte frameCount;
     ushort nodeCount;
-    fread(&frameCount, sizeof(byte), 1, stream);
-    fread(&nodeCount, sizeof(ushort), 1, stream);
+    fRead(&frameCount, sizeof(byte), 1, stream);
+    fRead(&nodeCount, sizeof(ushort), 1, stream);
 
     for (int i = 0; i < frameCount; ++i) {
         byte nameLen;
-        fread(&nameLen, sizeof(byte), 1, stream);
-        fread(boneName, sizeof(byte), nameLen, stream);
+        fRead(&nameLen, sizeof(byte), 1, stream);
+        fRead(boneName, sizeof(byte), nameLen, stream);
 
-        fread(&animation->nodes[i].position.x, sizeof(float), 1, stream);
-        fread(&animation->nodes[i].position.y, sizeof(float), 1, stream);
-        fread(&animation->nodes[i].position.z, sizeof(float), 1, stream);
+        fRead(&animation->nodes[i].position.x, sizeof(float), 1, stream);
+        fRead(&animation->nodes[i].position.y, sizeof(float), 1, stream);
+        fRead(&animation->nodes[i].position.z, sizeof(float), 1, stream);
 
-        fread(&animation->nodes[i].vertexCount, sizeof(ushort), 1, stream);
+        fRead(&animation->nodes[i].vertexCount, sizeof(ushort), 1, stream);
         animation->nodes[i].vertexIDs = new ushort[animation->nodes[i].vertexCount];
 
         for (int j = 0; j < animation->nodes[i].vertexCount; ++j) {
-            fread(&animation->nodes[i].vertexIDs[j], sizeof(ushort), 1, stream);
+            fRead(&animation->nodes[i].vertexIDs[j], sizeof(ushort), 1, stream);
         }
 
         for (int j = 0; j < nodeCount; ++j) {
             byte idk;
             ushort val;
 
-            fread(&idk, sizeof(byte), 1, stream);
-            fread(&val, sizeof(ushort), 1, stream);
+            fRead(&idk, sizeof(byte), 1, stream);
+            fRead(&val, sizeof(ushort), 1, stream);
             animation->nodes[i].rotX[j] = (float)((idk ? (int)val : -(int)val) * (RSDK_PI / 180.0));
 
-            fread(&idk, sizeof(byte), 1, stream);
-            fread(&val, sizeof(ushort), 1, stream);
+            fRead(&idk, sizeof(byte), 1, stream);
+            fRead(&val, sizeof(ushort), 1, stream);
             animation->nodes[i].rotY[j] = (float)((idk ? (int)val : -(int)val) * (RSDK_PI / 180.0));
 
-            fread(&idk, sizeof(byte), 1, stream);
-            fread(&val, sizeof(ushort), 1, stream);
+            fRead(&idk, sizeof(byte), 1, stream);
+            fRead(&val, sizeof(ushort), 1, stream);
             animation->nodes[i].rotZ[j] = (float)((idk ? (int)val : -(int)val) * (RSDK_PI / 180.0));
         }
     }
 
-    fread(&animation->frameIDCount, sizeof(ushort), 1, stream);
+    fRead(&animation->frameIDCount, sizeof(ushort), 1, stream);
     animation->frameIDs = new byte[animation->frameIDCount];
 
     for (int i = 0; i < animation->frameIDCount; ++i) {
-        fread(&animation->frameIDs[i], sizeof(byte), 1, stream);
+        fRead(&animation->frameIDs[i], sizeof(byte), 1, stream);
     }
 
     byte stateCount;
-    fread(&stateCount, sizeof(byte), 1, stream);
+    fRead(&stateCount, sizeof(byte), 1, stream);
 
     for (int i = 0; i < stateCount; ++i) {
         byte nameLen;
-        fread(&nameLen, sizeof(byte), 1, stream);
-        fread(&boneName, sizeof(byte), nameLen, stream);
+        fRead(&nameLen, sizeof(byte), 1, stream);
+        fRead(&boneName, sizeof(byte), nameLen, stream);
 
-        fread(&animation->states[i].frameDuration, sizeof(byte), 1, stream);
-        fread(&animation->states[i].loopIndex, sizeof(byte), 1, stream);
-        fread(&animation->states[i].frameCount, sizeof(byte), 1, stream);
+        fRead(&animation->states[i].frameDuration, sizeof(byte), 1, stream);
+        fRead(&animation->states[i].loopIndex, sizeof(byte), 1, stream);
+        fRead(&animation->states[i].frameCount, sizeof(byte), 1, stream);
 
         for (int j = 0; j < animation->states[i].frameCount; ++j) {
-            fread(&animation->states[i].array_2[j], sizeof(ushort), 1, stream);
+            fRead(&animation->states[i].array_2[j], sizeof(ushort), 1, stream);
         }
     }
 
     animation->field_BFAA = 0;
     animation->field_BFAB = 0;
 
-    fclose(stream);
+    fClose(stream);
 }
 
 #if 0
@@ -568,62 +582,62 @@ int *__cdecl TODO_READER_FUNC_401A87(int *a1, char *FileName)
   int v5; // [esp+10h] [ebp-BFCCh] BYREF
   int j; // [esp+14h] [ebp-BFC8h]
   int i; // [esp+18h] [ebp-BFC4h]
-  FILE *Stream; // [esp+1Ch] [ebp-BFC0h]
+  FileIO *Stream; // [esp+1Ch] [ebp-BFC0h]
   int Buffer; // [esp+20h] [ebp-BFBCh] BYREF
   R3D::Animation v10; // [esp+24h] [ebp-BFB8h] BYREF
   int v11; // [esp+BFD8h] [ebp-4h] BYREF
 
   Stream = fopen(FileName, "rb");
-  fseek(Stream, 0, 0);
-  fread(&Buffer, 1u, 1u, Stream);
+  fSeek(Stream, 0, 0);
+  fRead(&Buffer, 1u, 1u, Stream);
   v3 = Buffer;
-  fread(&v11, 2u, 1u, Stream);
+  fRead(&v11, 2u, 1u, Stream);
   for ( i = 0; i < v3; ++i )
   {
-    fread(&Buffer, 1u, 1u, Stream);
+    fRead(&Buffer, 1u, 1u, Stream);
     v5 = Buffer;
     for ( j = 0; j < v5; ++j )
-      fread(&Buffer, 1u, 1u, Stream);
-    fread(&v10.frames[i].field_8, 4u, 1u, Stream);
-    fread(&v10.frames[i].field_8.y, 4u, 1u, Stream);
-    fread(&v10.frames[i].field_8.z, 4u, 1u, Stream);
-    fread(&v5, 2u, 1u, Stream);
+      fRead(&Buffer, 1u, 1u, Stream);
+    fRead(&v10.frames[i].field_8, 4u, 1u, Stream);
+    fRead(&v10.frames[i].field_8.y, 4u, 1u, Stream);
+    fRead(&v10.frames[i].field_8.z, 4u, 1u, Stream);
+    fRead(&v5, 2u, 1u, Stream);
     v10.frames[i].count = v5;
     for ( j = 0; j < v10.frames[i].count; ++j )
     {
-      fread(&v5, 2u, 1u, Stream);
+      fRead(&v5, 2u, 1u, Stream);
       v10.frames[i].field_0[j] = v5;
     }
     for ( j = 0; j < v11; ++j )
     {
-      fread(&v5, 2u, 1u, Stream);
+      fRead(&v5, 2u, 1u, Stream);
       v10.frames[i].rotX[j] = v5 * (3.1415927 / 180.0);
-      fread(&v5, 2u, 1u, Stream);
+      fRead(&v5, 2u, 1u, Stream);
       v10.frames[i].rotY[j] = v5 * (3.1415927 / 180.0);
-      fread(&v5, 2u, 1u, Stream);
+      fRead(&v5, 2u, 1u, Stream);
       v10.frames[i].rotZ[j] = v5 * (3.1415927 / 180.0);
     }
   }
-  fread(&v5, 2u, 1u, Stream);
+  fRead(&v5, 2u, 1u, Stream);
   v10.field_BFA8 = v5;
   v10.frameIDs = operator new(v5);
   for ( i = 0; i < v10.field_BFA8; ++i )
-    fread(&v10.frameIDs[i], 1u, 1u, Stream);
-  fread(&Buffer, 1u, 1u, Stream);
+    fRead(&v10.frameIDs[i], 1u, 1u, Stream);
+  fRead(&Buffer, 1u, 1u, Stream);
   v4 = Buffer;
   for ( i = 0; i < v4; ++i )
   {
-    fread(&Buffer, 1u, 1u, Stream);
+    fRead(&Buffer, 1u, 1u, Stream);
     v5 = Buffer;
     for ( j = 0; j < v5; ++j )
-      fread(&Buffer, 1u, 1u, Stream);
-    fread(&v10.array_AB90[i].field_201, 1u, 1u, Stream);
-    fread(&v10.array_AB90[i].field_200, 1u, 1u, Stream);
-    fread(&v10.array_AB90[i], 1u, 1u, Stream);
+      fRead(&Buffer, 1u, 1u, Stream);
+    fRead(&v10.array_AB90[i].field_201, 1u, 1u, Stream);
+    fRead(&v10.array_AB90[i].field_200, 1u, 1u, Stream);
+    fRead(&v10.array_AB90[i], 1u, 1u, Stream);
     for ( j = 0; j < v10.array_AB90[i].count; ++j )
-      fread(&v10.array_AB90[i].array_2[j], 2u, 1u, Stream);
+      fRead(&v10.array_AB90[i].array_2[j], 2u, 1u, Stream);
   }
-  fclose(Stream);
+  fClose(Stream);
   qmemcpy(a1, &v10, 0xBFB4u);
   return a1;
 }

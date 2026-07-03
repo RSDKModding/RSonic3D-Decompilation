@@ -183,12 +183,6 @@ struct Texture {
     void Release();
 };
 
-#if RETRO_USE_ORIGINAL_CODE
-extern tagRECT rect_420488;
-extern tagRECT clientRect;
-extern tagRECT windowBounds;
-#endif
-
 extern Matrix3D MatrixInversed;
 extern Matrix3D MatrixWorld;
 extern Matrix3D MatrixView;
@@ -212,16 +206,24 @@ extern IDirectDrawSurface7 *FrontBuffer;
 extern IDirectDrawSurface7 *BackBuffer;
 extern IDirectDrawSurface7 *ZBuffer;
 
+extern tagRECT ClientRect;
+extern tagRECT WindowRect;
+extern tagRECT WindowStoreRect;
+
 extern bool D3DUseHardwareRendering;
 extern byte D3DDeviceType;
 extern bool D3DSupportsZBufferFmt;
 
 extern HWND HWnd;
+extern HMENU HMenu;
+
 extern HINSTANCE HInst;
 extern int NCmdShow;
-#else
+#elif RETRO_USE_SDL3 || RETRO_USE_SDL2
 extern SDL_Window *Window;
 extern SDL_GLContext GLContext;
+#elif RETRO_USE_SDL1
+extern SDL_Surface *Window;
 #endif
 
 extern bool EngineRunning;
@@ -249,7 +251,6 @@ void SetRenderTransform(RenderTransform type, Matrix3D *pMatrix);
 void SetRenderState(RenderState type, int value);
 void SetRenderTextureStageState(int stage, TextureStageState type, int value);
 void EnableLight(int id, bool enabled);
-void EnableVSync(bool enabled);
 
 void DrawIndexedPrimitive(RenderFVF type, void *pVertices, int numVertices, void *pIndices, int numIndices);
 void SetFade(float r, float g, float b, float a);

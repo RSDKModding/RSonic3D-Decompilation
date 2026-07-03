@@ -12,6 +12,8 @@ double FrameDeltaTime;
 #if RETRO_USE_ORIGINAL_CODE
 MSG Message;
 bool UseQueryCounter;
+#else
+SDL_Event SDLEvent;
 #endif
 
 int QuitMessage = EXIT_FAILURE;
@@ -29,27 +31,33 @@ bool CreateMWindow()
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = 4;
     wndClass.hInstance     = HInst;
-    wndClass.hIcon         = LoadIconA(HInst, MAKEINTRESOURCEA(0x65));
-    wndClass.hCursor       = LoadCursorA(0, MAKEINTRESOURCEA(0x7F00));
-    wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-    wndClass.lpszMenuName  = (LPCSTR)IDR_MAINMENU;
+    wndClass.hIcon         = LoadIcon(HInst, MAKEINTRESOURCE(IDI_MAINICON));
+    wndClass.hCursor       = LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW));
+    wndClass.hbrBackground = (HBRUSH)(GetStockObject(BLACK_BRUSH));
+    wndClass.lpszMenuName  = (LPCSTR)(IDR_MAINMENU);
     wndClass.lpszClassName = title;
 
     if (RegisterClassA(&wndClass)) {
-        int mtcapt = GetSystemMetrics(SM_CYCAPTION);
-        int mtmenu = GetSystemMetrics(SM_CYMENU);
+        int width  = 2 * GetSystemMetrics(SM_CXSIZEFRAME);
+        int height = 2 * GetSystemMetrics(SM_CYSIZEFRAME);
 
-        int w = (2 * GetSystemMetrics(SM_CXSIZEFRAME)) + (SCREEN_XSIZE * 2);
-        int h = (2 * GetSystemMetrics(SM_CYSIZEFRAME)) + (SCREEN_YSIZE * 2);
+        width += 2 * SCREEN_XSIZE;
+        height += 2 * SCREEN_YSIZE;
+
+        height += GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYMENU);
 
         int style = WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 
-        HWnd = CreateWindow(title, title, style, CW_USEDEFAULT, CW_USEDEFAULT, w, (mtmenu + mtcapt) + h, 0, 0, HInst, 0);
+        HWnd = CreateWindow(title, title, style, CW_USEDEFAULT, CW_USEDEFAULT, width, height, 0, 0, HInst, 0);
         if (HWnd != NULL) {
             ShowWindow(HWnd, NCmdShow);
             UpdateWindow(HWnd);
+
             EngineRunning = true;
-            return InitInputDevice() && InitGraphicsAPI();
+            if (InitInputDevice() && InitGraphicsAPI())
+                return true;
+
+            return false;
         }
     }
     else {
@@ -58,15 +66,21 @@ bool CreateMWindow()
 
     return false;
 #else
-    SetScreenResolution(SCALE_2X, SCALE_2X, 0);
+    SetScreenResolution(SCALE_3X, SCALE_2X, 0);
 
 #if RETRO_USE_SDL3
-    Uint32 flags = SDL_WINDOW_OPENGL;
-#elif RETRO_USE_SDL2
-    Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
-#endif
+    uint flags = SDL_WINDOW_OPENGL;
     if (WindowMode == 0)
         flags |= SDL_WINDOW_FULLSCREEN;
+#elif RETRO_USE_SDL2
+    uint flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+    if (WindowMode == 0)
+        flags |= SDL_WINDOW_FULLSCREEN;
+#elif RETRO_USE_SDL1
+    uint flags = SDL_OPENGL;
+    if (WindowMode == 0)
+        flags |= SDL_FULLSCREEN;
+#endif
 
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
@@ -74,18 +88,30 @@ bool CreateMWindow()
     Window = SDL_CreateWindow("Retro-Sonic 3D: A Taxman Test", ResX, ResY, flags);
 #elif RETRO_USE_SDL2
     Window = SDL_CreateWindow("Retro-Sonic 3D: A Taxman Test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, ResX, ResY, flags);
+#elif RETRO_USE_SDL1
+    // TODO: VSync option
+    SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
+    SDL_WM_SetCaption("Retro-Sonic 3D: A Taxman Test", NULL);
+    Window = SDL_SetVideoMode(ResX, ResY, 32, flags);
 #endif
     if (!Window)
         return false;
 
+#if RETRO_USE_SDL3 || RETRO_USE_SDL2
     GLContext = SDL_GL_CreateContext(Window);
     if (!GLContext)
         return false;
 
-    EnableVSync(true);
+    // TODO: VSync option
+    SDL_GL_SetSwapInterval(true);
+#elif RETRO_USE_SDL1
+#endif
 
     EngineRunning = true;
-    return InitInputDevice() && InitGraphicsAPI();
+    if (InitInputDevice() && InitGraphicsAPI())
+        return true;
+
+    return false;
 #endif
 }
 
@@ -120,7 +146,7 @@ LRESULT CALLBACK MWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                     GameMode = GAMEMODE_TITLESCREEN;
                     ResetTitleScreen();
 
-                    for (int i = 0; i < 6; ++i) {
+                    for (int i = 0; i < 7; ++i) {
                         ReleaseCharacterUITexture(i);
                     }
 
@@ -150,7 +176,9 @@ LRESULT CALLBACK MWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                     PostQuitMessage(EXIT_SUCCESS);
                     break;
 
-                case IDM_HELP_ABOUT: break;
+                case IDM_HELP_ABOUT:
+                    // This'd be the about menu, nothing here though :(
+                    break;
 
                 case IDM_SET_DISPLAY: DialogBoxParamA(HInst, "DMSelect", hWnd, MDialogProc, 0); break;
 
@@ -220,29 +248,29 @@ INT_PTR CALLBACK MDialogProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
 void UpdateWindowRect(HWND hWnd)
 {
-    if (WindowMode == 1) {
-        GetClientRect(hWnd, &clientRect);
-        GetClientRect(hWnd, &windowBounds);
-        ClientToScreen(hWnd, (POINT *)&windowBounds.left);
-        ClientToScreen(hWnd, (POINT *)&windowBounds.right);
+    if (WindowMode == true) {
+        GetClientRect(hWnd, &ClientRect);
+        GetClientRect(hWnd, &WindowRect);
+        ClientToScreen(hWnd, (POINT *)&WindowRect.left);
+        ClientToScreen(hWnd, (POINT *)&WindowRect.right);
     }
 }
 
 void ResetWindow(HWND hWnd)
 {
-    if (WindowMode == 1)
-        GetWindowRect(hWnd, &rect_420488);
+    if (WindowMode == true)
+        GetWindowRect(hWnd, &WindowStoreRect);
 
     ToggleScreenMode();
 }
 #else
-void ProcessEvents(SDL_Event &event)
+void ProcessEvents()
 {
-    while (SDL_PollEvent(&event)) {
-        switch (event.type) {
+    while (SDL_PollEvent(&SDLEvent)) {
+        switch (SDLEvent.type) {
 #if RETRO_USE_SDL3
             case SDL_EVENT_QUIT:
-#elif RETRO_USE_SDL2
+#elif RETRO_USE_SDL2 || RETRO_USE_SDL1
             case SDL_QUIT:
 #endif
                 EngineRunning = false;
@@ -250,24 +278,34 @@ void ProcessEvents(SDL_Event &event)
 
 #if RETRO_USE_SDL3
             case SDL_EVENT_WINDOW_FOCUS_GAINED: EnableInput(); break;
-
             case SDL_EVENT_WINDOW_FOCUS_LOST: DisableInput(); break;
+
 #elif RETRO_USE_SDL2
             case SDL_WINDOWEVENT:
-                if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+                if (SDLEvent.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
                     EnableInput();
 
-                if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
+                if (SDLEvent.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
                     DisableInput();
+                break;
+
+#elif RETRO_USE_SDL1
+            case SDL_ACTIVEEVENT:
+                if (SDLEvent.active.state & SDL_APPINPUTFOCUS) {
+                    if (SDLEvent.active.gain)
+                        EnableInput();
+                    else
+                        DisableInput();
+                }
                 break;
 #endif
 
 #if RETRO_USE_SDL3
             case SDL_EVENT_KEY_DOWN:
-                switch (event.key.key) {
-#elif RETRO_USE_SDL2
+                switch (SDLEvent.key.key) {
+#elif RETRO_USE_SDL2 || RETRO_USE_SDL1
             case SDL_KEYDOWN:
-                switch (event.key.keysym.sym) {
+                switch (SDLEvent.key.keysym.sym) {
 #endif
 
                     case SDLK_ESCAPE: EngineRunning = false; break;

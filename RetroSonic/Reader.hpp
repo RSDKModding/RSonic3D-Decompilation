@@ -3,6 +3,33 @@
 
 #include "RetroEngine.hpp"
 
+#if defined (FORCE_CASE_INSENSITIVE) && defined (ijtorhiomjbtn)
+#include "fcaseopen.h"
+#define FileIO                                          FILE
+#define fOpen(path, mode)                               fcaseopen(path, mode)
+#define fRead(buffer, elementSize, elementCount, file)  fread(buffer, elementSize, elementCount, file)
+#define fSeek(file, offset, whence)                     fseek(file, offset, whence)
+#define fTell(file)                                     ftell(file)
+#define fClose(file)                                    fclose(file)
+#define fWrite(buffer, elementSize, elementCount, file) fwrite(buffer, elementSize, elementCount, file)
+#elif RETRO_USING_SDL1 || RETRO_USING_SDL2 || RETRO_USING_SDL3
+#define FileIO                                          SDL_RWops
+#define fOpen(path, mode)                               SDL_RWFromFile(path, mode)
+#define fRead(buffer, elementSize, elementCount, file)  SDL_RWread(file, buffer, elementSize, elementCount)
+#define fSeek(file, offset, whence)                     SDL_RWseek(file, offset, whence)
+#define fTell(file)                                     SDL_RWtell(file)
+#define fClose(file)                                    SDL_RWclose(file)
+#define fWrite(buffer, elementSize, elementCount, file) SDL_RWwrite(file, buffer, elementSize, elementCount)
+#else
+#define FileIO                                          FILE
+#define fOpen(path, mode)                               fopen(path, mode)
+#define fRead(buffer, elementSize, elementCount, file)  fread(buffer, elementSize, elementCount, file)
+#define fSeek(file, offset, whence)                     fseek(file, offset, whence)
+#define fTell(file)                                     ftell(file)
+#define fClose(file)                                    fclose(file)
+#define fWrite(buffer, elementSize, elementCount, file) fwrite(buffer, elementSize, elementCount, file)
+#endif
+
 struct FileInfo {
     byte *data;
     int size;
@@ -73,8 +100,7 @@ struct Animation {
 extern LevelDirectoryEntry *LDirectory;
 
 void LoadFile(FileInfo *file, const char *path);
-
-void LoadTexture(Texture **texture, const char *path, bool useTexMips);
+void LoadTexture(Texture **texturePtr, const char *path, bool useTexMips);
 
 void LoadLevelModel(LMF *model, const char *path);
 void SetLevelDirectory(const char *text, byte length, int index);

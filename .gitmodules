@@ -1,3 +1,6 @@
 [submodule "dependencies/coldet"]
 	path = dependencies/coldet
 	url = https://github.com/amirgeva/coldet
+[submodule "dependencies/stb-image"]
+	path = dependencies/stb-image
+	url = https://github.com/nothings/stb.git
