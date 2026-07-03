@@ -7,12 +7,20 @@ LevelDirectoryEntry *LDirectory;
 
 void LoadFile(FileInfo *file, const char *path)
 {
-    FileIO *handle = fOpen(path, "rb");
-    fSeek(handle, 0, 2);
+#if RETRO_USE_MOD_LOADER
+    char filePathBuf[0x100];
+    StrCopy(filePathBuf, path);
+    ModFilePath(filePathBuf);
 
+    FileIO *handle = fOpen(filePathBuf, "rb");
+#else
+    FileIO *handle = fOpen(path, "rb");
+#endif
+
+    fSeek(handle, 0, SEEK_END);
     file->size = fTell(handle);
     file->data = new byte[file->size + 1];
-    fSeek(handle, 0, 0);
+    fSeek(handle, 0, SEEK_SET);
 
     for (int i = 0; i < file->size; ++i) {
         fRead(&file->data[i], 1, 1, handle);
@@ -246,7 +254,16 @@ void LoadTexture(Texture **texturePtr, const char *path, bool useTexMips)
     int width    = 0;
     int height   = 0;
     int channels = 0;
+
+#if RETRO_USE_MOD_LOADER
+    char filePathBuf[0x100];
+    StrCopy(filePathBuf, path);
+    ModFilePath(filePathBuf);
+
+    if (stbi_uc *data = stbi_load(filePathBuf, &width, &height, &channels, 4)) {
+#else
     if (stbi_uc *data = stbi_load(path, &width, &height, &channels, 4)) {
+#endif
         Texture *texture = (*texturePtr) = new Texture();
 
         texture->vtbl   = NULL;
@@ -277,16 +294,25 @@ void LoadLevelModel(LMF *model, const char *path)
 {
     memset(model, 0, sizeof(*model));
 
-    FileIO *stream = fOpen(path, "rb");
-    fRead(&model->surfaceCount, sizeof(model->surfaceCount), 1, stream);
-    fRead(&model->columns, sizeof(model->columns), 1, stream);
-    fRead(&model->rows, sizeof(model->rows), 1, stream);
-    fRead(&model->startX, sizeof(model->startX), 1, stream);
-    fRead(&model->startZ, sizeof(model->startZ), 1, stream);
-    fRead(&model->unused, sizeof(model->unused), 1, stream);
+#if RETRO_USE_MOD_LOADER
+    char filePathBuf[0x100];
+    StrCopy(filePathBuf, path);
+    ModFilePath(filePathBuf);
+
+    FileIO *handle = fOpen(filePathBuf, "rb");
+#else
+    FileIO *handle = fOpen(path, "rb");
+#endif
+
+    fRead(&model->surfaceCount, sizeof(model->surfaceCount), 1, handle);
+    fRead(&model->columns, sizeof(model->columns), 1, handle);
+    fRead(&model->rows, sizeof(model->rows), 1, handle);
+    fRead(&model->startX, sizeof(model->startX), 1, handle);
+    fRead(&model->startZ, sizeof(model->startZ), 1, handle);
+    fRead(&model->unused, sizeof(model->unused), 1, handle);
 
     for (int i = 0; i < model->surfaceCount; ++i) {
-        fRead(&model->surfaceID[i], sizeof(model->surfaceID[i]), 1, stream);
+        fRead(&model->surfaceID[i], sizeof(model->surfaceID[i]), 1, handle);
     }
 
     LCollision = new CollisionModel3D **[model->rows];
@@ -309,7 +335,7 @@ void LoadLevelModel(LMF *model, const char *path)
             for (int s = 0; s < model->surfaceCount; ++s) {
                 LMFMesh *tile = &model->tiles[s][y][c];
 
-                fRead(&tile->numVertices, sizeof(tile->numVertices), 1, stream);
+                fRead(&tile->numVertices, sizeof(tile->numVertices), 1, handle);
                 tile->vertices = new LVertex[tile->numVertices + 1]();
                 tile->colors   = new float[tile->numVertices];
 
@@ -326,7 +352,7 @@ void LoadLevelModel(LMF *model, const char *path)
                         float tv;
                     } vert;
 
-                    fRead(&vert, sizeof(vert), 1, stream);
+                    fRead(&vert, sizeof(vert), 1, handle);
 
                     vert.color += 1.0f;
                     vert.color *= 0.375f;
@@ -338,11 +364,11 @@ void LoadLevelModel(LMF *model, const char *path)
                     tile->colors[v]   = vert.color;
                 }
 
-                fRead(&tile->numIndices, sizeof(tile->numIndices), 1, stream);
+                fRead(&tile->numIndices, sizeof(tile->numIndices), 1, handle);
                 tile->indices = new ushort[tile->numIndices];
 
                 for (int v = 0; v < tile->numIndices; ++v) {
-                    fRead(&tile->indices[v], sizeof(tile->indices[v]), 1, stream);
+                    fRead(&tile->indices[v], sizeof(tile->indices[v]), 1, handle);
                 }
 
                 for (int t = 0; t < tile->numIndices; t += 3) {
@@ -359,7 +385,7 @@ void LoadLevelModel(LMF *model, const char *path)
         }
     }
 
-    fClose(stream);
+    fClose(handle);
 }
 
 void SetLevelDirectory(const char *text, byte length, int index)
@@ -384,7 +410,12 @@ void AllocateDirectories(int size) { LDirectory = new LevelDirectoryEntry[size +
 
 void LoadDirectoryFile(FileInfo *file, int id, const char *fileName, int fileNameLen)
 {
+#if RETRO_USE_MOD_LOADER
+    char path[0x100];
+#else
     char path[0x20];
+#endif
+
     StrCopy(path, "Data/Levels/");
 
     int r = 12; // "Data/Levels/" length
@@ -398,12 +429,21 @@ void LoadDirectoryFile(FileInfo *file, int id, const char *fileName, int fileNam
 
     path[r] = '\0';
 
-    LoadFile(file, fileName);
+#if RETRO_USE_MOD_LOADER
+    ModFilePath(path);
+#endif
+
+    LoadFile(file, path);
 }
 
 void LoadDirectoryActFile(FileInfo *file, int id, const char *fileName, int fileNameLen)
 {
+#if RETRO_USE_MOD_LOADER
+    char path[0x100];
+#else
     char path[0x20];
+#endif
+
     StrCopy(path, "Data/Levels/");
 
     char act[0x08];
@@ -428,12 +468,21 @@ void LoadDirectoryActFile(FileInfo *file, int id, const char *fileName, int file
 
     path[r] = '\0';
 
-    LoadFile(file, fileName);
+#if RETRO_USE_MOD_LOADER
+    ModFilePath(path);
+#endif
+
+    LoadFile(file, path);
 }
 
 void LoadDirectoryGraphic(int id, const char *fileName, int fileNameLen)
 {
+#if RETRO_USE_MOD_LOADER
+    char path[0x100];
+#else
     char path[0x20];
+#endif
+
     StrCopy(path, "Data/Levels/");
 
     int r = 12; // "Data/Levels/" length
@@ -446,6 +495,10 @@ void LoadDirectoryGraphic(int id, const char *fileName, int fileNameLen)
     }
 
     path[r] = '\0';
+
+#if RETRO_USE_MOD_LOADER
+    ModFilePath(path);
+#endif
 
     // No LoadZoneTiles :C
 }
@@ -475,103 +528,121 @@ void Load_TMF_File(TMF *model, const char *path)
 {
     memset(model, 0, sizeof(*model));
 
-    FileIO *stream = fopen(path, "rb");
-    fSeek(stream, 0, 0);
+#if RETRO_USE_MOD_LOADER
+    char filePathBuf[0x100];
+    StrCopy(filePathBuf, path);
+    ModFilePath(filePathBuf);
 
-    fRead(&model->numVertices, 2, 1, stream);
+    FileIO *handle = fOpen(filePathBuf, "rb");
+#else
+    FileIO *handle = fOpen(path, "rb");
+#endif
+
+    fSeek(handle, 0, SEEK_SET);
+
+    fRead(&model->numVertices, 2, 1, handle);
     model->vertices = new Vertex[model->numVertices + 1];
     if (model->vertices != NULL)
         memset(model->vertices, 0, sizeof(*model->vertices));
 
     for (int i = 0; i < model->numVertices; ++i) {
-        fRead(&model->vertices[i], sizeof(model->vertices[i]), 1, stream);
+        fRead(&model->vertices[i], sizeof(model->vertices[i]), 1, handle);
     }
 
-    fRead(&model->numIndices, sizeof(model->numIndices), 1, stream);
+    fRead(&model->numIndices, sizeof(model->numIndices), 1, handle);
     model->indices = new ushort[model->numIndices + 2];
     for (int i = 0; i < model->numIndices; ++i) {
-        fRead(&model->indices[i], sizeof(model->indices[i]), 1, stream);
+        fRead(&model->indices[i], sizeof(model->indices[i]), 1, handle);
     }
 
-    fClose(stream);
+    fClose(handle);
 }
 
 void Load_ANI_File(Animation *animation, const char *path)
 {
     memset(animation, 0, sizeof(*animation));
 
-    char boneName[256];
+    char boneName[0x100];
 
-    FileIO *stream = fopen(path, "rb");
-    fSeek(stream, 0, SEEK_SET);
+#if RETRO_USE_MOD_LOADER
+    char filePathBuf[0x100];
+    StrCopy(filePathBuf, path);
+    ModFilePath(filePathBuf);
+
+    FileIO *handle = fOpen(filePathBuf, "rb");
+#else
+    FileIO *handle = fOpen(path, "rb");
+#endif
+
+    fSeek(handle, 0, SEEK_SET);
 
     byte frameCount;
     ushort nodeCount;
-    fRead(&frameCount, sizeof(byte), 1, stream);
-    fRead(&nodeCount, sizeof(ushort), 1, stream);
+    fRead(&frameCount, sizeof(byte), 1, handle);
+    fRead(&nodeCount, sizeof(ushort), 1, handle);
 
     for (int i = 0; i < frameCount; ++i) {
         byte nameLen;
-        fRead(&nameLen, sizeof(byte), 1, stream);
-        fRead(boneName, sizeof(byte), nameLen, stream);
+        fRead(&nameLen, sizeof(byte), 1, handle);
+        fRead(boneName, sizeof(byte), nameLen, handle);
 
-        fRead(&animation->nodes[i].position.x, sizeof(float), 1, stream);
-        fRead(&animation->nodes[i].position.y, sizeof(float), 1, stream);
-        fRead(&animation->nodes[i].position.z, sizeof(float), 1, stream);
+        fRead(&animation->nodes[i].position.x, sizeof(float), 1, handle);
+        fRead(&animation->nodes[i].position.y, sizeof(float), 1, handle);
+        fRead(&animation->nodes[i].position.z, sizeof(float), 1, handle);
 
-        fRead(&animation->nodes[i].vertexCount, sizeof(ushort), 1, stream);
+        fRead(&animation->nodes[i].vertexCount, sizeof(ushort), 1, handle);
         animation->nodes[i].vertexIDs = new ushort[animation->nodes[i].vertexCount];
 
         for (int j = 0; j < animation->nodes[i].vertexCount; ++j) {
-            fRead(&animation->nodes[i].vertexIDs[j], sizeof(ushort), 1, stream);
+            fRead(&animation->nodes[i].vertexIDs[j], sizeof(ushort), 1, handle);
         }
 
         for (int j = 0; j < nodeCount; ++j) {
             byte idk;
             ushort val;
 
-            fRead(&idk, sizeof(byte), 1, stream);
-            fRead(&val, sizeof(ushort), 1, stream);
+            fRead(&idk, sizeof(byte), 1, handle);
+            fRead(&val, sizeof(ushort), 1, handle);
             animation->nodes[i].rotX[j] = (float)((idk ? (int)val : -(int)val) * (RSDK_PI / 180.0));
 
-            fRead(&idk, sizeof(byte), 1, stream);
-            fRead(&val, sizeof(ushort), 1, stream);
+            fRead(&idk, sizeof(byte), 1, handle);
+            fRead(&val, sizeof(ushort), 1, handle);
             animation->nodes[i].rotY[j] = (float)((idk ? (int)val : -(int)val) * (RSDK_PI / 180.0));
 
-            fRead(&idk, sizeof(byte), 1, stream);
-            fRead(&val, sizeof(ushort), 1, stream);
+            fRead(&idk, sizeof(byte), 1, handle);
+            fRead(&val, sizeof(ushort), 1, handle);
             animation->nodes[i].rotZ[j] = (float)((idk ? (int)val : -(int)val) * (RSDK_PI / 180.0));
         }
     }
 
-    fRead(&animation->frameIDCount, sizeof(ushort), 1, stream);
+    fRead(&animation->frameIDCount, sizeof(ushort), 1, handle);
     animation->frameIDs = new byte[animation->frameIDCount];
 
     for (int i = 0; i < animation->frameIDCount; ++i) {
-        fRead(&animation->frameIDs[i], sizeof(byte), 1, stream);
+        fRead(&animation->frameIDs[i], sizeof(byte), 1, handle);
     }
 
     byte stateCount;
-    fRead(&stateCount, sizeof(byte), 1, stream);
+    fRead(&stateCount, sizeof(byte), 1, handle);
 
     for (int i = 0; i < stateCount; ++i) {
         byte nameLen;
-        fRead(&nameLen, sizeof(byte), 1, stream);
-        fRead(&boneName, sizeof(byte), nameLen, stream);
+        fRead(&nameLen, sizeof(byte), 1, handle);
+        fRead(&boneName, sizeof(byte), nameLen, handle);
 
-        fRead(&animation->states[i].frameDuration, sizeof(byte), 1, stream);
-        fRead(&animation->states[i].loopIndex, sizeof(byte), 1, stream);
-        fRead(&animation->states[i].frameCount, sizeof(byte), 1, stream);
+        fRead(&animation->states[i].frameDuration, sizeof(byte), 1, handle);
+        fRead(&animation->states[i].loopIndex, sizeof(byte), 1, handle);
+        fRead(&animation->states[i].frameCount, sizeof(byte), 1, handle);
 
         for (int j = 0; j < animation->states[i].frameCount; ++j) {
-            fRead(&animation->states[i].array_2[j], sizeof(ushort), 1, stream);
+            fRead(&animation->states[i].array_2[j], sizeof(ushort), 1, handle);
         }
     }
 
     animation->field_BFAA = 0;
     animation->field_BFAB = 0;
 
-    fClose(stream);
+    fClose(handle);
 }
 
 #if 0
@@ -582,62 +653,62 @@ int *__cdecl TODO_READER_FUNC_401A87(int *a1, char *FileName)
   int v5; // [esp+10h] [ebp-BFCCh] BYREF
   int j; // [esp+14h] [ebp-BFC8h]
   int i; // [esp+18h] [ebp-BFC4h]
-  FileIO *Stream; // [esp+1Ch] [ebp-BFC0h]
+  FileIO *handle; // [esp+1Ch] [ebp-BFC0h]
   int Buffer; // [esp+20h] [ebp-BFBCh] BYREF
   R3D::Animation v10; // [esp+24h] [ebp-BFB8h] BYREF
   int v11; // [esp+BFD8h] [ebp-4h] BYREF
 
-  Stream = fopen(FileName, "rb");
-  fSeek(Stream, 0, 0);
-  fRead(&Buffer, 1u, 1u, Stream);
+  handle = fopen(FileName, "rb");
+  fSeek(handle, 0, SEEK_SET);
+  fRead(&Buffer, 1u, 1u, handle);
   v3 = Buffer;
-  fRead(&v11, 2u, 1u, Stream);
+  fRead(&v11, 2u, 1u, handle);
   for ( i = 0; i < v3; ++i )
   {
-    fRead(&Buffer, 1u, 1u, Stream);
+    fRead(&Buffer, 1u, 1u, handle);
     v5 = Buffer;
     for ( j = 0; j < v5; ++j )
-      fRead(&Buffer, 1u, 1u, Stream);
-    fRead(&v10.frames[i].field_8, 4u, 1u, Stream);
-    fRead(&v10.frames[i].field_8.y, 4u, 1u, Stream);
-    fRead(&v10.frames[i].field_8.z, 4u, 1u, Stream);
-    fRead(&v5, 2u, 1u, Stream);
+      fRead(&Buffer, 1u, 1u, handle);
+    fRead(&v10.frames[i].field_8, 4u, 1u, handle);
+    fRead(&v10.frames[i].field_8.y, 4u, 1u, handle);
+    fRead(&v10.frames[i].field_8.z, 4u, 1u, handle);
+    fRead(&v5, 2u, 1u, handle);
     v10.frames[i].count = v5;
     for ( j = 0; j < v10.frames[i].count; ++j )
     {
-      fRead(&v5, 2u, 1u, Stream);
+      fRead(&v5, 2u, 1u, handle);
       v10.frames[i].field_0[j] = v5;
     }
     for ( j = 0; j < v11; ++j )
     {
-      fRead(&v5, 2u, 1u, Stream);
+      fRead(&v5, 2u, 1u, handle);
       v10.frames[i].rotX[j] = v5 * (3.1415927 / 180.0);
-      fRead(&v5, 2u, 1u, Stream);
+      fRead(&v5, 2u, 1u, handle);
       v10.frames[i].rotY[j] = v5 * (3.1415927 / 180.0);
-      fRead(&v5, 2u, 1u, Stream);
+      fRead(&v5, 2u, 1u, handle);
       v10.frames[i].rotZ[j] = v5 * (3.1415927 / 180.0);
     }
   }
-  fRead(&v5, 2u, 1u, Stream);
+  fRead(&v5, 2u, 1u, handle);
   v10.field_BFA8 = v5;
   v10.frameIDs = operator new(v5);
   for ( i = 0; i < v10.field_BFA8; ++i )
-    fRead(&v10.frameIDs[i], 1u, 1u, Stream);
-  fRead(&Buffer, 1u, 1u, Stream);
+    fRead(&v10.frameIDs[i], 1u, 1u, handle);
+  fRead(&Buffer, 1u, 1u, handle);
   v4 = Buffer;
   for ( i = 0; i < v4; ++i )
   {
-    fRead(&Buffer, 1u, 1u, Stream);
+    fRead(&Buffer, 1u, 1u, handle);
     v5 = Buffer;
     for ( j = 0; j < v5; ++j )
-      fRead(&Buffer, 1u, 1u, Stream);
-    fRead(&v10.array_AB90[i].field_201, 1u, 1u, Stream);
-    fRead(&v10.array_AB90[i].field_200, 1u, 1u, Stream);
-    fRead(&v10.array_AB90[i], 1u, 1u, Stream);
+      fRead(&Buffer, 1u, 1u, handle);
+    fRead(&v10.array_AB90[i].field_201, 1u, 1u, handle);
+    fRead(&v10.array_AB90[i].field_200, 1u, 1u, handle);
+    fRead(&v10.array_AB90[i], 1u, 1u, handle);
     for ( j = 0; j < v10.array_AB90[i].count; ++j )
-      fRead(&v10.array_AB90[i].array_2[j], 2u, 1u, Stream);
+      fRead(&v10.array_AB90[i].array_2[j], 2u, 1u, handle);
   }
-  fClose(Stream);
+  fClose(handle);
   qmemcpy(a1, &v10, 0xBFB4u);
   return a1;
 }

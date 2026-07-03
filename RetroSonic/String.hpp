@@ -4,6 +4,8 @@
 void StrCopy(char *dest, const char *src);
 
 #if !RETRO_USE_ORIGINAL_CODE
+int FindLastStringToken(const char *string, const char *token);
+
 inline bool StrComp(const char *stringA, const char *stringB)
 {
     bool match    = true;

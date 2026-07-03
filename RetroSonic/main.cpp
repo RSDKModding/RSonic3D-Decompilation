@@ -36,6 +36,9 @@ int main(int argc, char **argv)
 
 #if !RETRO_USE_ORIGINAL_CODE
     InitUserdata();
+#if RETRO_USE_MOD_LOADER
+    InitMods();
+#endif
 
     WindowMode = !Settings.startFullScreen;
 #endif
@@ -138,6 +141,9 @@ FrameSecondsPerTick = 0.001;
 
 #if !RETRO_USE_ORIGINAL_CODE
     WriteSettings();
+#if RETRO_USE_MOD_LOADER
+    SaveMods();
+#endif
 #endif
 
 #if RETRO_USE_ORIGINAL_CODE

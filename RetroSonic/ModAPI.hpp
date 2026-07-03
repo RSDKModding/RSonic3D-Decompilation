@@ -18,9 +18,14 @@ struct ModInfo {
     bool active;
 };
 
-extern std::vector<ModInfo> ModList;
+extern std::vector<ModInfo> modList;
+extern int activeMod;
 
 void InitMods();
+bool LoadMod(ModInfo *info, std::string modsPath, std::string folder, bool active);
+void ScanModFolder(ModInfo *info);
+void ModFilePath(char *buffer);
+void SaveMods();
 
 #endif // !RETRO_USE_MOD_LOADER
 
