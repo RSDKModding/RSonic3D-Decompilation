@@ -114,7 +114,7 @@ void ProcessTitleScreen()
                 SetFade(1.0f, 1.0f, 1.0f, 0.9f);
             }
             else {
-                DrawTitleScr(0);
+                SetSceneRenderState(0);
 
                 if (TtlTime < 61)
                     SetFade(0.0f, 0.0f, 0.0f, 1.0f - (double)TtlTime * 0.0166f);
@@ -128,10 +128,10 @@ void ProcessTitleScreen()
             ++TtlTime;
 
             TitleScrMovement();
-            DrawTitleScr(1);
+            SetSceneRenderState(1);
 
-            Zone_TitleScreen_4127E6();
-            DrawTitleScr(0);
+            DrawTitleScr();
+            SetSceneRenderState(0);
 
             if (TtlTime < 61)
                 SetFade(1.0f, 1.0f, 1.0f, 1.0f - (double)TtlTime * 0.0166f);
@@ -144,10 +144,10 @@ void ProcessTitleScreen()
 
         case 2:
             TitleScrMovement();
-            DrawTitleScr(1);
 
-            Zone_TitleScreen_4127E6();
-            DrawTitleScr(0);
+            SetSceneRenderState(1);
+            DrawTitleScr();
+            SetSceneRenderState(0);
 
             CheckInput(&TitleInput);
 
@@ -232,8 +232,8 @@ void ProcessTitleScreen()
 
         case 3:
             ClearScreen(0x000000);
-            DrawTitleScr(1);
-            DrawTitleScr(0);
+            SetSceneRenderState(1);
+            SetSceneRenderState(0);
 
             CheckKeyPress(&TitleInput, INPUT_UP, INPUT_LCONTROL);
 
@@ -253,8 +253,8 @@ void ProcessTitleScreen()
 
         case 4:
             ClearScreen(0x000000);
-            DrawTitleScr(1);
-            DrawTitleScr(0);
+            SetSceneRenderState(1);
+            SetSceneRenderState(0);
 
             CheckKeyPress(&TitleInput, INPUT_UP, INPUT_LCONTROL);
 
@@ -274,8 +274,8 @@ void ProcessTitleScreen()
 
         case 6:
             ClearScreen(0x000000);
-            DrawTitleScr(1);
-            DrawTitleScr(0);
+            SetSceneRenderState(1);
+            SetSceneRenderState(0);
 
             CheckKeyPress(&TitleInput, INPUT_LEFT, INPUT_LSHIFT);
 
@@ -424,34 +424,32 @@ void DrawMenuBackground()
     DrawScrollingMenu(TitleMenu, 200, 48, 48, 160, -SMenuY2);
 }
 
-void DrawTitleScr(sbyte id)
+void DrawTitleScr()
 {
-    switch (id) {
-        case 0:
-            SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixIdentity);
-            SetRenderTransform(RENDER_TRANSFORM_VIEW, &MatrixIdentity);
-            SetRenderTransform(RENDER_TRANSFORM_PROJECTION, &MatrixIdentity);
+    ClearScreen(0x000000);
 
-            SetRenderState(RENDER_STATE_ZENABLE, false);
-            SetRenderState(RENDER_STATE_LIGHTING, false);
-            SetRenderState(RENDER_STATE_SPECULARENABLE, false);
-            break;
+    BackXRotation += 0.0050f;
+    if (2 * RSDK_PI < BackXRotation)
+        BackXRotation = 0.0f;
 
-        case 1:
-            SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixIdentity);
-            SetRenderTransform(RENDER_TRANSFORM_VIEW, &MatrixView);
-            SetRenderTransform(RENDER_TRANSFORM_PROJECTION, &MatrixProjection);
+    SetSceneRenderState(2);
+    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
 
-            SetRenderState(RENDER_STATE_ZENABLE, true);
-            SetRenderState(RENDER_STATE_LIGHTING, true);
-            SetRenderState(RENDER_STATE_SPECULARENABLE, false);
-            break;
+    WorldMatrixRotateY(BackXRotation);
+    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
 
-        case 2: SetRenderState(RENDER_STATE_ZENABLE, false); break;
-        case 3: SetRenderState(RENDER_STATE_ZENABLE, true); break;
+    WorldMatrixTranslateXYZ(0.0f, 0.0f, 20.0f);
+    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+    SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
+    DrawTitleModel(0);
 
-        default: break;
-    }
+    SetSceneRenderState(3);
+    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
+
+    WorldMatrixTranslateXYZ(0.0f, 0.0f, SonZ);
+    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+    SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
+    DrawTitleModel(1);
 }
 
 void DrawGameMenu(TextMenu TextMenu, int x, int y)
@@ -459,38 +457,38 @@ void DrawGameMenu(TextMenu TextMenu, int x, int y)
     for (int i = 0; i < TextMenu.rowCount; ++i) {
         TextMenuEntry *entry = &TextMenu.labels[i];
 
-        int xdraw = x;
-        int ydraw = (10 * i) + y;
+        int drawX = x;
+        int drawY = (10 * i) + y;
 
         switch (TextMenu.alignment) {
-            case MENU_ALIGN_RIGHT: xdraw -= (10 * entry->length) / 1; break;
-            case MENU_ALIGN_CENTER: xdraw -= (10 * entry->length) / 2; break;
+            case MENU_ALIGN_RIGHT: drawX -= (10 * entry->length) / 1; break;
+            case MENU_ALIGN_CENTER: drawX -= (10 * entry->length) / 2; break;
             default: break;
         }
 
         switch (TextMenu.selectionCount) {
             case 1:
                 if (i == TextMenu.selection1)
-                    DrawMenuText(entry->text, entry->length, xdraw, ydraw, 8);
+                    DrawMenuText(entry->text, entry->length, drawX, drawY, 8);
 
                 else
-                    DrawMenuText(entry->text, entry->length, xdraw, ydraw, 0);
+                    DrawMenuText(entry->text, entry->length, drawX, drawY, 0);
                 break;
 
             case 2:
                 if (i == TextMenu.selection1 || i == TextMenu.selection2)
-                    DrawMenuText(entry->text, entry->length, xdraw, ydraw, 8);
+                    DrawMenuText(entry->text, entry->length, drawX, drawY, 8);
                 else
-                    DrawMenuText(entry->text, entry->length, xdraw, ydraw, 0);
+                    DrawMenuText(entry->text, entry->length, drawX, drawY, 0);
                 break;
 
             case 3:
                 if (TextMenu.alignment == MENU_ALIGN_LEFT) {
                     if (i == TextMenu.selection1)
-                        DrawMenuText(entry->text, entry->length, xdraw, ydraw, 8);
+                        DrawMenuText(entry->text, entry->length, drawX, drawY, 8);
 
                     if (i != TextMenu.selection1 && i == TextMenu.selection2)
-                        DrawText_2(entry->text, entry->length, xdraw, ydraw);
+                        DrawText_2(entry->text, entry->length, drawX, drawY);
                 }
                 break;
 
@@ -805,34 +803,6 @@ void LoadZoneMenu(TextMenu *menu)
     menu->selectionCount = 3;
     menu->selection1     = 0;
     menu->selection2     = 0;
-}
-
-void Zone_TitleScreen_4127E6()
-{
-    ClearScreen(0x000000);
-
-    BackXRotation += 0.0050f;
-    if (2 * RSDK_PI < BackXRotation)
-        BackXRotation = 0.0f;
-
-    DrawTitleScr(2);
-    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
-
-    WorldMatrixRotateY(BackXRotation);
-    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
-
-    WorldMatrixTranslateXYZ(0.0f, 0.0f, 20.0f);
-    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
-    SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
-    DrawTitleModel(0);
-
-    DrawTitleScr(3);
-    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
-
-    WorldMatrixTranslateXYZ(0.0f, 0.0f, SonZ);
-    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
-    SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
-    DrawTitleModel(1);
 }
 
 void DrawTitleModel(char type)

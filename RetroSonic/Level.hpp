@@ -86,8 +86,8 @@ extern TMF BallModel;
 extern Animation SonicAni;
 extern Material ObjectMaterial;
 
-extern Matrix3D matrix_47A790[100][36];
-extern Matrix3D array_42C590[100][36];
+extern Matrix3D SonicNodeMatricesUnknown1[100][36];
+extern Matrix3D SonicNodeMatricesUnknown2[100][36];
 
 void LoadObjectAssets();
 void LoadLevelAssets();

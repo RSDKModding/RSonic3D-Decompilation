@@ -53,7 +53,7 @@ bool CreateMWindow()
             ShowWindow(HWnd, NCmdShow);
             UpdateWindow(HWnd);
 
-            EngineRunning = true;
+            GameRunning = true;
             if (InitInputDevice() && InitGraphicsAPI())
                 return true;
 
@@ -107,7 +107,7 @@ bool CreateMWindow()
         SDL_SetWindowBordered(Window, false);
 #endif
 
-    EngineRunning = true;
+    GameRunning = true;
     if (InitInputDevice() && InitGraphicsAPI())
         return true;
 
@@ -273,7 +273,7 @@ void ProcessEvents()
 #elif RETRO_USE_SDL2 || RETRO_USE_SDL1
             case SDL_QUIT:
 #endif
-                EngineRunning = false;
+                GameRunning = false;
                 break;
 
 #if RETRO_USE_SDL3
@@ -308,7 +308,7 @@ void ProcessEvents()
                 switch (SDLEvent.key.keysym.sym) {
 #endif
 
-                    case SDLK_ESCAPE: EngineRunning = false; break;
+                    case SDLK_ESCAPE: GameRunning = false; break;
 
                     case SDLK_F2:
                         GameMode = GAMEMODE_TITLESCREEN;
@@ -343,7 +343,8 @@ void ProcessMainGame()
         case 0:
             CameraTargetPosition.y = 10.0f;
             CameraTargetPosition.z = -32.0f;
-            MainGameMode           = 2;
+
+            MainGameMode = 2;
 
             // x-axis line of 6 rings
             for (ObjectLoop = 0; ObjectLoop < 6; ++ObjectLoop) {
@@ -415,137 +416,116 @@ void ProcessMainGame()
     }
 }
 
-void SetGameMode(int mode) { GameMode = mode; }
-
-void PauseCheck()
-{
-    if (MGameInput.start == true) {
-        if (PauseV == true)
-            PauseV = false;
-        else if (PauseV == false)
-            PauseV == true;
-    }
-}
-
 void ProcessPlayerInput()
 {
-    float a4;  // [esp+0h] [ebp-138h]
-    float a4a; // [esp+0h] [ebp-138h]
-    float v2;  // [esp+4h] [ebp-134h]
-    float v3;  // [esp+4h] [ebp-134h]
-    float v4;  // [esp+4h] [ebp-134h]
-    float v5;  // [esp+4h] [ebp-134h]
-    float v6;  // [esp+4h] [ebp-134h]
-    float v7;  // [esp+4h] [ebp-134h]
-    float v8;  // [esp+4h] [ebp-134h]
-    float v9;  // [esp+4h] [ebp-134h]
-    int v18;   // [esp+134h] [ebp-4h]
+    int pressed = 0;
 
-    v18 = 0;
+    PlayerObject *player  = &Player[PNumber];
+    PlayerObject *player1 = &Player[0];
 
-    Player[PNumber].up        = false;
-    Player[PNumber].jumpPress = false;
+    player->up        = false;
+    player->jumpPress = false;
 
-    if (!Player[PNumber].disableControl) {
-        Player[PNumber].targetAngle = 0;
+    if (!player->disableControl) {
+        player->targetAngle = 0;
 
         CheckInput(&MGameInput);
 
         if (Debug) {
-            if (MGameInput.left == 1) {
-                Player[0].position.x   = Player[0].position.x - Cos(CameraRotateY);
-                CameraTargetPosition.x = CameraTargetPosition.x - Cos(CameraRotateY);
-                Player[0].position.z   = Player[0].position.z - Sin(CameraRotateY);
-                CameraTargetPosition.z = CameraTargetPosition.z - Sin(CameraRotateY);
+            if (MGameInput.left == true) {
+                player1->position.x -= Cos(CameraRotateY);
+                CameraTargetPosition.x -= Cos(CameraRotateY);
+
+                player1->position.z -= Sin(CameraRotateY);
+                CameraTargetPosition.z -= Sin(CameraRotateY);
             }
-            if (MGameInput.right == 1) {
-                Player[0].position.x   = Cos(CameraRotateY) + Player[0].position.x;
-                CameraTargetPosition.x = Cos(CameraRotateY) + CameraTargetPosition.x;
-                Player[0].position.z   = Sin(CameraRotateY) + Player[0].position.z;
-                CameraTargetPosition.z = Sin(CameraRotateY) + CameraTargetPosition.z;
+
+            if (MGameInput.right == true) {
+                player1->position.x += Cos(CameraRotateY);
+                CameraTargetPosition.x += Cos(CameraRotateY);
+
+                player1->position.z += Sin(CameraRotateY);
+                CameraTargetPosition.z += Sin(CameraRotateY);
             }
+
             if (MGameInput.Z) {
-                if (MGameInput.up == 1) {
-                    Player[0].position.y += 1.0;
-                    CameraTargetPosition.y += 1.2;
+                if (MGameInput.up == true) {
+                    player1->position.y += 1.0f;
+                    CameraTargetPosition.y += 1.2f;
                 }
-                if (MGameInput.down == 1) {
-                    Player[0].position.y -= 1.0f;
+
+                if (MGameInput.down == true) {
+                    player1->position.y -= 1.0f;
                     CameraTargetPosition.y -= 1.2f;
                 }
             }
             else {
-                if (MGameInput.up == 1) {
-                    v2                     = CameraRotateY - 3.1415927 * 0.5;
-                    Player[0].position.x   = Player[0].position.x - Cos(v2);
-                    v3                     = CameraRotateY - 3.1415927 * 0.5;
-                    CameraTargetPosition.x = CameraTargetPosition.x - Cos(v3);
-                    v4                     = CameraRotateY - 3.1415927 * 0.5;
-                    Player[0].position.z   = Player[0].position.z - Sin(v4);
-                    v5                     = CameraRotateY - 3.1415927 * 0.5;
-                    CameraTargetPosition.z = CameraTargetPosition.z - Sin(v5);
+                if (MGameInput.up == true) {
+                    player1->position.x -= Cos(CameraRotateY - RSDK_PI_H);
+                    CameraTargetPosition.x -= Cos(CameraRotateY - RSDK_PI_H);
+
+                    player1->position.z -= Sin(CameraRotateY - RSDK_PI_H);
+                    CameraTargetPosition.z -= Sin(CameraRotateY - RSDK_PI_H);
                 }
-                if (MGameInput.down == 1) {
-                    v6                     = CameraRotateY - 3.1415927 * 0.5;
-                    Player[0].position.x   = Cos(v6) + Player[0].position.x;
-                    v7                     = CameraRotateY - 3.1415927 * 0.5;
-                    CameraTargetPosition.x = Cos(v7) + CameraTargetPosition.x;
-                    v8                     = CameraRotateY - 3.1415927 * 0.5;
-                    Player[0].position.z   = Sin(v8) + Player[0].position.z;
-                    v9                     = CameraRotateY - 3.1415927 * 0.5;
-                    CameraTargetPosition.z = Sin(v9) + CameraTargetPosition.z;
+
+                if (MGameInput.down == true) {
+                    player1->position.x += Cos(CameraRotateY - RSDK_PI_H);
+                    CameraTargetPosition.x += Cos(CameraRotateY - RSDK_PI_H);
+
+                    player1->position.z += Sin(CameraRotateY - RSDK_PI_H);
+                    CameraTargetPosition.z += Sin(CameraRotateY - RSDK_PI_H);
                 }
             }
 
             CheckKeyPress(&MGameInput, INPUT_START, INPUT_ONCE);
 
-            if (MGameInput.control == 1) {
-                a4 = Player[0].position.y + 1.8;
-                CreateObject(4, 0, Player[0].position.x, a4, Player[0].position.z);
-            }
+            if (MGameInput.control == true)
+                CreateObject(OBJECT_SPRING, 0, player1->position.x, player1->position.y + 1.8f, player1->position.z);
 
-            if (MGameInput.X == 1) {
-                a4a = Player[0].position.y + 4.0;
-                CreateObject(1, 0, Player[0].position.x, a4a, Player[0].position.z);
-            }
+            if (MGameInput.X == true)
+                CreateObject(OBJECT_RING, 0, player1->position.x, player1->position.y + 4.0f, player1->position.z);
         }
         else {
-            if (MGameInput.left == 1) {
-                Player[PNumber].targetAngle += 64;
-                if (Player[PNumber].angle > 192)
-                    Player[PNumber].angle -= 256;
-                ++v18;
+            if (MGameInput.left == true) {
+                player->targetAngle += 64;
+                if (player->angle > 192)
+                    player->angle -= 256;
+
+                ++pressed;
             }
 
-            if (MGameInput.right == 1) {
-                if (Player[PNumber].angle < 64)
-                    Player[PNumber].angle += 256;
-                Player[PNumber].targetAngle += 192;
-                ++v18;
+            if (MGameInput.right == true) {
+                if (player->angle < 64)
+                    player->angle += 256;
+                player->targetAngle += 192;
+
+                ++pressed;
             }
 
-            if (MGameInput.up == 1) {
-                if (Player[PNumber].angle > 128)
-                    Player[PNumber].targetAngle += 256;
-                ++v18;
+            if (MGameInput.up == true) {
+                if (player->angle > 128)
+                    player->targetAngle += 256;
+
+                ++pressed;
             }
 
-            if (MGameInput.down == 1) {
-                Player[PNumber].targetAngle += 128;
-                ++v18;
+            if (MGameInput.down == true) {
+                player->targetAngle += 128;
+
+                ++pressed;
             }
 
-            if (v18 > 0) {
-                Player[PNumber].up = true;
-                Player[PNumber].targetAngle /= v18;
+            if (pressed > 0) {
+                player->up = true;
+                player->targetAngle /= pressed;
             }
 
-            Player[PNumber].z = MGameInput.Z == true;
+            player->z = MGameInput.Z == true;
             CheckKeyPress(&MGameInput, INPUT_START, INPUT_Z);
         }
 
         if (MGameInput.control == true)
-            Player[PNumber].jumpPress = true;
+            player->jumpPress = true;
 
         if (MGameInput.shift == true && DebugEn == true)
             Debug ^= true;
@@ -736,17 +716,18 @@ void ProcessPlayerMovement()
 
 void ProcessObjects()
 {
+    PlayerObject *player  = &Player[PNumber];
+    PlayerObject *player1 = &Player[0];
+
     for (ObjectLoop = 0; ObjectLoop < 1100; ++ObjectLoop) {
         Object *object = &LevelObjects[ObjectLoop];
         if (object->enabled > 0) {
             switch (object->type) {
                 case OBJECT_RING: {
-                    Vector3D position;
-                    position.z = object->position.z - Player[0].position.z;
-                    position.y = object->position.y - Player[0].position.y + Player[0].collisionPos.y;
-                    position.x = object->position.x - Player[0].position.x;
+                    Vector3D position = object->position - player1->position;
+                    position.y += player1->collisionPos.y;
 
-                    if (position.Magnitude() < 6.0)
+                    if (position.Magnitude() < 6.0f)
                         object->type = OBJECT_RING_SPARKLE;
                     break;
                 }
@@ -760,14 +741,12 @@ void ProcessObjects()
                 }
 
                 case OBJECT_SPRING: {
-                    Vector3D position;
-                    position.z = object->position.z - Player[0].position.z;
-                    position.y = object->position.y - Player[0].position.y + Player[0].collisionPos.y;
-                    position.x = object->position.x - Player[0].position.x;
+                    Vector3D position = object->position - player1->position;
+                    position.y += player1->collisionPos.y;
 
-                    if (position.Magnitude() < 6.0) {
-                        Player[PNumber].velocity.y = 4.0;
-                        Player[PNumber].gravity    = GRAVITY_AIR;
+                    if (position.Magnitude() < 6.0f) {
+                        player->velocity.y = 4.0f;
+                        player->gravity    = GRAVITY_AIR;
                     }
                     break;
                 }
@@ -793,5 +772,47 @@ void ProcessTime()
             Seconds = 0;
         }
         SmallSeconds = 0;
+    }
+}
+
+void SetGameMode(int mode) { GameMode = mode; }
+
+void PauseCheck()
+{
+    if (MGameInput.start == true) {
+        if (PauseV == true)
+            PauseV = false;
+        else if (PauseV == false)
+            PauseV == true;
+    }
+}
+
+void SetSceneRenderState(sbyte id)
+{
+    switch (id) {
+        case 0:
+            SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixIdentity);
+            SetRenderTransform(RENDER_TRANSFORM_VIEW, &MatrixIdentity);
+            SetRenderTransform(RENDER_TRANSFORM_PROJECTION, &MatrixIdentity);
+
+            SetRenderState(RENDER_STATE_ZENABLE, false);
+            SetRenderState(RENDER_STATE_LIGHTING, false);
+            SetRenderState(RENDER_STATE_SPECULARENABLE, false);
+            break;
+
+        case 1:
+            SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixIdentity);
+            SetRenderTransform(RENDER_TRANSFORM_VIEW, &MatrixView);
+            SetRenderTransform(RENDER_TRANSFORM_PROJECTION, &MatrixProjection);
+
+            SetRenderState(RENDER_STATE_ZENABLE, true);
+            SetRenderState(RENDER_STATE_LIGHTING, true);
+            SetRenderState(RENDER_STATE_SPECULARENABLE, false);
+            break;
+
+        case 2: SetRenderState(RENDER_STATE_ZENABLE, false); break;
+        case 3: SetRenderState(RENDER_STATE_ZENABLE, true); break;
+
+        default: break;
     }
 }

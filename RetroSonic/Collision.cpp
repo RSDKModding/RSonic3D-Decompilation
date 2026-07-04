@@ -23,22 +23,31 @@ byte ObjectFloorCollision(float *xpos, float *ypos, float *zpos, float xdir, flo
     int minCol = CLAMP(c - 4, 0, LevelModel.columns);
     int maxCol = CLAMP(c + 4, 0, LevelModel.columns);
 
-    Collided = false;
+    Collided = 0;
 
     for (int y = minRow; y < maxRow; ++y) {
         for (int x = minCol; x < maxCol; ++x) {
-            if (!LCollision[y][x]->rayCollision(&origin[0], &direction[0], true, 0.0f, magnitude))
-                continue;
+            if (LCollision[y][x]->rayCollision(&origin[0], &direction[0], true, 0.0f, magnitude)) {
+                Collided = 1;
 
-            Collided = true;
+                LCollision[y][x]->getCollisionPoint(point);
+                *xpos = point[0];
+                *ypos = point[1];
+                *zpos = point[2];
 
-            LCollision[y][x]->getCollisionPoint(point);
-            *xpos = point[0];
-            *ypos = point[1];
-            *zpos = point[2];
+                LCollision[y][x]->getCollidingTriangles(colist, NULL);
+            }
+        }
+    }
 
-            LCollision[y][x]->getCollidingTriangles(colist, NULL);
+    switch (Collided) {
+        case 0: {
+            PlayerTargetRotationX = 0.0f;
+            PlayerTargetRotationZ = 0.0f;
+            break;
+        }
 
+        case 1: {
             Vector3D ab = { colist[3] - colist[0], colist[4] - colist[1], colist[5] - colist[2] };
             Vector3D ac = { colist[6] - colist[0], colist[7] - colist[1], colist[8] - colist[2] };
 
@@ -49,12 +58,10 @@ byte ObjectFloorCollision(float *xpos, float *ypos, float *zpos, float xdir, flo
 
             if (normal.y < 0.0f)
                 PlayerTargetRotationX = -PlayerTargetRotationX + RSDK_PI;
+            break;
         }
-    }
 
-    if (!Collided) {
-        PlayerTargetRotationX = 0.0f;
-        PlayerTargetRotationZ = 0.0f;
+        default: break;
     }
 
     return Collided;

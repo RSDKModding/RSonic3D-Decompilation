@@ -94,7 +94,7 @@ FrameSecondsPerTick = 0.001;
 #if RETRO_USE_ORIGINAL_CODE
     while (QuitMessage) {
 #else
-    while (EngineRunning != false) {
+    while (GameRunning != false) {
 #endif
 
 #if RETRO_USE_ORIGINAL_CODE

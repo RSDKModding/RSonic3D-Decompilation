@@ -50,7 +50,7 @@ void ResetTitleScreen();
 void ProcessTitleScreen();
 void TitleScrMovement();
 void DrawMenuBackground();
-void DrawTitleScr(sbyte id);
+void DrawTitleScr();
 void DrawGameMenu(TextMenu TextMenu, int x, int y);
 void DrawScrollingMenu(TextMenu TextMenu, int x, int y, int clipT, int clipB, int scrollPos);
 void LoadCharacterMenu(TextMenu *menu);
@@ -58,7 +58,6 @@ void SetMenuSelMode(TextMenu *menu, int id);
 void SetCharacters(int row);
 void CodeCheck();
 void LoadZoneMenu(TextMenu *menu);
-void Zone_TitleScreen_4127E6();
 void DrawTitleModel(char type);
 
 #endif // !TITLESCREEN_H

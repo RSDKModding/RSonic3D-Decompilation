@@ -23,71 +23,62 @@ PlayerObject Player[2];
 
 void ProcessPlayerCamera()
 {
-    int v0;    // esi
-    int v1;    // esi
-    int v2;    // esi
-    int v3;    // esi
-    float v4;  // [esp+0h] [ebp-28h]
-    float v5;  // [esp+8h] [ebp-20h]
-    float v6;  // [esp+Ch] [ebp-1Ch]
-    float v7;  // [esp+10h] [ebp-18h]
-    float v8;  // [esp+14h] [ebp-14h]
-    float v9;  // [esp+18h] [ebp-10h]
-    float v10; // [esp+1Ch] [ebp-Ch]
-    float v11; // [esp+1Ch] [ebp-Ch]
-    float v12; // [esp+20h] [ebp-8h]
-    float v13; // [esp+20h] [ebp-8h]
-    float v14; // [esp+24h] [ebp-4h]
+    PlayerObject *player = &Player[PNumber];
 
     if (MGameInput.Z == true) {
-        CameraTargetPosition.x = CameraTargetPosition.x - Player[PNumber].position.x;
-        CameraTargetPosition.z = CameraTargetPosition.z - Player[PNumber].position.z;
-        v9            = Cos(0.02) * CameraTargetPosition.x;
-        v12           = Sin(0.02) * CameraTargetPosition.z + v9;
-        v8            = -Sin(0.02) * CameraTargetPosition.x;
-        v10           = Cos(0.02) * CameraTargetPosition.z + v8;
-        CameraTargetPosition.x = v12 + Player[PNumber].position.x;
-        CameraTargetPosition.z = v10 + Player[PNumber].position.z;
+        CameraTargetPosition.x -= player->position.x;
+        CameraTargetPosition.z -= player->position.z;
+
+        float x = CameraTargetPosition.x;
+        float z = CameraTargetPosition.z;
+
+        CameraTargetPosition.x = Cos(0.02f) * x;
+        CameraTargetPosition.z = -Sin(0.02f) * x;
+
+        CameraTargetPosition.x += Sin(0.02f) * z;
+        CameraTargetPosition.z += Cos(0.02f) * z;
+
+        CameraTargetPosition.x += player->position.x;
+        CameraTargetPosition.z += player->position.z;
     }
 
     if (MGameInput.X == true) {
-        CameraTargetPosition.x = CameraTargetPosition.x - Player[PNumber].position.x;
-        CameraTargetPosition.z = CameraTargetPosition.z - Player[PNumber].position.z;
-        v7            = Cos(-0.02) * CameraTargetPosition.x;
-        v13           = Sin(-0.02) * CameraTargetPosition.z + v7;
-        v6            = -Sin(-0.02) * CameraTargetPosition.x;
-        v11           = Cos(-0.02) * CameraTargetPosition.z + v6;
-        CameraTargetPosition.x = v13 + Player[PNumber].position.x;
-        CameraTargetPosition.z = v11 + Player[PNumber].position.z;
+        CameraTargetPosition.x -= player->position.x;
+        CameraTargetPosition.z -= player->position.z;
+
+        float x = CameraTargetPosition.x;
+        float z = CameraTargetPosition.z;
+
+        CameraTargetPosition.x = Cos(-0.02f) * x;
+        CameraTargetPosition.z = -Sin(-0.02f) * x;
+
+        CameraTargetPosition.x += Sin(-0.02f) * z;
+        CameraTargetPosition.z += Cos(-0.02f) * z;
+
+        CameraTargetPosition.x += player->position.x;
+        CameraTargetPosition.z += player->position.z;
     }
 
-    if (CameraTargetPosition.x == Player[PNumber].position.x) {
-        if (CameraTargetPosition.z >= (double)Player[PNumber].position.z)
-            CameraRotateY = 3.1415927;
-        else
-            CameraRotateY = 0.0;
+    if (CameraTargetPosition.x == player->position.x) {
+        CameraRotateY = 0.0f;
+        if (CameraTargetPosition.z >= player->position.z)
+            CameraRotateY = RSDK_PI;
     }
     else {
-        v4 = (CameraTargetPosition.z - Player[PNumber].position.z) / (CameraTargetPosition.x - Player[PNumber].position.x);
-        if (CameraTargetPosition.x <= (double)Player[PNumber].position.x)
-            CameraRotateY = ATan(v4) - 3.1415927 * 0.5;
+        if (CameraTargetPosition.x <= player->position.x)
+            CameraRotateY = ATan((CameraTargetPosition.z - player->position.z) / (CameraTargetPosition.x - player->position.x)) - (RSDK_PI * 0.5f);
         else
-            CameraRotateY = ATan(v4) + 3.1415927 * 0.5;
+            CameraRotateY = ATan((CameraTargetPosition.z - player->position.z) / (CameraTargetPosition.x - player->position.x)) + (RSDK_PI * 0.5f);
     }
 
-    v5  = Player[PNumber].position.x - CameraTargetPosition.x;
-    v14 = v5 / Sin(CameraRotateY);
-    if (v14 < 0.0)
-        v14 = v14 * -1.0;
-
-    if (v14 < 32.0f) {
-        CameraTargetPosition.x = Player[PNumber].position.x - Sin(CameraRotateY) * -32.0;
-        CameraTargetPosition.z = Cos(CameraRotateY) * -32.0 + Player[PNumber].position.z;
+    if (Fabs((player->position.x - CameraTargetPosition.x) / Sin(CameraRotateY)) < 32.0f) {
+        CameraTargetPosition.x = player->position.x - Sin(CameraRotateY) * -32.0f;
+        CameraTargetPosition.z = Cos(CameraRotateY) * -32.0f + player->position.z;
     }
 
-    if (v14 > 60.0f) {
-        CameraTargetPosition.x = Player[PNumber].position.x - Sin(CameraRotateY) * -60.0;
-        CameraTargetPosition.z = Cos(CameraRotateY) * -60.0 + Player[PNumber].position.z;
+    if (Fabs((player->position.x - CameraTargetPosition.x) / Sin(CameraRotateY)) > 60.0f) {
+        CameraTargetPosition.x = player->position.x - Sin(CameraRotateY) * -60.0f;
+        CameraTargetPosition.z = Cos(CameraRotateY) * -60.0f + player->position.z;
     }
 }
 
@@ -159,7 +150,7 @@ void SetPlayerAnimationID(byte animation, float speed)
             break;
         }
 
-        case ANI_JUMPING:{
+        case ANI_JUMPING: {
             AnimationState *state = &SonicAni.states[ANI_JUMPING];
 
             PlayerJumpRotationX = PlayerJumpRotationX - speed * 0.3f;
@@ -307,13 +298,13 @@ void MightBeSonicAnim_406432()
                         for (int m = k; SonicAni.frameIDs[m] < 254; ++m) {
                             MatrixMultiply(&MatrixSonicModel, &MatrixSonicNodeTransform[SonicAni.frameIDs[m]]);
                         }
-                        memcpy(&matrix_47A790[k][i], &MatrixSonicModel, sizeof(matrix_47A790[k][i]));
+                        memcpy(&SonicNodeMatricesUnknown1[k][i], &MatrixSonicModel, sizeof(SonicNodeMatricesUnknown1[k][i]));
 
                         memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
                         for (int n = k; SonicAni.frameIDs[n] < 254; ++n) {
                             MatrixMultiply(&MatrixSonicModel, &MatrixSonicNodeRotation[SonicAni.frameIDs[n]]);
                         }
-                        memcpy(&array_42C590[k][i], &MatrixSonicModel, sizeof(array_42C590[k][i]));
+                        memcpy(&SonicNodeMatricesUnknown2[k][i], &MatrixSonicModel, sizeof(SonicNodeMatricesUnknown2[k][i]));
                         break;
                 }
             }

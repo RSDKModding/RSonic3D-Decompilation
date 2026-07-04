@@ -146,12 +146,13 @@ void ProcessEvents();
 #endif
 
 void ProcessMainGame();
-void SetGameMode(int mode);
-void PauseCheck();
 void ProcessPlayerInput();
 void ProcessDebugMode();
 void ProcessPlayerMovement();
 void ProcessObjects();
 void ProcessTime();
+void SetGameMode(int mode);
+void PauseCheck();
+void SetSceneRenderState(sbyte id);
 
 #endif // !RETROSONICENGINE_H

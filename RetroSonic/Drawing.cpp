@@ -12,9 +12,9 @@ Matrix3D MatrixIdentity;
 
 char WindowMode = true;
 
-int ResX = 80;
-int ResY = 82;
-sbyte ColourDepth;
+int ResX = 1024;
+int ResY = 768;
+byte ColourDepth;
 
 #if RETRO_USE_ORIGINAL_CODE
 IDirect3D7 *D3D;
@@ -46,7 +46,7 @@ SDL_GLContext GLContext;
 SDL_Surface *Window;
 #endif
 
-bool EngineRunning = false;
+bool GameRunning = false;
 
 bool InitGraphicsAPI()
 {
@@ -193,7 +193,7 @@ bool InitDirect3D()
 
         BackBuffer->Blt(NULL, NULL, NULL, DDBLT_WAIT | DDBLT_COLORFILL, &ddbltfx);
 
-        if (!EngineRunning || InitScreen()) {
+        if (!GameRunning || InitScreen()) {
             // this branch is empty for an amazing reason
         }
     }
@@ -430,7 +430,7 @@ void ToggleScreenMode()
         ReleaseCharacterUITexture(i);
     }
 
-    if (EngineRunning == true)
+    if (GameRunning == true)
         ReleaseModelSurfaces();
 
     if (BackBuffer != NULL) {

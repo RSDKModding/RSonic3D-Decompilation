@@ -41,8 +41,8 @@ struct PlayerObject {
     int unused1;
     byte state;
     byte unused2;
+    byte unused3;
     byte disableControl;
-    int unused3;
     int unused4;
     int gravity;
     int up;
@@ -72,6 +72,7 @@ struct PlayerObject {
     int unused26;
     int unused27;
     int unused28;
+    int unused29;
 };
 
 extern Matrix3D MatrixSonicModel;

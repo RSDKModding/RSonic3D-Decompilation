@@ -197,7 +197,7 @@ extern char WindowMode;
 
 extern int ResX;
 extern int ResY;
-extern sbyte ColourDepth;
+extern byte ColourDepth;
 
 #if RETRO_USE_ORIGINAL_CODE
 extern IDirect3D7 *D3D;
@@ -229,7 +229,7 @@ extern SDL_GLContext GLContext;
 extern SDL_Surface *Window;
 #endif
 
-extern bool EngineRunning;
+extern bool GameRunning;
 
 bool InitGraphicsAPI();
 void ReleaseGraphicsAPI();
