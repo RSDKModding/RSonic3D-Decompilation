@@ -63,7 +63,7 @@ jobs:
       - name: Move artifacts
         run: |
           mkdir artifacts
-          mv ./build/RetroSonic* ./artifacts
+          mv ./build/RSonic3D* ./artifacts
           tar -czvf linux.tar.gz -C ./artifacts .
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
