@@ -1,0 +1,71 @@
+name: Build Retro-Sonic
+
+on:
+  push:
+    paths:
+      - dependencies/**
+      - RetroSonic/**
+      - platforms/**
+      - .github/workflows/build.yml
+      - CMakeLists.txt
+    branches:
+      - main
+
+env:
+  GENERAL_FLAGS: "-DRETRO_DISABLE_PLUS=ON -DCMAKE_BUILD_TYPE=Release"
+  # Normally you would use $VCPKG_INSTALLATION_PATH, but it's broken...so hardcode C:/vcpkg
+  GENERAL_WIN_FLAGS: "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+  WIN64_FLAGS: "-DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_PREFIX_PATH=C:/vcpkg/installed/x64-windows-static/"
+  # FIXME: For some reason ubuntu enables _FORTIFY_SOURCE by default, so let's override it to prevent IO bugs
+  GENERAL_LINUX_FLAGS: "-DCMAKE_CXX_FLAGS='-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0'"
+
+jobs:
+  rs-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install dependencies
+        run: vcpkg install sdl3 --triplet=x64-windows-static
+      - name: Build Retro-Sonic
+        run: |
+          cmake -B build ${{env.GENERAL_FLAGS}} ${{env.GENERAL_WIN_FLAGS}} ${{env.WIN64_FLAGS}}
+          cmake --build build --parallel --config Release
+      - name: Move artifacts
+        run: |
+          mkdir artifacts
+          mv ./build/Release/*.exe ./artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rs-windows
+          path: artifacts
+  rs-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libsdl3-dev
+      - name: Build Retro-Sonic
+        run: |
+          cmake -B build ${{env.GENERAL_FLAGS}} ${{env.GENERAL_LINUX_FLAGS}}
+          cmake --build build --parallel 4
+      # tar the executables so that they don't lose exec permissions
+      # see: https://github.com/actions/upload-artifact?tab=readme-ov-file#permission-loss
+      - name: Move artifacts
+        run: |
+          mkdir artifacts
+          mv ./build/RetroSonic* ./artifacts
+          tar -czvf linux.tar.gz -C ./artifacts .
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rs-linux
+          path: linux.tar.gz
