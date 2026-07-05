@@ -1,0 +1,11 @@
+if(NOT WIN32 OR NOT RETRO_ORIGINAL_CODE)
+    find_package(GLEW CONFIG)
+
+    if(NOT GLEW_FOUND)
+        message(NOTICE "could not find glew, attempting to build from source")
+    else()
+        message("found GLEW")
+        add_library(glew ALIAS GLEW::GLEW)
+        target_link_libraries(RetroEngine PRIVATE glew)
+    endif()
+endif()

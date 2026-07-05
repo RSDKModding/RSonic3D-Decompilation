@@ -12,15 +12,6 @@ set(RETRO_SDL_VERSION 3 CACHE STRING "Select between SDL3, SDL2 and SDL1, defaul
 set(RETRO_OUTPUT_NAME "RSonic3D" CACHE STRING "The exported name of the executable.")
 
 if(NOT WIN32 OR NOT RETRO_ORIGINAL_CODE)
-    find_package(GLEW CONFIG)
-
-    if(NOT GLEW_FOUND)
-        message(NOTICE "could not find glew, attempting to build from source")
-    else()
-        message("found GLEW")
-        add_library(glew ALIAS GLEW::GLEW)
-    endif()
-
     if(RETRO_SDL_VERSION STREQUAL "3")
         find_package(SDL3 CONFIG REQUIRED)
     elseif(RETRO_SDL_VERSION STREQUAL "2")
@@ -88,6 +79,8 @@ endif()
 
 add_executable(RetroEngine WIN32 ${RETRO_FILES} RetroSonic/RetroSonic.rc)
 
+include(platforms/${PLATFORM}.cmake)
+
 target_compile_definitions(RetroEngine PRIVATE _CRT_SECURE_NO_WARNINGS D3D_OVERLOADS SDL_MAIN_HANDLED)
 set_target_properties(RetroEngine PROPERTIES OUTPUT_NAME ${RETRO_OUTPUT_NAME})
 
@@ -120,8 +113,6 @@ if(WIN32 AND RETRO_ORIGINAL_CODE)
 
     set_target_properties(RetroEngine PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 else()
-    target_link_libraries(RetroEngine PRIVATE glew)
-
     if(RETRO_SDL_VERSION STREQUAL "3")
         target_link_libraries(RetroEngine PRIVATE
             $<TARGET_NAME_IF_EXISTS:SDL3::SDL3main>
