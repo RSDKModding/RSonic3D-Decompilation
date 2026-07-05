@@ -49,13 +49,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+      # temporarily using sdl2 because sdl3 isn't avaliable for ubuntu right now
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libsdl3-dev
+          sudo apt-get install libsdl2-dev
       - name: Build Retro-Sonic
         run: |
-          cmake -B build ${{env.GENERAL_FLAGS}} ${{env.GENERAL_LINUX_FLAGS}}
+          cmake -B build ${{env.GENERAL_FLAGS}} ${{env.GENERAL_LINUX_FLAGS}} -DRETRO_SDL_VERSION=2
           cmake --build build --parallel 4
       # tar the executables so that they don't lose exec permissions
       # see: https://github.com/actions/upload-artifact?tab=readme-ov-file#permission-loss
