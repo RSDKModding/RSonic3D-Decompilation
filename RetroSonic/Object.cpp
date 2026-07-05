@@ -1,7 +1,7 @@
 #include "RetroEngine.hpp"
 
 int ObjectLoop;
-int TempObjectPos = 0xA8 - ENTITY_COUNT;
+int TempObjectPos = ENTITY_COUNT - 0x364;
 Object LevelObjects[ENTITY_COUNT];
 
 void ProcessObjects()
@@ -85,7 +85,7 @@ void CreateObject(byte type, byte unused, float x, float y, float z)
 {
     if (LevelObjects[TempObjectPos].type != OBJ_TYPE_BLANKOBJECT) {
         if (++TempObjectPos >= ENTITY_COUNT)
-            TempObjectPos = 100 - ENTITY_COUNT;
+            TempObjectPos -= 100;
     }
 
     Object *entity = &LevelObjects[TempObjectPos];
