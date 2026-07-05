@@ -28,7 +28,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install dependencies
-        run: vcpkg install sdl3 --triplet=x64-windows-static
+        run: vcpkg install glew sdl3 --triplet=x64-windows-static
       - name: Build Retro-Sonic
         run: |
           cmake -B build ${{env.GENERAL_FLAGS}} ${{env.GENERAL_WIN_FLAGS}} ${{env.WIN64_FLAGS}}
@@ -53,7 +53,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libsdl2-dev
+          sudo apt-get install libglew-dev libsdl2-dev
       - name: Build Retro-Sonic
         run: |
           cmake -B build ${{env.GENERAL_FLAGS}} ${{env.GENERAL_LINUX_FLAGS}} -DRETRO_SDL_VERSION=2

@@ -8,29 +8,27 @@ option(RETRO_FORCE_CASE_INSENSITIVE "Forces case insensivity." OFF)
 option(RETRO_MOD_LOADER "Enables or disables the mod loader." ON)
 option(RETRO_ORIGINAL_CODE "Removes any change that differs from the original code." OFF)
 
+set(RETRO_SDL_VERSION 3 CACHE STRING "Select between SDL3, SDL2 and SDL1, defaults to SDL3")
 set(RETRO_OUTPUT_NAME "RSonic3D" CACHE STRING "The exported name of the executable.")
 
 if(NOT WIN32 OR NOT RETRO_ORIGINAL_CODE)
-    find_package(OpenGL REQUIRED)
+    find_package(GLEW CONFIG)
 
-    if(RETRO_SDL_VERSION EQUAL 3)
-        find_package(SDL3 CONFIG)
-        if(NOT SDL3_FOUND)
-            find_package(PkgConfig REQUIRED)
-            pkg_check_modules(SDL3 REQUIRED IMPORTED_TARGET sdl3)
-        endif()
-    elseif(RETRO_SDL_VERSION EQUAL 2)
-        find_package(SDL2 CONFIG)
-        if(NOT SDL2_FOUND)
-            find_package(PkgConfig REQUIRED)
-            pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
-        endif()
-    elseif(RETRO_SDL_VERSION EQUAL 1)
-        find_package(SDL)
-        if(NOT SDL_FOUND)
-            find_package(PkgConfig REQUIRED)
-            pkg_check_modules(SDL REQUIRED IMPORTED_TARGET sdl)
-        endif()
+    if(NOT GLEW_FOUND)
+        message(NOTICE "could not find glew, attempting to build from source")
+    else()
+        message("found GLEW")
+        add_library(glew ALIAS GLEW::GLEW)
+    endif()
+
+    if(RETRO_SDL_VERSION STREQUAL "3")
+        find_package(SDL3 CONFIG REQUIRED)
+    elseif(RETRO_SDL_VERSION STREQUAL "2")
+        find_package(SDL2 CONFIG REQUIRED)
+    elseif(RETRO_SDL_VERSION STREQUAL "1")
+        find_package(SDL1 CONFIG REQUIRED)
+    else()
+        message(FATAL_ERROR "RETRO_SDL_VERSION must be 1, 2 or 3")
     endif()
 endif()
 
@@ -122,26 +120,23 @@ if(WIN32 AND RETRO_ORIGINAL_CODE)
 
     set_target_properties(RetroEngine PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 else()
-    target_link_libraries(RetroEngine PRIVATE OpenGL::GL)
+    target_link_libraries(RetroEngine PRIVATE glew)
 
-    if(RETRO_SDL_VERSION EQUAL 3)
-        if(TARGET SDL3::SDL3)
-            target_link_libraries(RetroEngine PRIVATE SDL3::SDL3)
-        else()
-            target_link_libraries(RetroEngine PRIVATE PkgConfig::SDL3)
-        endif()
-    elseif(RETRO_SDL_VERSION EQUAL 2)
-        if(TARGET SDL2::SDL2)
-            target_link_libraries(RetroEngine PRIVATE SDL2::SDL2)
-        else()
-            target_link_libraries(RetroEngine PRIVATE PkgConfig::SDL2)
-        endif()
+    if(RETRO_SDL_VERSION STREQUAL "3")
+        target_link_libraries(RetroEngine PRIVATE
+            $<TARGET_NAME_IF_EXISTS:SDL3::SDL3main>
+            $<IF:$<TARGET_EXISTS:SDL3::SDL3>,SDL3::SDL3,SDL3::SDL3-static>
+        )
+    elseif(RETRO_SDL_VERSION STREQUAL "2")
+        target_link_libraries(RetroEngine PRIVATE
+            $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+            $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+        )
     elseif(RETRO_SDL_VERSION EQUAL 1)
-        if(TARGET SDL::SDL)
-            target_link_libraries(RetroEngine PRIVATE SDL::SDL)
-        else()
-            target_link_libraries(RetroEngine PRIVATE PkgConfig::SDL)
-        endif()
+        target_link_libraries(RetroEngine PRIVATE
+            $<TARGET_NAME_IF_EXISTS:SDL1::SDL1main>
+            $<IF:$<TARGET_EXISTS:SDL1::SDL1>,SDL1::SDL1,SDL1::SDL1-static>
+        )
 
         if(WIN32)
             ## Why?

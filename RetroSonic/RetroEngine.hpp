@@ -5,7 +5,7 @@
 // STANDARD LIBS
 // ============================
 
-#if RETRO_USE_ORIGINAL_CODE
+#if _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
@@ -14,7 +14,7 @@
 #include <cstring>
 #include <new>
 #include <math.h>
-#if RETRO_USE_ORIGINAL_CODE
+#if _WIN32
 #include <mmsystem.h>
 #endif
 
@@ -60,19 +60,22 @@ typedef unsigned int uint;
 // ============================
 
 #if RETRO_USE_ORIGINAL_CODE
-#include "d3d.h"
-#include "dinput.h"
+#include <d3d.h>
+#include <dinput.h>
 #include <FreeImage.h>
 #include "DX7/ddutil.h"
 #include "DX7/texture.h"
 #include "resource.h"
 #elif RETRO_USE_SDL3
+#include <GL/glew.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 #elif RETRO_USE_SDL2
+#include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #elif RETRO_USE_SDL1
+#include <GL/glew.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
 #endif
