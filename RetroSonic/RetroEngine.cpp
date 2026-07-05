@@ -102,9 +102,14 @@ bool CreateMWindow()
         return false;
 
     SDL_GL_SetSwapInterval(Settings.vsync);
+#endif
 
+#if RETRO_USE_SDL3
     if (Settings.borderless)
         SDL_SetWindowBordered(Window, false);
+#elif RETRO_USE_SDL2
+    if (Settings.borderless)
+        SDL_SetWindowBordered(Window, SDL_FALSE);
 #endif
 
     GameRunning = true;
