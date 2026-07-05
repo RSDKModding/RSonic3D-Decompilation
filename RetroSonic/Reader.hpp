@@ -30,6 +30,15 @@
 #define fWrite(buffer, elementSize, elementCount, file) fwrite(buffer, elementSize, elementCount, file)
 #endif
 
+#if !RETRO_USE_ORIGINAL_CODE && RETRO_USE_MOD_LOADER
+#define READER_PATH_BUFFER(path)                                                                                                                     \
+    char buffer[0x100];                                                                                                                              \
+    StrCopy(buffer, path);                                                                                                                           \
+    ModFilePath(buffer)
+#else
+#define READER_PATH_BUFFER(path) const char *buffer = path
+#endif
+
 struct FileInfo {
     byte *data;
     int size;
@@ -40,61 +49,6 @@ struct LevelDirectoryEntry {
     char actNum[4];
     uint levelNameLen;
     uint actNumLen;
-};
-
-struct LMFMesh {
-    LVertex *vertices;
-    float *colors;
-    ushort numVertices;
-    ushort *indices;
-    ushort numIndices;
-};
-
-struct LMF {
-    byte surfaceCount;
-    byte unused;
-    byte surfaceID[10];
-    ushort columns;
-    ushort rows;
-    float startX;
-    float startZ;
-    LMFMesh ***tiles;
-};
-
-struct TMF {
-    Vertex *vertices;
-    ushort numVertices;
-    ushort *indices;
-    ushort numIndices;
-};
-
-struct AnimationState {
-    byte frameCount;
-    byte unknown1;
-    ushort array_2[128];
-    byte loopIndex;
-    byte frameDuration;
-};
-
-struct AnimationNode {
-    ushort *vertexIDs;
-    ushort vertexCount;
-    Vector3D position;
-    float rotX[100];
-    float rotY[100];
-    float rotZ[100];
-};
-
-struct Animation {
-    AnimationNode nodes[36];
-    AnimationState states[10];
-    byte *frameIDs;      // TODO:
-    ushort frameIDCount; // TODO:
-    byte field_BFAA;
-    byte field_BFAB;
-    ushort field_BFAC;
-    ushort field_BFAE;
-    ushort field_BFB0;
 };
 
 extern LevelDirectoryEntry *LDirectory;
@@ -111,7 +65,8 @@ void LoadDirectoryActFile(FileInfo *file, int id, const char *fileName, int file
 void LoadDirectoryGraphic(int id, const char *fileName, int fileNameLen);
 void CreateDirectories();
 
-void Load_TMF_File(TMF *tmf, const char *path);
-void Load_ANI_File(Animation *animation, const char *path);
+void LoadModel(TMF *model, const char *path);
+void LoadAnimationFile(Animator *animator, const char *path);
+void LoadAnimationFile2(Animator *animator, const char *path);
 
 #endif // !READER_H

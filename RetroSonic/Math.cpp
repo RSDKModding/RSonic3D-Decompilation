@@ -34,3 +34,63 @@ void MatrixInverse(Matrix3D *dest, Matrix3D *matrix)
 {
     *dest = matrix->Inverse();
 }
+
+void MatrixWorldTranslateXYZ(float x, float y, float z)
+{
+    memcpy(&MatrixWorld, &MatrixIdentity, sizeof(MatrixWorld));
+    MatrixWorld.m[3][0] = x;
+    MatrixWorld.m[3][1] = y;
+    MatrixWorld.m[3][2] = z;
+    MatrixWorld.m[3][3] = 1.0f;
+}
+
+void MatrixWorldRotateX(float value)
+{
+    memcpy(&MatrixWorld, &MatrixIdentity, sizeof(MatrixWorld));
+    MatrixWorld.m[0][0] = cos(value);
+    MatrixWorld.m[0][1] = sin(value);
+    MatrixWorld.m[1][0] = -sin(value);
+    MatrixWorld.m[1][1] = cos(value);
+}
+
+void MatrixWorldRotateY(float value)
+{
+    memcpy(&MatrixWorld, &MatrixIdentity, sizeof(MatrixWorld));
+    MatrixWorld.m[0][0] = cos(value);
+    MatrixWorld.m[0][2] = -sin(value);
+    MatrixWorld.m[2][0] = sin(value);
+    MatrixWorld.m[2][2] = cos(value);
+}
+
+void MatrixWorldRotateZ(float x)
+{
+    memcpy(&MatrixWorld, &MatrixIdentity, sizeof(MatrixWorld));
+    MatrixWorld.m[1][1] = cos(x);
+    MatrixWorld.m[1][2] = sin(x);
+    MatrixWorld.m[2][1] = -sin(x);
+    MatrixWorld.m[2][2] = cos(x);
+}
+
+void MatrixWorldSetTranslateXYZ(float x, float y, float z)
+{
+    MatrixWorldTranslateXYZ(x, y, z);
+    SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixWorld);
+}
+
+void MatrixWorldSetRotateX(float z)
+{
+    MatrixWorldRotateX(z);
+    SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixWorld);
+}
+
+void MatrixWorldSetRotateY(float y)
+{
+    MatrixWorldRotateY(y);
+    SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixWorld);
+}
+
+void MatrixWorldSetRotateZ(float x)
+{
+    MatrixWorldRotateZ(x);
+    SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixWorld);
+}

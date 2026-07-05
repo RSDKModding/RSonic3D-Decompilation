@@ -89,6 +89,7 @@ typedef unsigned int uint;
 #include "Level.hpp"
 #include "Math.hpp"
 #include "ModAPI.hpp"
+#include "Object.hpp"
 #include "Player.hpp"
 #include "String.hpp"
 #include "Text.hpp"
@@ -98,6 +99,11 @@ typedef unsigned int uint;
 // ============================
 // ENGINE VARIABLES
 // ============================
+
+enum GameModeType {
+    GAMEMODE_TITLESCREEN,
+    GAMEMODE_MAINGAME,
+};
 
 extern unsigned long long Frequency;
 extern unsigned long long FrameCurrentTicks;
@@ -117,18 +123,6 @@ extern SDL_Event SDLEvent;
 
 extern int QuitMessage;
 
-enum WindowScalingMode {
-    SCALE_1X,
-    SCALE_2X,
-    SCALE_3X,
-    SCALE_4X,
-};
-
-enum GameModeType {
-    GAMEMODE_TITLESCREEN,
-    GAMEMODE_MAINGAME,
-};
-
 // ============================
 // ENGINE FUNCTIONS
 // ============================
@@ -136,8 +130,8 @@ enum GameModeType {
 bool CreateMWindow();
 
 #if RETRO_USE_ORIGINAL_CODE
-LRESULT CALLBACK MWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
-INT_PTR CALLBACK MDialogProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK DialogProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 
 void UpdateWindowRect(HWND hWnd);
 void ResetWindow(HWND hWnd);
@@ -146,13 +140,9 @@ void ProcessEvents();
 #endif
 
 void ProcessMainGame();
-void ProcessPlayerInput();
-void ProcessDebugMode();
-void ProcessPlayerMovement();
-void ProcessObjects();
 void ProcessTime();
 void SetGameMode(int mode);
 void PauseCheck();
-void SetSceneRenderState(sbyte id);
+void SetSceneRenderProperties(byte id);
 
 #endif // !RETROSONICENGINE_H

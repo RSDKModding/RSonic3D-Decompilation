@@ -5,6 +5,8 @@ CollisionModel3D ***LCollision;
 
 byte ObjectFloorCollision(float *xpos, float *ypos, float *zpos, float xdir, float ydir, float zdir)
 {
+    LMF *level = &LevelModel;
+
     Vector3D origin    = { *xpos, *ypos, *zpos };
     Vector3D direction = { xdir, ydir, zdir };
     float magnitude    = direction.Magnitude();
@@ -14,14 +16,14 @@ byte ObjectFloorCollision(float *xpos, float *ypos, float *zpos, float xdir, flo
     float point[3];
     float colist[9];
 
-    float c = (origin.x - LevelModel.startX) / 50.0f;
-    float r = (origin.z - LevelModel.startZ) / 50.0f;
+    float c = (origin.x - level->x) / 50.0f;
+    float r = (origin.z - level->z) / 50.0f;
 
-    int minRow = CLAMP(r - 4, 0, LevelModel.rows);
-    int maxRow = CLAMP(r + 4, 0, LevelModel.rows);
+    int minRow = CLAMP(r - 4, 0, level->rows);
+    int maxRow = CLAMP(r + 4, 0, level->rows);
 
-    int minCol = CLAMP(c - 4, 0, LevelModel.columns);
-    int maxCol = CLAMP(c + 4, 0, LevelModel.columns);
+    int minCol = CLAMP(c - 4, 0, level->columns);
+    int maxCol = CLAMP(c + 4, 0, level->columns);
 
     Collided = 0;
 

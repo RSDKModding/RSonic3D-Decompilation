@@ -74,6 +74,7 @@ set(RETRO_FILES
     RetroSonic/main.cpp
     RetroSonic/Math.cpp
     RetroSonic/ModAPI.cpp
+    RetroSonic/Object.cpp
     RetroSonic/Player.cpp
     RetroSonic/Reader.cpp
     RetroSonic/RetroEngine.cpp

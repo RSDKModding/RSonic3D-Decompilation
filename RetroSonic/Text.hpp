@@ -26,7 +26,7 @@ void TextMeDo(const char *text, TextMenu *menu, int rowNo, int rowID, int length
 void SetGameText(const char *text, TextMenu *menu, int rowID, int length);
 
 void DrawMenuText(const char *text, int length, int xpos, int ypos, byte sprite);
-void DrawText_2(const char *text, int length, int xpos, int ypos);
-void DrawText_3(const char *text, int length, int xpos, int ypos, byte sprite, byte alphaStrengthA, byte alphaStrengthB);
+void DrawMenuTextFaded(const char *text, int length, int xpos, int ypos);
+void DrawMenuTextClipped(const char *text, int length, int xpos, int ypos, byte sprite, byte alphaStrengthA, byte alphaStrengthB);
 
 #endif

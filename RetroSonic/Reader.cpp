@@ -7,16 +7,9 @@ LevelDirectoryEntry *LDirectory;
 
 void LoadFile(FileInfo *file, const char *path)
 {
-#if RETRO_USE_MOD_LOADER
-    char filePathBuf[0x100];
-    StrCopy(filePathBuf, path);
-    ModFilePath(filePathBuf);
+    READER_PATH_BUFFER(path);
 
-    FileIO *handle = fOpen(filePathBuf, "rb");
-#else
-    FileIO *handle = fOpen(path, "rb");
-#endif
-
+    FileIO *handle = fOpen(buffer, "rb");
     fSeek(handle, 0, SEEK_END);
     file->size = fTell(handle);
     file->data = new byte[file->size + 1];
@@ -31,8 +24,10 @@ void LoadFile(FileInfo *file, const char *path)
 
 void LoadTexture(Texture **texturePtr, const char *path, bool useTexMips)
 {
+    READER_PATH_BUFFER(path);
+
 #if RETRO_USE_ORIGINAL_CODE
-    FIBITMAP *image = FreeImage_Load(FIF_PNG, path);
+    FIBITMAP *image = FreeImage_Load(FIF_PNG, buffer);
     if (image == NULL)
         return;
 
@@ -255,15 +250,7 @@ void LoadTexture(Texture **texturePtr, const char *path, bool useTexMips)
     int height   = 0;
     int channels = 0;
 
-#if RETRO_USE_MOD_LOADER
-    char filePathBuf[0x100];
-    StrCopy(filePathBuf, path);
-    ModFilePath(filePathBuf);
-
-    if (stbi_uc *data = stbi_load(filePathBuf, &width, &height, &channels, 4)) {
-#else
-    if (stbi_uc *data = stbi_load(path, &width, &height, &channels, 4)) {
-#endif
+    if (stbi_uc *data = stbi_load(buffer, &width, &height, &channels, 4)) {
         Texture *texture = (*texturePtr) = new Texture();
 
         texture->vtbl   = NULL;
@@ -292,36 +279,32 @@ void LoadTexture(Texture **texturePtr, const char *path, bool useTexMips)
 
 void LoadLevelModel(LMF *model, const char *path)
 {
-    MEM_ZERO(model, sizeof(*model));
+    MEM_ZEROP(model);
+    READER_PATH_BUFFER(path);
 
-#if RETRO_USE_MOD_LOADER
-    char filePathBuf[0x100];
-    StrCopy(filePathBuf, path);
-    ModFilePath(filePathBuf);
+    FileIO *handle = fOpen(buffer, "rb");
 
-    FileIO *handle = fOpen(filePathBuf, "rb");
-#else
-    FileIO *handle = fOpen(path, "rb");
-#endif
+    fRead(&model->layers, sizeof(byte), 1, handle);
+    fRead(&model->columns, sizeof(ushort), 1, handle);
+    fRead(&model->rows, sizeof(ushort), 1, handle);
+    fRead(&model->x, sizeof(float), 1, handle);
+    fRead(&model->z, sizeof(float), 1, handle);
+    fRead(&model->numTextures, sizeof(byte), 1, handle);
 
-    fRead(&model->surfaceCount, sizeof(model->surfaceCount), 1, handle);
-    fRead(&model->columns, sizeof(model->columns), 1, handle);
-    fRead(&model->rows, sizeof(model->rows), 1, handle);
-    fRead(&model->startX, sizeof(model->startX), 1, handle);
-    fRead(&model->startZ, sizeof(model->startZ), 1, handle);
-    fRead(&model->unused, sizeof(model->unused), 1, handle);
-
-    for (int i = 0; i < model->surfaceCount; ++i) {
-        fRead(&model->surfaceID[i], sizeof(model->surfaceID[i]), 1, handle);
+    for (int i = 0; i < model->layers; ++i) {
+        fRead(&model->textureIDs[i], sizeof(byte), 1, handle);
     }
 
+    // This and model->tiles were originally allocated as flat arrays, changed 'em here
+    // so we can access their multidimensional data naturally
     LCollision = new CollisionModel3D **[model->rows];
     for (int row = 0; row < model->rows; ++row) {
         LCollision[row] = new CollisionModel3D *[model->columns];
     }
 
-    model->tiles = new LMFMesh **[model->surfaceCount];
-    for (int s = 0; s < model->surfaceCount; ++s) {
+    // Instead of having to manually calculate it
+    model->tiles = new LMFMesh **[model->layers];
+    for (int s = 0; s < model->layers; ++s) {
         model->tiles[s] = new LMFMesh *[model->rows];
         for (int row = 0; row < model->rows; ++row) {
             model->tiles[s][row] = new LMFMesh[model->columns]();
@@ -332,10 +315,10 @@ void LoadLevelModel(LMF *model, const char *path)
         for (int c = 0; c < model->columns; ++c) {
             LCollision[y][c] = newCollisionModel3D();
 
-            for (int s = 0; s < model->surfaceCount; ++s) {
-                LMFMesh *tile = &model->tiles[s][y][c];
+            for (int l = 0; l < model->layers; ++l) {
+                LMFMesh *tile = &model->tiles[l][y][c];
 
-                fRead(&tile->numVertices, sizeof(tile->numVertices), 1, handle);
+                fRead(&tile->numVertices, sizeof(ushort), 1, handle);
                 tile->vertices = new LVertex[tile->numVertices + 1]();
                 tile->colors   = new float[tile->numVertices];
 
@@ -352,7 +335,7 @@ void LoadLevelModel(LMF *model, const char *path)
                         float tv;
                     } vert;
 
-                    fRead(&vert, sizeof(vert), 1, handle);
+                    fRead(&vert, sizeof(_), 1, handle);
 
                     vert.color += 1.0f;
                     vert.color *= 0.375f;
@@ -364,7 +347,7 @@ void LoadLevelModel(LMF *model, const char *path)
                     tile->colors[v]   = vert.color;
                 }
 
-                fRead(&tile->numIndices, sizeof(tile->numIndices), 1, handle);
+                fRead(&tile->numIndices, sizeof(ushort), 1, handle);
                 tile->indices = new ushort[tile->numIndices];
 
                 for (int v = 0; v < tile->numIndices; ++v) {
@@ -429,7 +412,7 @@ void LoadDirectoryFile(FileInfo *file, int id, const char *fileName, int fileNam
 
     path[r] = '\0';
 
-#if RETRO_USE_MOD_LOADER
+#if !RETRO_USE_ORIGINAL_CODE && RETRO_USE_MOD_LOADER
     ModFilePath(path);
 #endif
 
@@ -468,7 +451,7 @@ void LoadDirectoryActFile(FileInfo *file, int id, const char *fileName, int file
 
     path[r] = '\0';
 
-#if RETRO_USE_MOD_LOADER
+#if !RETRO_USE_ORIGINAL_CODE && RETRO_USE_MOD_LOADER
     ModFilePath(path);
 #endif
 
@@ -496,11 +479,11 @@ void LoadDirectoryGraphic(int id, const char *fileName, int fileNameLen)
 
     path[r] = '\0';
 
-#if RETRO_USE_MOD_LOADER
+#if !RETRO_USE_ORIGINAL_CODE && RETRO_USE_MOD_LOADER
     ModFilePath(path);
 #endif
 
-    // No LoadZoneTiles :C
+    // No LoadZoneTiles
 }
 
 void CreateDirectories()
@@ -524,192 +507,217 @@ void CreateDirectories()
     LDirectory[5].levelNameLen = 2;
 }
 
-void Load_TMF_File(TMF *model, const char *path)
+void LoadModel(TMF *model, const char *path)
 {
-    MEM_ZERO(model, sizeof(*model));
+    MEM_ZEROP(model);
+    READER_PATH_BUFFER(path);
 
-#if RETRO_USE_MOD_LOADER
-    char filePathBuf[0x100];
-    StrCopy(filePathBuf, path);
-    ModFilePath(filePathBuf);
-
-    FileIO *handle = fOpen(filePathBuf, "rb");
-#else
-    FileIO *handle = fOpen(path, "rb");
-#endif
-
+    FileIO *handle = fOpen(buffer, "rb");
     fSeek(handle, 0, SEEK_SET);
 
-    fRead(&model->numVertices, 2, 1, handle);
+    fRead(&model->numVertices, sizeof(ushort), 1, handle);
     model->vertices = new Vertex[model->numVertices + 1];
     if (model->vertices != NULL)
-        MEM_ZERO(model->vertices, sizeof(*model->vertices));
+        MEM_ZEROP(model->vertices);
 
     for (int i = 0; i < model->numVertices; ++i) {
-        fRead(&model->vertices[i], sizeof(model->vertices[i]), 1, handle);
+        fRead(&model->vertices[i], sizeof(Vertex), 1, handle);
     }
 
-    fRead(&model->numIndices, sizeof(model->numIndices), 1, handle);
+    fRead(&model->numIndices, sizeof(ushort), 1, handle);
     model->indices = new ushort[model->numIndices + 2];
     for (int i = 0; i < model->numIndices; ++i) {
-        fRead(&model->indices[i], sizeof(model->indices[i]), 1, handle);
+        fRead(&model->indices[i], sizeof(ushort), 1, handle);
     }
 
     fClose(handle);
 }
 
-void Load_ANI_File(Animation *animation, const char *path)
+void LoadAnimationFile(Animator *animator, const char *path)
 {
-    MEM_ZERO(animation, sizeof(*animation));
+    MEM_ZEROP(animator);
+    READER_PATH_BUFFER(path);
 
-    char boneName[0x100];
-
-#if RETRO_USE_MOD_LOADER
-    char filePathBuf[0x100];
-    StrCopy(filePathBuf, path);
-    ModFilePath(filePathBuf);
-
-    FileIO *handle = fOpen(filePathBuf, "rb");
-#else
     FileIO *handle = fOpen(path, "rb");
-#endif
-
     fSeek(handle, 0, SEEK_SET);
 
-    byte frameCount;
-    ushort nodeCount;
-    fRead(&frameCount, sizeof(byte), 1, handle);
-    fRead(&nodeCount, sizeof(ushort), 1, handle);
+    byte nodeCount;
+    ushort poseCount;
+    fRead(&nodeCount, sizeof(byte), 1, handle);
+    fRead(&poseCount, sizeof(ushort), 1, handle);
 
-    for (int i = 0; i < frameCount; ++i) {
-        byte nameLen;
-        fRead(&nameLen, sizeof(byte), 1, handle);
-        fRead(boneName, sizeof(byte), nameLen, handle);
+    for (int i = 0; i < nodeCount; ++i) {
+        AnimatorPart *node = &animator->nodes[i];
 
-        fRead(&animation->nodes[i].position.x, sizeof(float), 1, handle);
-        fRead(&animation->nodes[i].position.y, sizeof(float), 1, handle);
-        fRead(&animation->nodes[i].position.z, sizeof(float), 1, handle);
+        byte nameLength;  // Used by the animation editor, unused by the game
+        char name[0x100]; // Used by the animation editor, unused by the game
 
-        fRead(&animation->nodes[i].vertexCount, sizeof(ushort), 1, handle);
-        animation->nodes[i].vertexIDs = new ushort[animation->nodes[i].vertexCount];
+        fRead(&nameLength, sizeof(byte), 1, handle);
+        fRead(name, sizeof(byte), nameLength, handle);
 
-        for (int j = 0; j < animation->nodes[i].vertexCount; ++j) {
-            fRead(&animation->nodes[i].vertexIDs[j], sizeof(ushort), 1, handle);
+        fRead(&node->x, sizeof(float), 1, handle);
+        fRead(&node->y, sizeof(float), 1, handle);
+        fRead(&node->z, sizeof(float), 1, handle);
+
+        fRead(&node->numIndices, sizeof(ushort), 1, handle);
+        node->indices = new ushort[node->numIndices];
+
+        for (int k = 0; k < node->numIndices; ++k) {
+            fRead(&node->indices[k], sizeof(ushort), 1, handle);
         }
 
-        for (int j = 0; j < nodeCount; ++j) {
-            byte idk;
-            ushort val;
+        for (int j = 0; j < poseCount; ++j) {
+            byte poseFlipped;
+            ushort poseValue;
 
-            fRead(&idk, sizeof(byte), 1, handle);
-            fRead(&val, sizeof(ushort), 1, handle);
-            animation->nodes[i].rotX[j] = (float)((idk ? (int)val : -(int)val) * (RSDK_PI / 180.0));
+            fRead(&poseFlipped, sizeof(byte), 1, handle);
+            fRead(&poseValue, sizeof(ushort), 1, handle);
+            node->ZPosing[j] = -TO_RADIAN(poseValue);
+            if (poseFlipped != false)
+                node->ZPosing[j] = -node->ZPosing[j];
 
-            fRead(&idk, sizeof(byte), 1, handle);
-            fRead(&val, sizeof(ushort), 1, handle);
-            animation->nodes[i].rotY[j] = (float)((idk ? (int)val : -(int)val) * (RSDK_PI / 180.0));
+            fRead(&poseFlipped, sizeof(byte), 1, handle);
+            fRead(&poseValue, sizeof(ushort), 1, handle);
+            node->YPosing[j] = -TO_RADIAN(poseValue);
+            if (poseFlipped != false)
+                node->YPosing[j] = -node->YPosing[j];
 
-            fRead(&idk, sizeof(byte), 1, handle);
-            fRead(&val, sizeof(ushort), 1, handle);
-            animation->nodes[i].rotZ[j] = (float)((idk ? (int)val : -(int)val) * (RSDK_PI / 180.0));
-        }
-    }
-
-    fRead(&animation->frameIDCount, sizeof(ushort), 1, handle);
-    animation->frameIDs = new byte[animation->frameIDCount];
-
-    for (int i = 0; i < animation->frameIDCount; ++i) {
-        fRead(&animation->frameIDs[i], sizeof(byte), 1, handle);
-    }
-
-    byte stateCount;
-    fRead(&stateCount, sizeof(byte), 1, handle);
-
-    for (int i = 0; i < stateCount; ++i) {
-        byte nameLen;
-        fRead(&nameLen, sizeof(byte), 1, handle);
-        fRead(&boneName, sizeof(byte), nameLen, handle);
-
-        fRead(&animation->states[i].frameDuration, sizeof(byte), 1, handle);
-        fRead(&animation->states[i].loopIndex, sizeof(byte), 1, handle);
-        fRead(&animation->states[i].frameCount, sizeof(byte), 1, handle);
-
-        for (int j = 0; j < animation->states[i].frameCount; ++j) {
-            fRead(&animation->states[i].array_2[j], sizeof(ushort), 1, handle);
+            fRead(&poseFlipped, sizeof(byte), 1, handle);
+            fRead(&poseValue, sizeof(ushort), 1, handle);
+            node->XPosing[j] = -TO_RADIAN(poseValue);
+            if (poseFlipped != false)
+                node->XPosing[j] = -node->XPosing[j];
         }
     }
 
-    animation->field_BFAA = 0;
-    animation->field_BFAB = 0;
+    fRead(&animator->nodeCount, sizeof(ushort), 1, handle);
+    animator->nodeIndices = new byte[animator->nodeCount];
+
+    for (int i = 0; i < animator->nodeCount; ++i) {
+        fRead(&animator->nodeIndices[i], sizeof(byte), 1, handle);
+    }
+
+    byte numStates;
+    fRead(&numStates, sizeof(byte), 1, handle);
+
+    for (int i = 0; i < numStates; ++i) {
+        AnimatorState *state = &animator->states[i];
+
+        byte nameLength;  // Used by the animation editor, unused by the game
+        char name[0x100]; // Used by the animation editor, unused by the game
+
+        fRead(&nameLength, sizeof(byte), 1, handle);
+        fRead(name, sizeof(byte), nameLength, handle);
+
+        fRead(&state->frameDuration, sizeof(byte), 1, handle);
+        fRead(&state->loopIndex, sizeof(byte), 1, handle);
+        fRead(&state->frameCount, sizeof(byte), 1, handle);
+
+        for (int k = 0; k < state->frameCount; ++k) {
+            fRead(&state->indices[k], sizeof(ushort), 1, handle);
+        }
+    }
+
+    animator->animationID   = 0;
+    animator->nextAnimation = 0;
 
     fClose(handle);
 }
 
-#if 0
-int *__cdecl TODO_READER_FUNC_401A87(int *a1, char *FileName)
+void LoadAnimationFile2(Animator *animator, const char *path)
 {
-  int v3; // [esp+Ch] [ebp-BFD0h]
-  int v4; // [esp+Ch] [ebp-BFD0h]
-  int v5; // [esp+10h] [ebp-BFCCh] BYREF
-  int j; // [esp+14h] [ebp-BFC8h]
-  int i; // [esp+18h] [ebp-BFC4h]
-  FileIO *handle; // [esp+1Ch] [ebp-BFC0h]
-  int Buffer; // [esp+20h] [ebp-BFBCh] BYREF
-  R3D::Animation v10; // [esp+24h] [ebp-BFB8h] BYREF
-  int v11; // [esp+BFD8h] [ebp-4h] BYREF
+    MEM_ZEROP(animator);
+    READER_PATH_BUFFER(path);
 
-  handle = fopen(FileName, "rb");
-  fSeek(handle, 0, SEEK_SET);
-  fRead(&Buffer, 1u, 1u, handle);
-  v3 = Buffer;
-  fRead(&v11, 2u, 1u, handle);
-  for ( i = 0; i < v3; ++i )
-  {
-    fRead(&Buffer, 1u, 1u, handle);
-    v5 = Buffer;
-    for ( j = 0; j < v5; ++j )
-      fRead(&Buffer, 1u, 1u, handle);
-    fRead(&v10.frames[i].field_8, 4u, 1u, handle);
-    fRead(&v10.frames[i].field_8.y, 4u, 1u, handle);
-    fRead(&v10.frames[i].field_8.z, 4u, 1u, handle);
-    fRead(&v5, 2u, 1u, handle);
-    v10.frames[i].count = v5;
-    for ( j = 0; j < v10.frames[i].count; ++j )
-    {
-      fRead(&v5, 2u, 1u, handle);
-      v10.frames[i].field_0[j] = v5;
+    FileIO *handle = fOpen(buffer, "rb");
+    fSeek(handle, 0, SEEK_SET);
+
+    byte nodeCount;
+    ushort poseCount;
+    fRead(&nodeCount, sizeof(byte), 1, handle);
+    fRead(&poseCount, sizeof(ushort), 1, handle);
+
+    for (int i = 0; i < nodeCount; ++i) {
+        AnimatorPart *node = &animator->nodes[i];
+
+        byte nameLength;  // Used by the animation editor, unused by the game
+        char name[0x100]; // Used by the animation editor, unused by the game
+
+        fRead(&nameLength, sizeof(byte), 1, handle);
+
+        // This one reads each character individually
+        for (int n = 0; n < nameLength; ++n) {
+            fRead(&name, sizeof(byte), 1, handle);
+        }
+
+        fRead(&node->x, sizeof(float), 1, handle);
+        fRead(&node->y, sizeof(float), 1, handle);
+        fRead(&node->z, sizeof(float), 1, handle);
+
+        fRead(&node->numIndices, sizeof(ushort), 1, handle);
+        node->indices = new ushort[node->numIndices];
+
+        for (int k = 0; k < node->numIndices; ++k) {
+            fRead(&node->indices[k], sizeof(ushort), 1, handle);
+        }
+
+        for (int j = 0; j < poseCount; ++j) {
+            byte poseFlipped;
+            ushort poseValue;
+
+            fRead(&poseFlipped, sizeof(byte), 1, handle);
+            fRead(&poseValue, sizeof(ushort), 1, handle);
+            node->ZPosing[j] = -TO_RADIAN(poseValue);
+            if (poseFlipped != false)
+                node->ZPosing[j] = -node->ZPosing[j];
+
+            fRead(&poseFlipped, sizeof(byte), 1, handle);
+            fRead(&poseValue, sizeof(ushort), 1, handle);
+            node->YPosing[j] = -TO_RADIAN(poseValue);
+            if (poseFlipped != false)
+                node->YPosing[j] = -node->YPosing[j];
+
+            fRead(&poseFlipped, sizeof(byte), 1, handle);
+            fRead(&poseValue, sizeof(ushort), 1, handle);
+            node->XPosing[j] = -TO_RADIAN(poseValue);
+            if (poseFlipped != false)
+                node->XPosing[j] = -node->XPosing[j];
+        }
     }
-    for ( j = 0; j < v11; ++j )
-    {
-      fRead(&v5, 2u, 1u, handle);
-      v10.frames[i].rotX[j] = v5 * (3.1415927 / 180.0);
-      fRead(&v5, 2u, 1u, handle);
-      v10.frames[i].rotY[j] = v5 * (3.1415927 / 180.0);
-      fRead(&v5, 2u, 1u, handle);
-      v10.frames[i].rotZ[j] = v5 * (3.1415927 / 180.0);
+
+    fRead(&animator->nodeCount, sizeof(ushort), 1, handle);
+    animator->nodeIndices = new byte[animator->nodeCount];
+
+    for (int i = 0; i < animator->nodeCount; ++i) {
+        fRead(&animator->nodeIndices[i], sizeof(byte), 1, handle);
     }
-  }
-  fRead(&v5, 2u, 1u, handle);
-  v10.field_BFA8 = v5;
-  v10.frameIDs = operator new(v5);
-  for ( i = 0; i < v10.field_BFA8; ++i )
-    fRead(&v10.frameIDs[i], 1u, 1u, handle);
-  fRead(&Buffer, 1u, 1u, handle);
-  v4 = Buffer;
-  for ( i = 0; i < v4; ++i )
-  {
-    fRead(&Buffer, 1u, 1u, handle);
-    v5 = Buffer;
-    for ( j = 0; j < v5; ++j )
-      fRead(&Buffer, 1u, 1u, handle);
-    fRead(&v10.array_AB90[i].field_201, 1u, 1u, handle);
-    fRead(&v10.array_AB90[i].field_200, 1u, 1u, handle);
-    fRead(&v10.array_AB90[i], 1u, 1u, handle);
-    for ( j = 0; j < v10.array_AB90[i].count; ++j )
-      fRead(&v10.array_AB90[i].array_2[j], 2u, 1u, handle);
-  }
-  fClose(handle);
-  qmemcpy(a1, &v10, 0xBFB4u);
-  return a1;
+
+    byte numStates;
+    fRead(&numStates, sizeof(byte), 1, handle);
+
+    for (int i = 0; i < numStates; ++i) {
+        AnimatorState *state = &animator->states[i];
+
+        byte nameLength;  // Used by the animation editor, unused by the game
+        char name[0x100]; // Used by the animation editor, unused by the game
+
+        fRead(&nameLength, sizeof(byte), 1, handle);
+
+        // This one reads each character individually
+        for (int n = 0; n < nameLength; ++n) {
+            fRead(&name, sizeof(byte), 1, handle);
+        }
+
+        fRead(&state->frameDuration, sizeof(byte), 1, handle);
+        fRead(&state->loopIndex, sizeof(byte), 1, handle);
+        fRead(&state->frameCount, sizeof(byte), 1, handle);
+
+        for (int k = 0; k < state->frameCount; ++k) {
+            fRead(&state->indices[k], sizeof(ushort), 1, handle);
+        }
+    }
+
+    // Doesn't reset animationID
+
+    fClose(handle);
 }
-#endif

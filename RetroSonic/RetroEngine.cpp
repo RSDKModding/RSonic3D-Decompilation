@@ -27,7 +27,7 @@ bool CreateMWindow()
 
     WNDCLASSA wndClass;
     wndClass.style         = CS_VREDRAW | CS_HREDRAW;
-    wndClass.lpfnWndProc   = MWindowProc;
+    wndClass.lpfnWndProc   = WindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = 4;
     wndClass.hInstance     = HInst;
@@ -70,15 +70,15 @@ bool CreateMWindow()
 
 #if RETRO_USE_SDL3
     uint flags = SDL_WINDOW_OPENGL;
-    if (WindowMode == 0)
+    if (WindowMode == false)
         flags |= SDL_WINDOW_FULLSCREEN;
 #elif RETRO_USE_SDL2
     uint flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
-    if (WindowMode == 0)
+    if (WindowMode == false)
         flags |= SDL_WINDOW_FULLSCREEN;
 #elif RETRO_USE_SDL1
     uint flags = SDL_OPENGL;
-    if (WindowMode == 0)
+    if (WindowMode == false)
         flags |= SDL_FULLSCREEN;
 #endif
 
@@ -116,7 +116,7 @@ bool CreateMWindow()
 }
 
 #if RETRO_USE_ORIGINAL_CODE
-LRESULT CALLBACK MWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     switch (Msg) {
         case WM_DESTROY:
@@ -159,10 +159,10 @@ LRESULT CALLBACK MWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                         LoadFontAssets();
                     break;
 
-                case VK_F5: DialogBoxParamA(HInst, "DMSelect", hWnd, MDialogProc, 0); break;
+                case VK_F5: DialogBoxParam(HInst, "DMSelect", hWnd, DialogProc, 0); break;
             }
 
-            return DefWindowProcA(hWnd, Msg, wParam, lParam);
+            return DefWindowProc(hWnd, Msg, wParam, lParam);
 
         case WM_COMMAND:
             switch (wParam) {
@@ -180,7 +180,7 @@ LRESULT CALLBACK MWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                     // This'd be the about menu, nothing here though :(
                     break;
 
-                case IDM_SET_DISPLAY: DialogBoxParamA(HInst, "DMSelect", hWnd, MDialogProc, 0); break;
+                case IDM_SET_DISPLAY: DialogBoxParam(HInst, "DMSelect", hWnd, DialogProc, 0); break;
 
                 case IDM_OPT_FULLSCREEN:
                     ResetWindow(hWnd);
@@ -193,35 +193,35 @@ LRESULT CALLBACK MWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
             return 0;
 
-        default: return DefWindowProcA(hWnd, Msg, wParam, lParam);
+        default: return DefWindowProc(hWnd, Msg, wParam, lParam);
     }
 }
 
-INT_PTR CALLBACK MDialogProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK DialogProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     switch (Msg) {
         case WM_INITDIALOG:
             for (int i = 0; i < 4; ++i) {
-                SendDlgItemMessageA(hWnd, IDC_DM_RESOLUTION, CB_ADDSTRING, 0, (LPARAM)ResolutionOptions[i]);
+                SendDlgItemMessage(hWnd, IDC_DM_RESOLUTION, CB_ADDSTRING, 0, (LPARAM)ResolutionOptions[i]);
             }
 
             for (int i = 0; i < 2; ++i) {
-                SendDlgItemMessageA(hWnd, IDC_DM_WINDOW, CB_ADDSTRING, 0, (LPARAM)ResolutionOptions[i]);
+                SendDlgItemMessage(hWnd, IDC_DM_WINDOW, CB_ADDSTRING, 0, (LPARAM)ResolutionOptions[i]);
             }
 
-            SendDlgItemMessageA(hWnd, IDC_DM_RESOLUTION, CB_SETCURSEL, 0, 0);
-            SendDlgItemMessageA(hWnd, IDC_DM_WINDOW, CB_SETCURSEL, 0, 0);
-            SendDlgItemMessageA(hWnd, IDC_DM_STRETCH, BM_SETCHECK, BST_CHECKED, 0);
+            SendDlgItemMessage(hWnd, IDC_DM_RESOLUTION, CB_SETCURSEL, 0, 0);
+            SendDlgItemMessage(hWnd, IDC_DM_WINDOW, CB_SETCURSEL, 0, 0);
+            SendDlgItemMessage(hWnd, IDC_DM_STRETCH, BM_SETCHECK, BST_CHECKED, 0);
             return 1;
 
         case WM_COMMAND:
             if (wParam == IDC_DM_OK) {
-                char fullscreen = SendDlgItemMessageA(hWnd, IDC_DM_RESOLUTION, CB_GETCURSEL, 0, 0);
-                char window     = SendDlgItemMessageA(hWnd, IDC_DM_RESOLUTION, CB_GETCURSEL, 0, 0);
+                char fullscreen = SendDlgItemMessage(hWnd, IDC_DM_RESOLUTION, CB_GETCURSEL, 0, 0);
+                char window     = SendDlgItemMessage(hWnd, IDC_DM_RESOLUTION, CB_GETCURSEL, 0, 0);
 
-                char centerScreen = SendDlgItemMessageA(hWnd, IDC_DM_CENTER, BM_GETCHECK, BST_CHECKED, 0);
-                char stretchFit   = SendDlgItemMessageA(hWnd, IDC_DM_STRETCH, BM_GETCHECK, BST_CHECKED, 0);
-                char sai2X        = SendDlgItemMessageA(hWnd, IDC_DM_2XSAI, BM_GETCHECK, BST_CHECKED, 0);
+                char centerScreen = SendDlgItemMessage(hWnd, IDC_DM_CENTER, BM_GETCHECK, BST_CHECKED, 0);
+                char stretchFit   = SendDlgItemMessage(hWnd, IDC_DM_STRETCH, BM_GETCHECK, BST_CHECKED, 0);
+                char sai2X        = SendDlgItemMessage(hWnd, IDC_DM_2XSAI, BM_GETCHECK, BST_CHECKED, 0);
 
                 if (centerScreen == BST_CHECKED)
                     SetScreenResolution(fullscreen, window, 1);
@@ -280,13 +280,26 @@ void ProcessEvents()
             case SDL_EVENT_WINDOW_FOCUS_GAINED: EnableInput(); break;
             case SDL_EVENT_WINDOW_FOCUS_LOST: DisableInput(); break;
 
+            case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: {
+                glViewport(0, 0, SDLEvent.window.data1, SDLEvent.window.data2);
+                break;
+            }
 #elif RETRO_USE_SDL2
             case SDL_WINDOWEVENT:
-                if (SDLEvent.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
-                    EnableInput();
+                switch (SDLEvent.window.event) {
+                    case SDL_WINDOWEVENT_FOCUS_GAINED: EnableInput(); break;
+                    case SDL_WINDOWEVENT_FOCUS_LOST: DisableInput(); break;
 
-                if (SDLEvent.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
-                    DisableInput();
+                    case SDL_WINDOWEVENT_SIZE_CHANGED: {
+                        int w = 0;
+                        int h = 0;
+                        SDL_GL_GetDrawableSize(Window, &w, &h);
+                        glViewport(0, 0, w, h);
+                        break;
+                    }
+
+                    default: break;
+                }
                 break;
 
 #elif RETRO_USE_SDL1
@@ -341,8 +354,8 @@ void ProcessMainGame()
 {
     switch (MainGameMode) {
         case 0:
-            CameraTargetPosition.y = 10.0f;
-            CameraTargetPosition.z = -32.0f;
+            CameraPosition.y = 10.0f;
+            CameraPosition.z = -32.0f;
 
             MainGameMode = 2;
 
@@ -350,9 +363,10 @@ void ProcessMainGame()
             for (ObjectLoop = 0; ObjectLoop < 6; ++ObjectLoop) {
                 Object *ring = &LevelObjects[ObjectLoop];
 
-                ring->type       = OBJECT_RING;
-                ring->enabled    = true;
-                ring->position.x = (double)ObjectLoop * -8.0 - 10.0;
+                ring->type    = OBJ_TYPE_RING;
+                ring->enabled = true;
+
+                ring->position.x = -(ObjectLoop * 8.0f) - 10.0f;
                 ring->position.z = -20.0f;
                 ring->position.y = 5.0f;
             }
@@ -361,9 +375,9 @@ void ProcessMainGame()
             for (ObjectLoop = 10; ObjectLoop < 14; ++ObjectLoop) {
                 Object *ring = &LevelObjects[ObjectLoop];
 
-                ring->type       = OBJECT_RING;
+                ring->type       = OBJ_TYPE_RING;
                 ring->enabled    = true;
-                ring->position.z = (double)ObjectLoop * 8.0f - 60.0f;
+                ring->position.z = (ObjectLoop * 8.0f) - 60.0f;
                 ring->position.x = -50.0f;
                 ring->position.y = 12.0f;
             }
@@ -372,7 +386,7 @@ void ProcessMainGame()
             for (ObjectLoop = 14; ObjectLoop < 15; ++ObjectLoop) {
                 Object *spring = &LevelObjects[ObjectLoop];
 
-                spring->type       = OBJECT_SPRING;
+                spring->type       = OBJ_TYPE_SPRING;
                 spring->enabled    = true;
                 spring->position.z = 50.0f;
                 spring->position.x = -80.0f;
@@ -399,7 +413,7 @@ void ProcessMainGame()
                         // nothing here
                     }
 
-                    ProcessPlayerAnimationLMC();
+                    ProcessPlayerAnimation();
                 }
 
                 PNumber = 0;
@@ -414,349 +428,6 @@ void ProcessMainGame()
 
         default: break;
     }
-}
-
-void ProcessPlayerInput()
-{
-    int pressed = 0;
-
-    PlayerObject *player  = &Player[PNumber];
-    PlayerObject *player1 = &Player[0];
-
-    player->up        = false;
-    player->jumpPress = false;
-
-    if (!player->disableControl) {
-        player->targetAngle = 0;
-
-        CheckInput(&MGameInput);
-
-        if (Debug) {
-            if (MGameInput.left == true) {
-                player1->position.x -= Cos(CameraRotateY);
-                CameraTargetPosition.x -= Cos(CameraRotateY);
-
-                player1->position.z -= Sin(CameraRotateY);
-                CameraTargetPosition.z -= Sin(CameraRotateY);
-            }
-
-            if (MGameInput.right == true) {
-                player1->position.x += Cos(CameraRotateY);
-                CameraTargetPosition.x += Cos(CameraRotateY);
-
-                player1->position.z += Sin(CameraRotateY);
-                CameraTargetPosition.z += Sin(CameraRotateY);
-            }
-
-            if (MGameInput.Z) {
-                if (MGameInput.up == true) {
-                    player1->position.y += 1.0f;
-                    CameraTargetPosition.y += 1.2f;
-                }
-
-                if (MGameInput.down == true) {
-                    player1->position.y -= 1.0f;
-                    CameraTargetPosition.y -= 1.2f;
-                }
-            }
-            else {
-                if (MGameInput.up == true) {
-                    player1->position.x -= Cos(CameraRotateY - RSDK_PI_H);
-                    CameraTargetPosition.x -= Cos(CameraRotateY - RSDK_PI_H);
-
-                    player1->position.z -= Sin(CameraRotateY - RSDK_PI_H);
-                    CameraTargetPosition.z -= Sin(CameraRotateY - RSDK_PI_H);
-                }
-
-                if (MGameInput.down == true) {
-                    player1->position.x += Cos(CameraRotateY - RSDK_PI_H);
-                    CameraTargetPosition.x += Cos(CameraRotateY - RSDK_PI_H);
-
-                    player1->position.z += Sin(CameraRotateY - RSDK_PI_H);
-                    CameraTargetPosition.z += Sin(CameraRotateY - RSDK_PI_H);
-                }
-            }
-
-            CheckKeyPress(&MGameInput, INPUT_START, INPUT_ONCE);
-
-            if (MGameInput.control == true)
-                CreateObject(OBJECT_SPRING, 0, player1->position.x, player1->position.y + 1.8f, player1->position.z);
-
-            if (MGameInput.X == true)
-                CreateObject(OBJECT_RING, 0, player1->position.x, player1->position.y + 4.0f, player1->position.z);
-        }
-        else {
-            if (MGameInput.left == true) {
-                player->targetAngle += 64;
-                if (player->angle > 192)
-                    player->angle -= 256;
-
-                ++pressed;
-            }
-
-            if (MGameInput.right == true) {
-                if (player->angle < 64)
-                    player->angle += 256;
-                player->targetAngle += 192;
-
-                ++pressed;
-            }
-
-            if (MGameInput.up == true) {
-                if (player->angle > 128)
-                    player->targetAngle += 256;
-
-                ++pressed;
-            }
-
-            if (MGameInput.down == true) {
-                player->targetAngle += 128;
-
-                ++pressed;
-            }
-
-            if (pressed > 0) {
-                player->up = true;
-                player->targetAngle /= pressed;
-            }
-
-            player->z = MGameInput.Z == true;
-            CheckKeyPress(&MGameInput, INPUT_START, INPUT_Z);
-        }
-
-        if (MGameInput.control == true)
-            player->jumpPress = true;
-
-        if (MGameInput.shift == true && DebugEn == true)
-            Debug ^= true;
-    }
-
-    CheckInput(&MGameInput);
-}
-
-void ProcessDebugMode()
-{
-    // chillin
-}
-
-void ProcessPlayerMovement()
-{
-    PlayerObject *player = &Player[PNumber];
-
-    if (player->state == STATE_AIR && player->up == true) {
-        if (player->angle < player->targetAngle) {
-            player->angle += 6;
-
-            if (player->speed > 0.0f)
-                player->speed -= 0.02f;
-
-            if (player->angle > player->targetAngle)
-                player->angle = player->targetAngle;
-        }
-
-        if (player->angle > player->targetAngle) {
-            player->angle -= 6;
-
-            if (player->speed > 0.0f)
-                player->speed -= 0.02;
-
-            if (player->angle < player->targetAngle)
-                player->angle = player->targetAngle;
-        }
-
-        if (player->speed < 2.4f)
-            player->speed += 0.012f;
-    }
-    else if (player->state == STATE_GROUND && player->up == true) {
-        if (player->angle < player->targetAngle) {
-            player->angle += 8;
-
-            if (player->speed > 0.0f)
-                player->speed -= 0.01f;
-
-            if (player->angle > player->targetAngle)
-                player->angle = player->targetAngle;
-        }
-
-        if (player->angle > player->targetAngle) {
-            player->angle -= 8;
-
-            if (player->speed > 0.0f)
-                player->speed -= 0.01f;
-
-            if (player->angle < player->targetAngle)
-                player->angle = player->targetAngle;
-        }
-
-        if (player->speed < 2.4f)
-            player->speed += 0.012f;
-    }
-    else {
-        if (player->speed > 0.0f)
-            player->speed -= 0.012f;
-
-        if (player->speed > -0.05f && player->speed < 0.0f)
-            player->speed = 0.0f;
-    }
-
-    if (player->state != STATE_STATIC) {
-        if (player->gravity == GRAVITY_AIR) {
-            player->state = STATE_AIR;
-
-            player->velocity.y -= 0.05f;
-            if (player->velocity.y > 4.0f) {
-                player->velocity.y = 4.0f;
-                ResetPlayerRotation();
-            }
-
-            SetPlayerAnimationID(ANI_JUMPING, (player->speed * 0.4f) + 0.4f);
-        }
-        else {
-            PlayerObject *player1 = &Player[0];
-            if (player1->speed < 0.01f)
-                SetPlayerAnimationID(ANI_STOPPED, 0.0f);
-            else
-                SetPlayerAnimationID(ANI_WALKING, player->speed * 0.4f);
-
-            player->state = STATE_GROUND;
-            if (player->speed == 0.0f)
-                player->unused5 = 0;
-
-            if (player->jumpPress == true) {
-                player->gravity    = GRAVITY_AIR;
-                player->velocity.y = 2.0f;
-                player->state      = STATE_AIR;
-                ResetPlayerRotation();
-            }
-        }
-    }
-
-    player->velocity.x = -Sin(player->rotationY) * player->speed;
-    player->velocity.z = Cos(player->rotationY) * player->speed;
-
-    player->collisionPos = { 0.0f, -4.0f, 0.0f };
-    if (player->gravity == GRAVITY_AIR) {
-        if (player->velocity.y < 0.0f) {
-            if (ObjectFloorCollision(&player->position, { player->velocity.x, -player->velocity.y, player->velocity.z }) == true) {
-                player->velocity.y = 0.0f;
-                player->gravity    = GRAVITY_GROUND;
-                player->state      = STATE_GROUND;
-            }
-        }
-    }
-    else {
-        player->velocity.y = 0.0f;
-        PlayerRotationPhysics(&player->velocity.x, &player->velocity.y, &player->velocity.z);
-
-        player->collisionPos = { 0.0f, -3.5f, 0.0f };
-        PlayerRotationPhysics(&player->collisionPos.x, &player->collisionPos.y, &player->collisionPos.z);
-
-        player->position.x -= player->collisionPos.x * 0.75f;
-        player->position.y -= player->collisionPos.y * 0.75f;
-        player->position.z -= player->collisionPos.z * 0.75f;
-        switch (ObjectFloorCollision(&player->position, player->collisionPos)) {
-            case 1:
-            case 2:
-                player->gravity = GRAVITY_GROUND;
-                player->state   = STATE_GROUND;
-                break;
-
-            case 0:
-                player->position.x += player->collisionPos.x * 0.75f;
-                player->position.y += player->collisionPos.y * 0.75f;
-                player->position.z += player->collisionPos.z * 0.75f;
-                player->gravity = GRAVITY_AIR;
-                break;
-
-            default: break;
-        }
-    }
-
-    player->position += player->velocity;
-    ProcessPlayerCamera();
-
-    if (player->up == true)
-        player->rotationY = (player->angle * RSDK_PI / 128.0f) + CameraRotateY;
-
-    if (player->gravity == GRAVITY_AIR) {
-        if (CameraAirTimer < 30)
-            CameraAirTimer++;
-
-        if (CameraRotateX < player->velocity.y) {
-            CameraRotateX += 0.1f;
-            if (CameraRotateX > player->velocity.y)
-                CameraRotateX = player->velocity.y;
-        }
-
-        if (CameraRotateX > player->velocity.y) {
-            CameraRotateX -= 0.1f;
-            if (CameraRotateX < player->velocity.y)
-                CameraRotateX = player->velocity.y;
-        }
-    }
-    else {
-        if (CameraAirTimer > 0)
-            CameraAirTimer--;
-
-        if (CameraRotateX > 0.0f) {
-            CameraRotateX -= 0.1f;
-            if (CameraRotateX < 0.0f)
-                CameraRotateX = 0.0f;
-        }
-
-        if (CameraRotateX < 0.0f) {
-            CameraRotateX += 0.1f;
-            if (CameraRotateX > 0.0f)
-                CameraRotateX = 0.0f;
-        }
-    }
-
-    CameraTargetPosition.y = player->position.y + 15.0f - (CameraAirTimer * 0.25f * CameraRotateX);
-}
-
-void ProcessObjects()
-{
-    PlayerObject *player  = &Player[PNumber];
-    PlayerObject *player1 = &Player[0];
-
-    for (ObjectLoop = 0; ObjectLoop < 1100; ++ObjectLoop) {
-        Object *object = &LevelObjects[ObjectLoop];
-        if (object->enabled > 0) {
-            switch (object->type) {
-                case OBJECT_RING: {
-                    Vector3D position = object->position - player1->position;
-                    position.y += player1->collisionPos.y;
-
-                    if (position.Magnitude() < 6.0f)
-                        object->type = OBJECT_RING_SPARKLE;
-                    break;
-                }
-
-                case OBJECT_RING_SPARKLE: {
-                    if (++object->timer > 15) {
-                        object->timer = 0;
-                        object->type  = OBJECT_NONE;
-                    }
-                    break;
-                }
-
-                case OBJECT_SPRING: {
-                    Vector3D position = object->position - player1->position;
-                    position.y += player1->collisionPos.y;
-
-                    if (position.Magnitude() < 6.0f) {
-                        player->velocity.y = 4.0f;
-                        player->gravity    = GRAVITY_AIR;
-                    }
-                    break;
-                }
-            }
-        }
-    }
-
-    RingRotationY += 0.05f;
-    if (RingRotationY > RSDK_PI * 2)
-        RingRotationY -= RSDK_PI * 2;
 }
 
 void ProcessTime()
@@ -783,11 +454,11 @@ void PauseCheck()
         if (PauseV == true)
             PauseV = false;
         else if (PauseV == false)
-            PauseV == true;
+            PauseV = true;
     }
 }
 
-void SetSceneRenderState(sbyte id)
+void SetSceneRenderProperties(byte id)
 {
     switch (id) {
         case 0:

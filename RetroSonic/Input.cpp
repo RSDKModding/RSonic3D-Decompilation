@@ -1,6 +1,6 @@
 #include "RetroEngine.hpp"
 
-int InputEnabled = true;
+bool InputEnabled = true;
 InputData InputPress;
 
 #if RETRO_USE_ORIGINAL_CODE

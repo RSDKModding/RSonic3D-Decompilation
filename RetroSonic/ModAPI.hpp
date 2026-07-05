@@ -1,7 +1,7 @@
 #ifndef MOD_API_H
 #define MOD_API_H
 
-#if RETRO_USE_MOD_LOADER
+#if !RETRO_USE_ORIGINAL_CODE && RETRO_USE_MOD_LOADER
 #include <string>
 #include <vector>
 #include <map>

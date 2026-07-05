@@ -1,6 +1,6 @@
 #include "RetroEngine.hpp"
 
-Matrix3D MatrixSonicModel;
+Matrix3D MatrixObject;
 Matrix3D MatrixSonicNodeRotation[36];
 Matrix3D MatrixSonicNodeTransform[36];
 
@@ -21,70 +21,9 @@ int PlayerRotationTimerZ;
 byte PNumber;
 PlayerObject Player[2];
 
-void ProcessPlayerCamera()
-{
-    PlayerObject *player = &Player[PNumber];
-
-    if (MGameInput.Z == true) {
-        CameraTargetPosition.x -= player->position.x;
-        CameraTargetPosition.z -= player->position.z;
-
-        float x = CameraTargetPosition.x;
-        float z = CameraTargetPosition.z;
-
-        CameraTargetPosition.x = Cos(0.02f) * x;
-        CameraTargetPosition.z = -Sin(0.02f) * x;
-
-        CameraTargetPosition.x += Sin(0.02f) * z;
-        CameraTargetPosition.z += Cos(0.02f) * z;
-
-        CameraTargetPosition.x += player->position.x;
-        CameraTargetPosition.z += player->position.z;
-    }
-
-    if (MGameInput.X == true) {
-        CameraTargetPosition.x -= player->position.x;
-        CameraTargetPosition.z -= player->position.z;
-
-        float x = CameraTargetPosition.x;
-        float z = CameraTargetPosition.z;
-
-        CameraTargetPosition.x = Cos(-0.02f) * x;
-        CameraTargetPosition.z = -Sin(-0.02f) * x;
-
-        CameraTargetPosition.x += Sin(-0.02f) * z;
-        CameraTargetPosition.z += Cos(-0.02f) * z;
-
-        CameraTargetPosition.x += player->position.x;
-        CameraTargetPosition.z += player->position.z;
-    }
-
-    if (CameraTargetPosition.x == player->position.x) {
-        CameraRotateY = 0.0f;
-        if (CameraTargetPosition.z >= player->position.z)
-            CameraRotateY = RSDK_PI;
-    }
-    else {
-        if (CameraTargetPosition.x <= player->position.x)
-            CameraRotateY = ATan((CameraTargetPosition.z - player->position.z) / (CameraTargetPosition.x - player->position.x)) - (RSDK_PI * 0.5f);
-        else
-            CameraRotateY = ATan((CameraTargetPosition.z - player->position.z) / (CameraTargetPosition.x - player->position.x)) + (RSDK_PI * 0.5f);
-    }
-
-    if (Fabs((player->position.x - CameraTargetPosition.x) / Sin(CameraRotateY)) < 32.0f) {
-        CameraTargetPosition.x = player->position.x - Sin(CameraRotateY) * -32.0f;
-        CameraTargetPosition.z = Cos(CameraRotateY) * -32.0f + player->position.z;
-    }
-
-    if (Fabs((player->position.x - CameraTargetPosition.x) / Sin(CameraRotateY)) > 60.0f) {
-        CameraTargetPosition.x = player->position.x - Sin(CameraRotateY) * -60.0f;
-        CameraTargetPosition.z = Cos(CameraRotateY) * -60.0f + player->position.z;
-    }
-}
-
+#if RETRO_USE_ORIGINAL_CODE
 void LoadPlayerGfx(const char *textureName, sbyte characterID)
 {
-#if RETRO_USE_ORIGINAL_CODE
     char name[64];
     lstrcpy(name, "Data/Characters/");
     lstrcat(name, textureName);
@@ -96,62 +35,595 @@ void LoadPlayerGfx(const char *textureName, sbyte characterID)
 
     if (characterID == CHARACTER_SONIC_TAILS)
         DDLoadBitmap(name, 0);
+}
 #endif
+
+void ProcessPlayerInput()
+{
+    int pressed = 0;
+
+    PlayerObject *player  = &Player[PNumber];
+    PlayerObject *player1 = &Player[0];
+
+    player->up        = false;
+    player->jumpPress = false;
+
+    if (!player->disableControl) {
+        player->targetAngle = 0;
+
+        CheckInput(&MGameInput);
+
+        if (Debug) {
+            if (MGameInput.left == true) {
+                player1->position.x -= Cos(CameraRotateY);
+                CameraPosition.x -= Cos(CameraRotateY);
+
+                player1->position.z -= Sin(CameraRotateY);
+                CameraPosition.z -= Sin(CameraRotateY);
+            }
+
+            if (MGameInput.right == true) {
+                player1->position.x += Cos(CameraRotateY);
+                CameraPosition.x += Cos(CameraRotateY);
+
+                player1->position.z += Sin(CameraRotateY);
+                CameraPosition.z += Sin(CameraRotateY);
+            }
+
+            if (MGameInput.Z) {
+                if (MGameInput.up == true) {
+                    player1->position.y += 1.0f;
+                    CameraPosition.y += 1.2f;
+                }
+
+                if (MGameInput.down == true) {
+                    player1->position.y -= 1.0f;
+                    CameraPosition.y -= 1.2f;
+                }
+            }
+            else {
+                if (MGameInput.up == true) {
+                    player1->position.x -= Cos(CameraRotateY - RSDK_PI_H);
+                    CameraPosition.x -= Cos(CameraRotateY - RSDK_PI_H);
+
+                    player1->position.z -= Sin(CameraRotateY - RSDK_PI_H);
+                    CameraPosition.z -= Sin(CameraRotateY - RSDK_PI_H);
+                }
+
+                if (MGameInput.down == true) {
+                    player1->position.x += Cos(CameraRotateY - RSDK_PI_H);
+                    CameraPosition.x += Cos(CameraRotateY - RSDK_PI_H);
+
+                    player1->position.z += Sin(CameraRotateY - RSDK_PI_H);
+                    CameraPosition.z += Sin(CameraRotateY - RSDK_PI_H);
+                }
+            }
+
+            CheckKeyPress(&MGameInput, INPUT_START, INPUT_ONCE);
+
+            if (MGameInput.control == true)
+                CreateObject(OBJ_TYPE_SPRING, 0, player1->position.x, player1->position.y + 1.8f, player1->position.z);
+
+            if (MGameInput.X == true)
+                CreateObject(OBJ_TYPE_RING, 0, player1->position.x, player1->position.y + 4.0f, player1->position.z);
+        }
+        else {
+            if (MGameInput.left == true) {
+                player->targetAngle += 64;
+                if (player->angle > 192)
+                    player->angle -= 256;
+
+                ++pressed;
+            }
+
+            if (MGameInput.right == true) {
+                if (player->angle < 64)
+                    player->angle += 256;
+                player->targetAngle += 192;
+
+                ++pressed;
+            }
+
+            if (MGameInput.up == true) {
+                if (player->angle > 128)
+                    player->targetAngle += 256;
+
+                ++pressed;
+            }
+
+            if (MGameInput.down == true) {
+                player->targetAngle += 128;
+
+                ++pressed;
+            }
+
+            if (pressed > 0) {
+                player->up = true;
+                player->targetAngle /= pressed;
+            }
+
+            player->z = MGameInput.Z == true;
+            CheckKeyPress(&MGameInput, INPUT_START, INPUT_Z);
+        }
+
+        if (MGameInput.control == true)
+            player->jumpPress = true;
+
+        if (MGameInput.shift == true && DebugEn == true)
+            Debug ^= true;
+    }
+
+    CheckInput(&MGameInput);
 }
 
-void HandleSonicVertexPositions(int frameID)
+void ProcessPlayerCamera()
 {
-    AnimationNode *node = &SonicAni.nodes[frameID];
+    PlayerObject *player = &Player[PNumber];
 
-    Matrix3D *matrix = &MatrixSonicModel;
-    for (int i = 0; i < node->vertexCount; ++i) {
-        Vertex *vert = &SonicModel.vertices[node->vertexIDs[i]];
-        Vertex *base = &SonicBaseModel.vertices[node->vertexIDs[i]];
+    if (MGameInput.Z == true) {
+        CameraPosition.x -= player->position.x;
+        CameraPosition.z -= player->position.z;
 
-        vert->x = matrix->m[0][0] * base->x + matrix->m[1][0] * base->y + matrix->m[2][0] * base->z + matrix->m[3][0];
-        vert->y = matrix->m[0][1] * base->x + matrix->m[1][1] * base->y + matrix->m[2][1] * base->z + matrix->m[3][1];
-        vert->z = matrix->m[0][2] * base->x + matrix->m[1][2] * base->y + matrix->m[2][2] * base->z + matrix->m[3][2];
+        float x = CameraPosition.x;
+        float z = CameraPosition.z;
+
+        CameraPosition.x = Cos(0.02f) * x;
+        CameraPosition.z = -Sin(0.02f) * x;
+
+        CameraPosition.x += Sin(0.02f) * z;
+        CameraPosition.z += Cos(0.02f) * z;
+
+        CameraPosition.x += player->position.x;
+        CameraPosition.z += player->position.z;
+    }
+
+    if (MGameInput.X == true) {
+        CameraPosition.x -= player->position.x;
+        CameraPosition.z -= player->position.z;
+
+        float x = CameraPosition.x;
+        float z = CameraPosition.z;
+
+        CameraPosition.x = Cos(-0.02f) * x;
+        CameraPosition.z = -Sin(-0.02f) * x;
+
+        CameraPosition.x += Sin(-0.02f) * z;
+        CameraPosition.z += Cos(-0.02f) * z;
+
+        CameraPosition.x += player->position.x;
+        CameraPosition.z += player->position.z;
+    }
+
+    if (CameraPosition.x == player->position.x) {
+        CameraRotateY = 0.0f;
+        if (CameraPosition.z >= player->position.z)
+            CameraRotateY = RSDK_PI;
+    }
+    else {
+        if (CameraPosition.x <= player->position.x)
+            CameraRotateY = ATan((CameraPosition.z - player->position.z) / (CameraPosition.x - player->position.x)) - (RSDK_PI * 0.5f);
+        else
+            CameraRotateY = ATan((CameraPosition.z - player->position.z) / (CameraPosition.x - player->position.x)) + (RSDK_PI * 0.5f);
+    }
+
+    if (Fabs((player->position.x - CameraPosition.x) / Sin(CameraRotateY)) < 32.0f) {
+        CameraPosition.x = player->position.x - Sin(CameraRotateY) * -32.0f;
+        CameraPosition.z = Cos(CameraRotateY) * -32.0f + player->position.z;
+    }
+
+    if (Fabs((player->position.x - CameraPosition.x) / Sin(CameraRotateY)) > 60.0f) {
+        CameraPosition.x = player->position.x - Sin(CameraRotateY) * -60.0f;
+        CameraPosition.z = Cos(CameraRotateY) * -60.0f + player->position.z;
     }
 }
 
-void HandleSonicVertexNormals(int frameID)
+void ProcessPlayerMovement()
 {
-    AnimationNode *node = &SonicAni.nodes[frameID];
+    PlayerObject *player = &Player[PNumber];
 
-    Matrix3D *matrix = &MatrixSonicModel;
-    for (int i = 0; i < node->vertexCount; ++i) {
-        Vertex *vert = &SonicModel.vertices[node->vertexIDs[i]];
-        Vertex *base = &SonicBaseModel.vertices[node->vertexIDs[i]];
+    if (player->state == STATE_AIR && player->up == true) {
+        if (player->angle < player->targetAngle) {
+            player->angle += 6;
 
-        vert->nx = matrix->m[0][0] * base->nx + matrix->m[1][0] * base->ny + matrix->m[2][0] * base->nz + matrix->m[3][0];
-        vert->ny = matrix->m[0][1] * base->nx + matrix->m[1][1] * base->ny + matrix->m[2][1] * base->nz + matrix->m[3][1];
-        vert->nz = matrix->m[0][2] * base->nx + matrix->m[1][2] * base->ny + matrix->m[2][2] * base->nz + matrix->m[3][2];
+            if (player->speed > 0.0f)
+                player->speed -= 0.02f;
+
+            if (player->angle > player->targetAngle)
+                player->angle = player->targetAngle;
+        }
+
+        if (player->angle > player->targetAngle) {
+            player->angle -= 6;
+
+            if (player->speed > 0.0f)
+                player->speed -= 0.02;
+
+            if (player->angle < player->targetAngle)
+                player->angle = player->targetAngle;
+        }
+
+        if (player->speed < 2.4f)
+            player->speed += 0.012f;
+    }
+    else if (player->state == STATE_GROUND && player->up == true) {
+        if (player->angle < player->targetAngle) {
+            player->angle += 8;
+
+            if (player->speed > 0.0f)
+                player->speed -= 0.01f;
+
+            if (player->angle > player->targetAngle)
+                player->angle = player->targetAngle;
+        }
+
+        if (player->angle > player->targetAngle) {
+            player->angle -= 8;
+
+            if (player->speed > 0.0f)
+                player->speed -= 0.01f;
+
+            if (player->angle < player->targetAngle)
+                player->angle = player->targetAngle;
+        }
+
+        if (player->speed < 2.4f)
+            player->speed += 0.012f;
+    }
+    else {
+        if (player->speed > 0.0f)
+            player->speed -= 0.012f;
+
+        if (player->speed > -0.05f && player->speed < 0.0f)
+            player->speed = 0.0f;
+    }
+
+    if (player->state != STATE_STATIC) {
+        if (player->gravity == GRAVITY_AIR) {
+            player->state = STATE_AIR;
+
+            player->velocity.y -= 0.05f;
+            if (player->velocity.y > 4.0f) {
+                player->velocity.y = 4.0f;
+                ResetPlayerRotation();
+            }
+
+            SetPlayerAnimation(ANI_JUMPING, (player->speed * 0.4f) + 0.4f);
+        }
+        else {
+            PlayerObject *player1 = &Player[0];
+            if (player1->speed < 0.01f)
+                SetPlayerAnimation(ANI_STOPPED, 0.0f);
+            else
+                SetPlayerAnimation(ANI_WALKING, player->speed * 0.4f);
+
+            player->state = STATE_GROUND;
+            if (player->speed == 0.0f)
+                player->unused5 = 0;
+
+            if (player->jumpPress == true) {
+                player->gravity    = GRAVITY_AIR;
+                player->velocity.y = 2.0f;
+                player->state      = STATE_AIR;
+                ResetPlayerRotation();
+            }
+        }
+    }
+
+    player->velocity.x = -Sin(player->rotationY) * player->speed;
+    player->velocity.z = Cos(player->rotationY) * player->speed;
+
+    player->collisionPos = { 0.0f, -4.0f, 0.0f };
+    if (player->gravity == GRAVITY_AIR) {
+        if (player->velocity.y < 0.0f) {
+            if (ObjectFloorCollision(&player->position, { player->velocity.x, -player->velocity.y, player->velocity.z }) == true) {
+                player->velocity.y = 0.0f;
+                player->gravity    = GRAVITY_GROUND;
+                player->state      = STATE_GROUND;
+            }
+        }
+    }
+    else {
+        player->velocity.y = 0.0f;
+        HandlePlayerRotation(&player->velocity);
+
+        player->collisionPos = { 0.0f, -3.5f, 0.0f };
+        HandlePlayerRotation(&player->collisionPos);
+
+        player->position.x -= player->collisionPos.x * 0.75f;
+        player->position.y -= player->collisionPos.y * 0.75f;
+        player->position.z -= player->collisionPos.z * 0.75f;
+        switch (ObjectFloorCollision(&player->position, player->collisionPos)) {
+            case 1:
+            case 2:
+                player->gravity = GRAVITY_GROUND;
+                player->state   = STATE_GROUND;
+                break;
+
+            case 0:
+                player->position.x += player->collisionPos.x * 0.75f;
+                player->position.y += player->collisionPos.y * 0.75f;
+                player->position.z += player->collisionPos.z * 0.75f;
+                player->gravity = GRAVITY_AIR;
+                break;
+
+            default: break;
+        }
+    }
+
+    player->position += player->velocity;
+    ProcessPlayerCamera();
+
+    if (player->up == true)
+        player->rotationY = (player->angle * RSDK_PI / 128.0f) + CameraRotateY;
+
+    if (player->gravity == GRAVITY_AIR) {
+        if (CameraAirTimer < 30)
+            CameraAirTimer++;
+
+        if (CameraRotateX < player->velocity.y) {
+            CameraRotateX += 0.1f;
+            if (CameraRotateX > player->velocity.y)
+                CameraRotateX = player->velocity.y;
+        }
+
+        if (CameraRotateX > player->velocity.y) {
+            CameraRotateX -= 0.1f;
+            if (CameraRotateX < player->velocity.y)
+                CameraRotateX = player->velocity.y;
+        }
+    }
+    else {
+        if (CameraAirTimer > 0)
+            CameraAirTimer--;
+
+        if (CameraRotateX > 0.0f) {
+            CameraRotateX -= 0.1f;
+            if (CameraRotateX < 0.0f)
+                CameraRotateX = 0.0f;
+        }
+
+        if (CameraRotateX < 0.0f) {
+            CameraRotateX += 0.1f;
+            if (CameraRotateX > 0.0f)
+                CameraRotateX = 0.0f;
+        }
+    }
+
+    CameraPosition.y = player->position.y + 15.0f - (CameraAirTimer * 0.25f * CameraRotateX);
+}
+
+void ProcessDebugMode()
+{
+    // chillin
+}
+
+void ProcessPlayerAnimation()
+{
+    Animator *animator = &SonicAni;
+
+    ushort id = animator->animationID;
+    if (animator->animationID != animator->nextAnimation)
+        id = animator->nextAnimation;
+
+    animator->frameTimer += animator->states[id].frameDuration;
+    if (animator->frameTimer >= 240) {
+        animator->frameTimer -= 240;
+
+        if (++animator->frameID >= animator->states[animator->animationID].frameCount)
+            animator->frameID = animator->states[animator->animationID].loopIndex;
+
+        if (animator->animationID != animator->nextAnimation) {
+            animator->animationID = animator->nextAnimation;
+
+            animator->frameID = 0;
+        }
+
+        animator->nextFrame = animator->frameID + 1;
+        if (animator->nextFrame >= animator->states[animator->animationID].frameCount)
+            animator->nextFrame = animator->states[animator->animationID].loopIndex;
+    }
+
+    float timer = animator->frameTimer / 240.0f;
+    for (int i = 0; i < 36; ++i) {
+        AnimatorPart *node = &animator->nodes[i];
+
+        AnimatorState *state     = &animator->states[animator->animationID];
+        AnimatorState *stateNext = &animator->states[animator->nextAnimation];
+
+        memcpy(&MatrixSonicNodeRotation[i], &MatrixIdentity, sizeof(MatrixSonicNodeRotation[i]));
+
+        float ZPosingAnim = node->ZPosing[state->indices[animator->frameID]];
+        float ZPosingNext = node->ZPosing[stateNext->indices[animator->nextFrame]];
+        MatrixWorldRotateZ((1.0f - timer) * ZPosingAnim + (1.0f * timer) * ZPosingNext);
+        MatrixMultiply(&MatrixSonicNodeRotation[i], &MatrixWorld);
+
+        float YPosingAnim = node->YPosing[state->indices[animator->frameID]];
+        float YPosingNext = node->YPosing[stateNext->indices[animator->nextFrame]];
+        MatrixWorldRotateY((1.0f - timer) * YPosingAnim + (1.0f * timer) * YPosingNext);
+        MatrixMultiply(&MatrixSonicNodeRotation[i], &MatrixWorld);
+
+        float XPosingAnim = node->XPosing[state->indices[animator->frameID]];
+        float XPosingNext = node->XPosing[stateNext->indices[animator->nextFrame]];
+        MatrixWorldRotateX((1.0f - timer) * XPosingAnim + (1.0f * timer) * XPosingNext);
+        MatrixMultiply(&MatrixSonicNodeRotation[i], &MatrixWorld);
+
+        memcpy(&MatrixSonicNodeTransform[i], &MatrixIdentity, sizeof(MatrixSonicNodeTransform[i]));
+
+        MatrixWorldTranslateXYZ(-node->x, -node->y, -node->z);
+        MatrixMultiply(&MatrixSonicNodeTransform[i], &MatrixWorld);
+
+        MatrixMultiply(&MatrixSonicNodeTransform[i], &MatrixSonicNodeRotation[i]);
+
+        MatrixWorldTranslateXYZ(node->x, node->y, node->z);
+        MatrixMultiply(&MatrixSonicNodeTransform[i], &MatrixWorld);
+    }
+
+    bool parented = false;
+    for (int i = 0; i < animator->nodeCount; ++i) {
+        if (parented != false) {
+            if (animator->nodeIndices[i] == 0xFE || animator->nodeIndices[i] == 0xFF) {
+                parented = (animator->nodeIndices[i] == 0xFE);
+                continue;
+            }
+
+            memcpy(&MatrixObject, &MatrixIdentity, sizeof(MatrixObject));
+            for (int k = i; animator->nodeIndices[k] < 0xFE; ++k) {
+                MatrixMultiply(&MatrixObject, &MatrixSonicNodeTransform[animator->nodeIndices[k]]);
+            }
+            SetPlayerVertexPositions(animator->nodeIndices[i]);
+
+            memcpy(&MatrixObject, &MatrixIdentity, sizeof(MatrixObject));
+            for (int k = i; animator->nodeIndices[k] < 0xFE; ++k) {
+                MatrixMultiply(&MatrixObject, &MatrixSonicNodeRotation[animator->nodeIndices[k]]);
+            }
+            SetPlayerVertexNormals(animator->nodeIndices[i]);
+        }
+        else {
+            if (animator->nodeIndices[i] == 0xFE || animator->nodeIndices[i] == 0xFF) {
+                parented = (animator->nodeIndices[i] == 0xFE);
+                continue;
+            }
+
+            memcpy(&MatrixObject, &MatrixSonicNodeTransform[animator->nodeIndices[i]], sizeof(MatrixObject));
+            SetPlayerVertexPositions(animator->nodeIndices[i]);
+
+            memcpy(&MatrixObject, &MatrixSonicNodeRotation[animator->nodeIndices[i]], sizeof(MatrixObject));
+            SetPlayerVertexNormals(animator->nodeIndices[i]);
+        }
     }
 }
 
-void SetPlayerAnimationID(byte animation, float speed)
+void ProcessPlayerAnimationLMC()
 {
-    if (animation != SonicAni.field_BFAB) {
-        SonicAni.field_BFAB = animation;
-        SonicAni.field_BFB0 = 0;
-        SonicAni.field_BFAE = 0;
-        if (SonicAni.field_BFAA == ANI_JUMPING) {
-            SonicAni.field_BFAA = SonicAni.field_BFAB;
-            SonicAni.field_BFAC = 0;
+    Animator *animator = &SonicAni;
+
+    bool parented = false;
+    for (int i = 0; i < 36; ++i) {
+        for (int k = 0; k < 36; ++k) {
+            AnimatorPart *node = &animator->nodes[k];
+
+            memcpy(&MatrixSonicNodeRotation[k], &MatrixIdentity, sizeof(MatrixSonicNodeRotation[k]));
+
+            MatrixWorldRotateZ(node->ZPosing[i]);
+            MatrixMultiply(&MatrixSonicNodeRotation[k], &MatrixWorld);
+
+            MatrixWorldRotateY(node->YPosing[i]);
+            MatrixMultiply(&MatrixSonicNodeRotation[k], &MatrixWorld);
+
+            MatrixWorldRotateX(node->XPosing[i]);
+            MatrixMultiply(&MatrixSonicNodeRotation[k], &MatrixWorld);
+
+            memcpy(&MatrixSonicNodeTransform[k], &MatrixIdentity, sizeof(MatrixSonicNodeTransform[k]));
+
+            MatrixWorldTranslateXYZ(-node->x, -node->y, -node->z);
+            MatrixMultiply(&MatrixSonicNodeTransform[k], &MatrixWorld);
+
+            MatrixMultiply(&MatrixSonicNodeTransform[k], &MatrixSonicNodeRotation[k]);
+
+            MatrixWorldTranslateXYZ(node->x, node->y, node->z);
+            MatrixMultiply(&MatrixSonicNodeTransform[k], &MatrixWorld);
+        }
+
+        for (int k = 0; k < animator->nodeCount; ++k) {
+            if (parented != false) {
+                if (animator->nodeIndices[k] == 0xFE || animator->nodeIndices[k] == 0xFF) {
+                    parented = (animator->nodeIndices[k] == 0xFE);
+                    continue;
+                }
+
+                memcpy(&MatrixObject, &MatrixIdentity, sizeof(MatrixObject));
+                for (int m = k; animator->nodeIndices[m] < 0xFE; ++m) {
+                    MatrixMultiply(&MatrixObject, &MatrixSonicNodeTransform[animator->nodeIndices[m]]);
+                }
+                memcpy(&SonicNodeMatrixPositionStore[k][i], &MatrixObject, sizeof(SonicNodeMatrixPositionStore[k][i]));
+
+                memcpy(&MatrixObject, &MatrixIdentity, sizeof(MatrixObject));
+                for (int n = k; animator->nodeIndices[n] < 0xFE; ++n) {
+                    MatrixMultiply(&MatrixObject, &MatrixSonicNodeRotation[animator->nodeIndices[n]]);
+                }
+                memcpy(&SonicNodeMatrixNormalStore[k][i], &MatrixObject, sizeof(SonicNodeMatrixNormalStore[k][i]));
+            }
+            else {
+                if (animator->nodeIndices[k] == 0xFE || animator->nodeIndices[k] == 0xFF) {
+                    parented = (animator->nodeIndices[k] == 0xFE);
+                    continue;
+                }
+
+                memcpy(&MatrixObject, &MatrixSonicNodeTransform[animator->nodeIndices[k]], sizeof(MatrixObject));
+                SetPlayerVertexPositions(animator->nodeIndices[k]);
+
+                memcpy(&MatrixObject, &MatrixSonicNodeRotation[animator->nodeIndices[k]], sizeof(MatrixObject));
+                SetPlayerVertexNormals(animator->nodeIndices[k]);
+            }
+        }
+    }
+}
+
+void SetPlayerVertexPositions(int nodeID)
+{
+    Animator *animator = &SonicAni;
+    AnimatorPart *node = &animator->nodes[nodeID];
+
+    TMF *model     = &SonicModel;
+    TMF *baseModel = &SonicBaseModel;
+
+    Matrix3D *matrix = &MatrixObject;
+    for (int i = 0; i < node->numIndices; ++i) {
+        Vertex *vert     = &model->vertices[node->indices[i]];
+        Vertex *baseVert = &baseModel->vertices[node->indices[i]];
+
+        vert->x = matrix->m[0][0] * baseVert->x + matrix->m[1][0] * baseVert->y + matrix->m[2][0] * baseVert->z + matrix->m[3][0];
+        vert->y = matrix->m[0][1] * baseVert->x + matrix->m[1][1] * baseVert->y + matrix->m[2][1] * baseVert->z + matrix->m[3][1];
+        vert->z = matrix->m[0][2] * baseVert->x + matrix->m[1][2] * baseVert->y + matrix->m[2][2] * baseVert->z + matrix->m[3][2];
+    }
+}
+
+void SetPlayerVertexNormals(int nodeID)
+{
+    Animator *animator = &SonicAni;
+    AnimatorPart *node = &animator->nodes[nodeID];
+
+    TMF *model     = &SonicModel;
+    TMF *baseModel = &SonicBaseModel;
+
+    Matrix3D *matrix = &MatrixObject;
+    for (int i = 0; i < node->numIndices; ++i) {
+        Vertex *vert     = &model->vertices[node->indices[i]];
+        Vertex *baseVert = &baseModel->vertices[node->indices[i]];
+
+        vert->nx = matrix->m[0][0] * baseVert->nx + matrix->m[1][0] * baseVert->ny + matrix->m[2][0] * baseVert->nz + matrix->m[3][0];
+        vert->ny = matrix->m[0][1] * baseVert->nx + matrix->m[1][1] * baseVert->ny + matrix->m[2][1] * baseVert->nz + matrix->m[3][1];
+        vert->nz = matrix->m[0][2] * baseVert->nx + matrix->m[1][2] * baseVert->ny + matrix->m[2][2] * baseVert->nz + matrix->m[3][2];
+    }
+}
+
+void SetPlayerAnimation(byte animation, float speed)
+{
+    Animator *animator = &SonicAni;
+
+    if (animation != animator->nextAnimation) {
+        animator->nextAnimation = animation;
+
+        animator->frameTimer = 0;
+        animator->nextFrame  = 0;
+        if (animator->animationID == ANI_JUMPING) {
+            animator->animationID = animator->nextAnimation;
+            animator->frameID     = 0;
+
             PlayerJumpRotationX = 0.0f;
         }
     }
 
     switch (animation) {
         case ANI_WALKING: {
-            AnimationState *state = &SonicAni.states[ANI_WALKING];
+            AnimatorState *state = &animator->states[ANI_WALKING];
 
             state->frameDuration = (byte)(speed * 128.0f);
             break;
         }
 
         case ANI_JUMPING: {
-            AnimationState *state = &SonicAni.states[ANI_JUMPING];
+            AnimatorState *state = &animator->states[ANI_JUMPING];
 
             PlayerJumpRotationX = PlayerJumpRotationX - speed * 0.3f;
             if (PlayerJumpRotationX < 0.0f)
@@ -165,163 +637,112 @@ void SetPlayerAnimationID(byte animation, float speed)
     }
 }
 
-void ProcessPlayerAnimationLMC()
+void DrawModelSonic(float x, float y, float z, float ry)
 {
-    int v0; // edx
+    Animator *animator = &SonicAni;
 
-    bool v7 = false;
-    if (SonicAni.field_BFAA == SonicAni.field_BFAB)
-        v0 = SonicAni.field_BFAA;
-    else
-        v0 = SonicAni.field_BFAB;
+    TMF *model = &SonicModel;
+    TMF *ball  = &BallModel;
 
-    SonicAni.field_BFB0 += SonicAni.states[v0].frameDuration;
-    if (SonicAni.field_BFB0 >= 240) {
-        SonicAni.field_BFB0 -= 240;
+    SetRenderTexture(0, SonicTexture);
+    SetRenderState(RENDER_STATE_SPECULARENABLE, true);
+    memcpy(&MatrixObject, &MatrixIdentity, sizeof(MatrixObject));
 
-        if (++SonicAni.field_BFAC >= (int)SonicAni.states[SonicAni.field_BFAA].frameCount)
-            SonicAni.field_BFAC = SonicAni.states[SonicAni.field_BFAA].loopIndex;
+    if (animator->animationID == ANI_JUMPING) {
+        if (animator->frameID != 0) {
+            MatrixWorldRotateY(ry);
+            MatrixMultiply(&MatrixObject, &MatrixWorld);
 
-        if (SonicAni.field_BFAA != SonicAni.field_BFAB) {
-            SonicAni.field_BFAA = SonicAni.field_BFAB;
-            SonicAni.field_BFAC = 0;
-        }
+            MatrixWorldTranslateXYZ(x, y, z);
+            MatrixMultiply(&MatrixObject, &MatrixWorld);
 
-        SonicAni.field_BFAE = SonicAni.field_BFAC + 1;
-        if (SonicAni.field_BFAE >= (int)SonicAni.states[SonicAni.field_BFAA].frameCount)
-            SonicAni.field_BFAE = SonicAni.states[SonicAni.field_BFAA].loopIndex;
-    }
-
-    float F_BFB0 = (double)SonicAni.field_BFB0 / 240.0;
-    for (int i = 0; i < 36; ++i) {
-        AnimationNode *node = &SonicAni.nodes[i];
-
-        AnimationState *AB90_BFAA = &SonicAni.states[SonicAni.field_BFAA];
-        AnimationState *AB90_BFAB = &SonicAni.states[SonicAni.field_BFAB];
-
-        ushort BFAA_BFAC = AB90_BFAA->array_2[SonicAni.field_BFAC];
-        ushort BFAB_BFAE = AB90_BFAB->array_2[SonicAni.field_BFAE];
-
-        memcpy(&MatrixSonicNodeRotation[i], &MatrixIdentity, sizeof(Matrix3D));
-        WorldMatrixRotateZ((1.0 - F_BFB0) * node->rotX[BFAA_BFAC] + F_BFB0 * node->rotX[BFAB_BFAE]);
-        MatrixMultiply(&MatrixSonicNodeRotation[i], &MatrixWorld);
-
-        WorldMatrixRotateY((1.0 - F_BFB0) * node->rotY[BFAA_BFAC] + F_BFB0 * node->rotY[BFAB_BFAE]);
-        MatrixMultiply(&MatrixSonicNodeRotation[i], &MatrixWorld);
-
-        WorldMatrixRotateX((1.0 - F_BFB0) * node->rotZ[BFAA_BFAC] + F_BFB0 * node->rotZ[BFAB_BFAE]);
-        MatrixMultiply(&MatrixSonicNodeRotation[i], &MatrixWorld);
-
-        memcpy(&MatrixSonicNodeTransform[i], &MatrixIdentity, sizeof(Matrix3D));
-        WorldMatrixTranslateXYZ(-node->position.x, -node->position.y, -node->position.z);
-        MatrixMultiply(&MatrixSonicNodeTransform[i], &MatrixWorld);
-
-        MatrixMultiply(&MatrixSonicNodeTransform[i], &MatrixSonicNodeRotation[i]);
-        WorldMatrixTranslateXYZ(node->position.x, node->position.y, node->position.z);
-        MatrixMultiply(&MatrixSonicNodeTransform[i], &MatrixWorld);
-    }
-
-    for (int j = 0; j < SonicAni.frameIDCount; ++j) {
-        if (v7 != false) {
-            switch (SonicAni.frameIDs[j]) {
-                case 254: v7 = true; break;
-                case 255: v7 = false; break;
-
-                default:
-                    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
-                    for (int k = j; SonicAni.frameIDs[k] < 254; ++k) {
-                        MatrixMultiply(&MatrixSonicModel, &MatrixSonicNodeTransform[SonicAni.frameIDs[k]]);
-                    }
-                    HandleSonicVertexPositions(SonicAni.frameIDs[j]);
-
-                    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
-                    for (int l = j; SonicAni.frameIDs[l] < 254; ++l) {
-                        MatrixMultiply(&MatrixSonicModel, &MatrixSonicNodeRotation[SonicAni.frameIDs[l]]);
-                    }
-                    HandleSonicVertexNormals(SonicAni.frameIDs[j]);
-                    break;
-            }
+            SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixObject);
+            DrawFace(RENDER_FVF_VERTEX, ball->vertices, ball->numVertices, ball->indices, ball->numIndices);
         }
         else {
-            switch (SonicAni.frameIDs[j]) {
-                case 254: v7 = true; break;
-                case 255: v7 = false; break;
+            MatrixWorldTranslateXYZ(0.0f, -5.4f, 0.0f);
+            MatrixMultiply(&MatrixObject, &MatrixWorld);
 
-                default:
-                    memcpy(&MatrixSonicModel, &MatrixSonicNodeTransform[SonicAni.frameIDs[j]], sizeof(MatrixSonicModel));
-                    HandleSonicVertexPositions(SonicAni.frameIDs[j]);
+            MatrixWorldRotateZ(PlayerJumpRotationX);
+            MatrixMultiply(&MatrixObject, &MatrixWorld);
 
-                    memcpy(&MatrixSonicModel, &MatrixSonicNodeRotation[SonicAni.frameIDs[j]], sizeof(MatrixSonicModel));
-                    HandleSonicVertexNormals(SonicAni.frameIDs[j]);
-                    break;
-            }
+            MatrixWorldTranslateXYZ(0.0f, 3.8f, 0.0f);
+            MatrixMultiply(&MatrixObject, &MatrixWorld);
+
+            MatrixWorldRotateY(ry);
+            MatrixMultiply(&MatrixObject, &MatrixWorld);
+
+            MatrixWorldTranslateXYZ(x, y, z);
+            MatrixMultiply(&MatrixObject, &MatrixWorld);
+
+            SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixObject);
+            DrawFace(RENDER_FVF_VERTEX, model->vertices, model->numVertices, model->indices, model->numIndices);
+
+            RenderMaterial.diffuse.a = 0.25f;
+            SetRenderMaterial(&RenderMaterial);
+
+            memcpy(&MatrixObject, &MatrixIdentity, sizeof(MatrixObject));
+
+            MatrixWorldSetRotateY(ry);
+            MatrixMultiply(&MatrixObject, &MatrixWorld);
+
+            MatrixWorldTranslateXYZ(x, y, z);
+            MatrixMultiply(&MatrixObject, &MatrixWorld);
+
+            SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixObject);
+            DrawFace(RENDER_FVF_VERTEX, ball->vertices, ball->numVertices, ball->indices, ball->numIndices);
+
+            RenderMaterial.diffuse.a = 1.0f;
+            SetRenderMaterial(&RenderMaterial);
         }
     }
+    else {
+        // The fact that this uses an ry parameter instead
+        // of a global PlayerRotationY bothers me, and now
+        // it will bother you as well.
+        MatrixWorldRotateY(ry);
+        MatrixMultiply(&MatrixObject, &MatrixWorld);
+
+        MatrixWorldRotateZ(PlayerRotationZ);
+        MatrixMultiply(&MatrixObject, &MatrixWorld);
+
+        MatrixWorldRotateX(PlayerRotationX);
+        MatrixMultiply(&MatrixObject, &MatrixWorld);
+
+        MatrixWorldTranslateXYZ(x, y, z);
+        MatrixMultiply(&MatrixObject, &MatrixWorld);
+
+        SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixObject);
+        DrawFace(RENDER_FVF_VERTEX, model->vertices, model->numVertices, model->indices, model->numIndices);
+    }
+
+    SetRenderState(RENDER_STATE_SPECULARENABLE, false);
+    DrawModelShadow(x, y, z, -30.0f, 2.5f, 3.0f, ry);
 }
 
-void MightBeSonicAnim_406432()
+void HandlePlayerRotation(float *x, float *y, float *z)
 {
-    bool v6 = false;
-    for (int i = 0; i < 36; ++i) {
-        for (int j = 0; j < 36; ++j) {
-            AnimationNode *node = &SonicAni.nodes[j];
+    Matrix3D *matrix = &MatrixObject;
 
-            memcpy(&MatrixSonicNodeRotation[j], &MatrixIdentity, sizeof(Matrix3D));
-            WorldMatrixRotateZ(node->rotX[i]);
+    float sx = *x;
+    float sy = *y;
+    float sz = *z;
 
-            MatrixMultiply(&MatrixSonicNodeRotation[j], &MatrixWorld);
-            WorldMatrixRotateY(node->rotY[i]);
+    memcpy(&MatrixObject, &MatrixIdentity, sizeof(MatrixObject));
 
-            MatrixMultiply(&MatrixSonicNodeRotation[j], &MatrixWorld);
-            WorldMatrixRotateX(node->rotZ[i]);
+    MatrixWorldRotateZ(PlayerTargetRotationZ);
+    MatrixMultiply(&MatrixObject, &MatrixWorld);
 
-            MatrixMultiply(&MatrixSonicNodeRotation[j], &MatrixWorld);
-            memcpy(&MatrixSonicNodeTransform[j], &MatrixIdentity, sizeof(Matrix3D));
+    MatrixWorldRotateX(PlayerTargetRotationX);
+    MatrixMultiply(&MatrixObject, &MatrixWorld);
 
-            WorldMatrixTranslateXYZ(-node->position.x, -node->position.y, -node->position.z);
-            MatrixMultiply(&MatrixSonicNodeTransform[j], &MatrixWorld);
+    *x = matrix->m[0][0] * sx + matrix->m[1][0] * sy + matrix->m[2][0] * sz + matrix->m[3][0];
+    *y = matrix->m[0][1] * sx + matrix->m[1][1] * sy + matrix->m[2][1] * sz + matrix->m[3][1];
+    *z = matrix->m[0][2] * sx + matrix->m[1][2] * sy + matrix->m[2][2] * sz + matrix->m[3][2];
+}
 
-            MatrixMultiply(&MatrixSonicNodeTransform[j], &MatrixSonicNodeRotation[j]);
-
-            WorldMatrixTranslateXYZ(node->position.x, node->position.y, node->position.z);
-            MatrixMultiply(&MatrixSonicNodeTransform[j], &MatrixWorld);
-        }
-
-        for (int k = 0; k < SonicAni.frameIDCount; ++k) {
-            if (v6 != false) {
-                switch (SonicAni.frameIDs[k]) {
-                    case 254: v6 = true; break;
-                    case 255: v6 = false; break;
-
-                    default:
-                        memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
-                        for (int m = k; SonicAni.frameIDs[m] < 254; ++m) {
-                            MatrixMultiply(&MatrixSonicModel, &MatrixSonicNodeTransform[SonicAni.frameIDs[m]]);
-                        }
-                        memcpy(&SonicNodeMatricesUnknown1[k][i], &MatrixSonicModel, sizeof(SonicNodeMatricesUnknown1[k][i]));
-
-                        memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
-                        for (int n = k; SonicAni.frameIDs[n] < 254; ++n) {
-                            MatrixMultiply(&MatrixSonicModel, &MatrixSonicNodeRotation[SonicAni.frameIDs[n]]);
-                        }
-                        memcpy(&SonicNodeMatricesUnknown2[k][i], &MatrixSonicModel, sizeof(SonicNodeMatricesUnknown2[k][i]));
-                        break;
-                }
-            }
-            else {
-                switch (SonicAni.frameIDs[k]) {
-                    case 254: v6 = true; break;
-                    case 255: v6 = false; break;
-
-                    default:
-                        memcpy(&MatrixSonicModel, &MatrixSonicNodeTransform[SonicAni.frameIDs[k]], sizeof(MatrixSonicModel));
-                        HandleSonicVertexPositions(SonicAni.frameIDs[k]);
-
-                        memcpy(&MatrixSonicModel, &MatrixSonicNodeRotation[SonicAni.frameIDs[k]], sizeof(MatrixSonicModel));
-                        HandleSonicVertexNormals(SonicAni.frameIDs[k]);
-                        break;
-                }
-            }
-        }
-    }
+void ResetPlayerRotation()
+{
+    PlayerTargetRotationZ = 0.0f;
+    PlayerTargetRotationX = 0.0f;
 }

@@ -30,6 +30,13 @@
 extern int SCREEN_XSIZE;
 #endif
 
+enum WindowScalingMode {
+    SCALE_1X,
+    SCALE_2X,
+    SCALE_3X,
+    SCALE_4X,
+};
+
 enum RenderTransform {
     RENDER_TRANSFORM_WORLD,
     RENDER_TRANSFORM_VIEW,
@@ -187,17 +194,72 @@ struct Texture {
     void Release();
 };
 
+struct LMFMesh {
+    LVertex *vertices;
+    float *colors;
+    ushort numVertices;
+    ushort *indices;
+    ushort numIndices;
+};
+
+struct LMF {
+    byte layers;
+    byte numTextures;
+    byte textureIDs[10];
+    ushort columns;
+    ushort rows;
+    float x;
+    float z;
+    LMFMesh ***tiles;
+};
+
+struct TMF {
+    Vertex *vertices;
+    ushort numVertices;
+    ushort *indices;
+    ushort numIndices;
+};
+
+struct AnimatorPart {
+    ushort *indices;
+    ushort numIndices;
+    float x;
+    float y;
+    float z;
+    float ZPosing[0x64];
+    float YPosing[0x64];
+    float XPosing[0x64];
+};
+
+struct AnimatorState {
+    byte frameCount;
+    ushort indices[0x80];
+    byte loopIndex;
+    byte frameDuration;
+};
+
+struct Animator {
+    AnimatorPart nodes[36];
+    AnimatorState states[10];
+    byte *nodeIndices;
+    ushort nodeCount;
+    byte animationID;
+    byte nextAnimation;
+    ushort frameID;
+    ushort nextFrame;
+    ushort frameTimer;
+};
+
 extern Matrix3D MatrixInversed;
 extern Matrix3D MatrixWorld;
 extern Matrix3D MatrixView;
 extern Matrix3D MatrixProjection;
 extern Matrix3D MatrixIdentity;
 
-extern char WindowMode;
-
 extern int ResX;
 extern int ResY;
 extern byte ColourDepth;
+extern bool WindowMode;
 
 #if RETRO_USE_ORIGINAL_CODE
 extern IDirect3D7 *D3D;
@@ -247,15 +309,15 @@ void ClearScreen(Color color);
 void BeginScene();
 void EndScene();
 
-void SetRenderTexture(int id, Texture *pTexture);
-void SetRenderMaterial(Material *pMaterial);
-void SetRenderLight(int id, Light *pLight);
-void SetRenderTransform(RenderTransform type, Matrix3D *pMatrix);
+void SetRenderTexture(int id, Texture *texture);
+void SetRenderMaterial(Material *material);
+void SetRenderLight(int id, Light *light);
+void SetRenderTransform(RenderTransform type, Matrix3D *matrix);
 void SetRenderState(RenderState type, int value);
 void SetRenderTextureStageState(int stage, TextureStageState type, int value);
 void EnableLight(int id, bool enabled);
 
-void DrawIndexedPrimitive(RenderFVF type, void *pVertices, int numVertices, void *pIndices, int numIndices);
+void DrawFace(RenderFVF type, void *vertices, int numVertices, void *indices, int numIndices);
 void SetFade(float r, float g, float b, float a);
 
 void ReleaseCharacterUITexture(byte id);

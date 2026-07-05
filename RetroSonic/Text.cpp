@@ -77,11 +77,11 @@ void DrawMenuText(const char *text, int length, int xpos, int ypos, byte sprite)
 
     BeginScene();
     SetRenderTexture(0, FontTexture);
-    DrawIndexedPrimitive(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
+    DrawFace(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
     EndScene();
 }
 
-void DrawText_2(const char *text, int length, int xpos, int ypos)
+void DrawMenuTextFaded(const char *text, int length, int xpos, int ypos)
 {
     LVertex vertices[20][4];
     ushort indices[20][6];
@@ -135,11 +135,11 @@ void DrawText_2(const char *text, int length, int xpos, int ypos)
 
     BeginScene();
     SetRenderTexture(0, FontTexture);
-    DrawIndexedPrimitive(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
+    DrawFace(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
     EndScene();
 }
 
-void DrawText_3(const char *text, int length, int xpos, int ypos, byte sprite, byte alphaStrengthT, byte alphaStrengthB)
+void DrawMenuTextClipped(const char *text, int length, int xpos, int ypos, byte sprite, byte alphaStrengthT, byte alphaStrengthB)
 {
     LVertex vertices[20][4];
     ushort indices[20][6];
@@ -213,6 +213,6 @@ void DrawText_3(const char *text, int length, int xpos, int ypos, byte sprite, b
 
     BeginScene();
     SetRenderTexture(0, FontTexture);
-    DrawIndexedPrimitive(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
+    DrawFace(RENDER_FVF_LVERTEX, &vertices, 4 * length, &indices, 6 * length);
     EndScene();
 }

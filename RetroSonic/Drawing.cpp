@@ -10,11 +10,10 @@ Matrix3D MatrixView;
 Matrix3D MatrixProjection;
 Matrix3D MatrixIdentity;
 
-char WindowMode = true;
-
 int ResX = 1024;
 int ResY = 768;
 byte ColourDepth;
+bool WindowMode = true;
 
 #if RETRO_USE_ORIGINAL_CODE
 IDirect3D7 *D3D;
@@ -308,19 +307,19 @@ bool InitScreen()
     Light light = {};
     light.type  = LIGHT_DIRECTIONAL;
 
-    light.direction = { 0.0f, -0.9f, 0.1f };
-    light.diffuse   = { 0.8f, 0.8f, 0.8f, 0.0f };
-    light.ambient   = { 0.450f, 0.450f, 0.450f, 0.0f };
-    light.specular  = { 1.0f, 1.0f, 1.0f, 0.0f };
+    light.direction = { 0.00f, -0.90f, 0.10f /* */ };
+    light.diffuse   = { 0.80f, +0.80f, 0.80f, 0.0f };
+    light.ambient   = { 0.45f, +0.45f, 0.45f, 0.0f };
+    light.specular  = { 1.00f, +1.00f, 1.00f, 0.0f };
 
     SetRenderLight(0, &light);
     EnableLight(0, true);
 
-    ObjectMaterial.ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
-    ObjectMaterial.diffuse = ObjectMaterial.ambient;
+    RenderMaterial.ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
+    RenderMaterial.diffuse = RenderMaterial.ambient;
 
-    ObjectMaterial.specular = { 0.25f, 0.25f, 1.0f, 0.25f };
-    ObjectMaterial.power    = 80.0f;
+    RenderMaterial.specular = { 0.25f, 0.25f, 1.0f, 0.25f };
+    RenderMaterial.power    = 80.0f;
 
     SetRenderTransform(RENDER_TRANSFORM_PROJECTION, &MatrixProjection);
     SetRenderState(RENDER_STATE_DITHERENABLE, true);
@@ -444,33 +443,18 @@ void ToggleScreenMode()
 #if RETRO_USE_ORIGINAL_CODE
         ShowWindow(HWnd, SW_HIDE);
         SetWindowLongA(HWnd, GWL_STYLE, WS_POPUP);
-
         HMenu = GetMenu(HWnd);
         SetMenu(HWnd, NULL);
         ShowCursor(false);
-#elif RETRO_USE_SDL3 || RETRO_USE_SDL2
+#elif RETRO_USE_SDL3
         SDL_SetWindowFullscreen(Window, true);
-
-#if RETRO_USE_SDL3
         SDL_HideCursor();
-#else
+#elif RETRO_USE_SDL2
+        SDL_SetWindowFullscreen(Window, SDL_WINDOW_FULLSCREEN_DESKTOP);
         SDL_ShowCursor(SDL_DISABLE);
-#endif
-
-        int w = 0;
-        int h = 0;
-        SDL_GetWindowSizeInPixels(Window, &w, &h);
-        glViewport(0, 0, w, h);
 #elif RETRO_USE_SDL1
         Window = SDL_SetVideoMode(ResX, ResY, 32, SDL_OPENGL | SDL_FULLSCREEN);
         SDL_ShowCursor(SDL_DISABLE);
-        glViewport(0, 0, ResX, ResY);
-
-        // Textures need to be reloaded
-        InitScreen();
-        LoadObjectAssets();
-        LoadLevelAssets();
-        LoadFontAssets();
 #endif
     }
     else if (WindowMode == false) {
@@ -478,32 +462,17 @@ void ToggleScreenMode()
 #if RETRO_USE_ORIGINAL_CODE
         ShowWindow(HWnd, SW_HIDE);
         SetWindowLongA(HWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW);
-
         SetMenu(HWnd, HMenu);
         ShowCursor(true);
-#elif RETRO_USE_SDL3 || RETRO_USE_SDL2
+#elif RETRO_USE_SDL3
         SDL_SetWindowFullscreen(Window, false);
-
-#if RETRO_USE_SDL3
         SDL_ShowCursor();
-#else
+#elif RETRO_USE_SDL2
+        SDL_SetWindowFullscreen(Window, 0);
         SDL_ShowCursor(SDL_ENABLE);
-#endif
-
-        int w = ResX;
-        int h = ResY;
-        glViewport(0, 0, w, h);
 #elif RETRO_USE_SDL1
         Window = SDL_SetVideoMode(ResX, ResY, 32, SDL_OPENGL);
         SDL_ShowCursor(SDL_ENABLE);
-
-        glViewport(0, 0, ResX, ResY);
-
-        // Textures need to be reloaded
-        InitScreen();
-        LoadObjectAssets();
-        LoadLevelAssets();
-        LoadFontAssets();
 #endif
     }
 
@@ -521,6 +490,14 @@ void ToggleScreenMode()
     }
 
     InitDirect3D();
+#elif RETRO_USE_SDL1
+    glViewport(0, 0, ResX, ResY);
+
+    // Textures need to be reloaded
+    InitScreen();
+    LoadObjectAssets();
+    LoadLevelAssets();
+    LoadFontAssets();
 #endif
 }
 
@@ -553,14 +530,14 @@ void EndScene()
 #endif
 }
 
-void SetRenderTexture(int id, Texture *pTexture)
+void SetRenderTexture(int id, Texture *texture)
 {
 #if RETRO_USE_ORIGINAL_CODE
-    D3DDevice->SetTexture(id, (IDirectDrawSurface7 *)(pTexture));
+    D3DDevice->SetTexture(id, (IDirectDrawSurface7 *)(texture));
 #else
-    if (pTexture != NULL && pTexture->id) {
+    if (texture != NULL && texture->id) {
         glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, pTexture->id);
+        glBindTexture(GL_TEXTURE_2D, texture->id);
     }
     else {
         glDisable(GL_TEXTURE_2D);
@@ -569,31 +546,31 @@ void SetRenderTexture(int id, Texture *pTexture)
 #endif
 }
 
-void SetRenderMaterial(Material *pMaterial)
+void SetRenderMaterial(Material *material)
 {
 #if RETRO_USE_ORIGINAL_CODE
-    D3DDevice->SetMaterial((D3DMATERIAL7 *)(pMaterial));
+    D3DDevice->SetMaterial((D3DMATERIAL7 *)(material));
 #else
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (const GLfloat *)(&pMaterial->ambient));
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, (const GLfloat *)(&pMaterial->diffuse));
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (const GLfloat *)(&pMaterial->specular));
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, pMaterial->power);
-    glColor4f(pMaterial->diffuse.r, pMaterial->diffuse.g, pMaterial->diffuse.b, pMaterial->diffuse.a);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (const GLfloat *)(&material->ambient));
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, (const GLfloat *)(&material->diffuse));
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (const GLfloat *)(&material->specular));
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, material->power);
+    glColor4f(material->diffuse.r, material->diffuse.g, material->diffuse.b, material->diffuse.a);
 #endif
 }
 
-void SetRenderLight(int id, Light *pLight)
+void SetRenderLight(int id, Light *light)
 {
 #if RETRO_USE_ORIGINAL_CODE
-    D3DDevice->SetLight(id, (D3DLIGHT7 *)(pLight));
+    D3DDevice->SetLight(id, (D3DLIGHT7 *)(light));
 #else
-    glLightfv(GL_LIGHT0 + id, GL_AMBIENT, (const GLfloat *)(&pLight->ambient));
-    glLightfv(GL_LIGHT0 + id, GL_DIFFUSE, (const GLfloat *)(&pLight->diffuse));
-    glLightfv(GL_LIGHT0 + id, GL_SPECULAR, (const GLfloat *)(&pLight->specular));
+    glLightfv(GL_LIGHT0 + id, GL_AMBIENT, (const GLfloat *)(&light->ambient));
+    glLightfv(GL_LIGHT0 + id, GL_DIFFUSE, (const GLfloat *)(&light->diffuse));
+    glLightfv(GL_LIGHT0 + id, GL_SPECULAR, (const GLfloat *)(&light->specular));
 
-    switch (pLight->type) {
+    switch (light->type) {
         case LIGHT_DIRECTIONAL: {
-            GLfloat position[] = { -pLight->direction.x, -pLight->direction.y, -pLight->direction.z, 0.0f };
+            GLfloat position[] = { -light->direction.x, -light->direction.y, -light->direction.z, 0.0f };
             glLightfv(GL_LIGHT0 + id, GL_POSITION, position);
             break;
         }
@@ -603,7 +580,7 @@ void SetRenderLight(int id, Light *pLight)
 #endif
 }
 
-void SetRenderTransform(RenderTransform type, Matrix3D *pMatrix)
+void SetRenderTransform(RenderTransform type, Matrix3D *matrix)
 {
 #if !RETRO_USE_ORIGINAL_CODE
     static Matrix3D ViewTemp  = Matrix3D::Identity;
@@ -613,10 +590,10 @@ void SetRenderTransform(RenderTransform type, Matrix3D *pMatrix)
     switch (type) {
         case RENDER_TRANSFORM_WORLD:
 #if RETRO_USE_ORIGINAL_CODE
-            D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, (D3DMATRIX *)(pMatrix));
+            D3DDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, (D3DMATRIX *)(matrix));
 #else
             glMatrixMode(GL_MODELVIEW);
-            memcpy(&WorldTemp, pMatrix, sizeof(WorldTemp));
+            memcpy(&WorldTemp, matrix, sizeof(WorldTemp));
 
             glLoadMatrixf(&ViewTemp.m[0][0]);
             glMultMatrixf(&WorldTemp.m[0][0]);
@@ -625,10 +602,10 @@ void SetRenderTransform(RenderTransform type, Matrix3D *pMatrix)
 
         case RENDER_TRANSFORM_VIEW:
 #if RETRO_USE_ORIGINAL_CODE
-            D3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, (D3DMATRIX *)(pMatrix));
+            D3DDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, (D3DMATRIX *)(matrix));
 #else
             glMatrixMode(GL_MODELVIEW);
-            memcpy(&ViewTemp, pMatrix, sizeof(ViewTemp));
+            memcpy(&ViewTemp, matrix, sizeof(ViewTemp));
 
             glLoadMatrixf(&ViewTemp.m[0][0]);
             glMultMatrixf(&WorldTemp.m[0][0]);
@@ -637,10 +614,10 @@ void SetRenderTransform(RenderTransform type, Matrix3D *pMatrix)
 
         case RENDER_TRANSFORM_PROJECTION:
 #if RETRO_USE_ORIGINAL_CODE
-            D3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, (D3DMATRIX *)(pMatrix));
+            D3DDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, (D3DMATRIX *)(matrix));
 #else
             glMatrixMode(GL_PROJECTION);
-            glLoadMatrixf(&pMatrix->m[0][0]);
+            glLoadMatrixf(&matrix->m[0][0]);
 #endif
             break;
 
@@ -686,7 +663,7 @@ void SetRenderState(RenderState type, int value)
             D3DDevice->SetRenderState(D3DRENDERSTATE_ALPHAFUNC, value);
 #else
             GLAlphaFunc = GL_NEVER + (GLenum)(value - 1);
-            glAlphaFunc((GLenum)GLAlphaFunc, GLAlphaRef);
+            glAlphaFunc(GLAlphaFunc, GLAlphaRef);
 #endif
             break;
 
@@ -901,13 +878,13 @@ void EnableLight(int id, bool enabled)
 #endif
 }
 
-void DrawIndexedPrimitive(RenderFVF type, void *pVertices, int numVertices, void *pIndices, int numIndices)
+void DrawFace(RenderFVF type, void *vertices, int numVertices, void *indices, int numIndices)
 {
 #if RETRO_USE_ORIGINAL_CODE
     int fvf = type ? D3DFVF_LVERTEX : D3DFVF_VERTEX;
-    D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, fvf, pVertices, numVertices, (ushort *)(pIndices), numIndices, 0);
+    D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, fvf, vertices, numVertices, (ushort *)(indices), numIndices, 0);
 #else
-    if (!pVertices || !pIndices || numVertices <= 0 || numIndices <= 0)
+    if (!vertices || !indices || numVertices <= 0 || numIndices <= 0)
         return;
 
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -917,7 +894,7 @@ void DrawIndexedPrimitive(RenderFVF type, void *pVertices, int numVertices, void
 
     switch (type) {
         case RENDER_FVF_VERTEX: {
-            Vertex *vertex = (Vertex *)(pVertices);
+            Vertex *vertex = (Vertex *)(vertices);
 
             glDisableClientState(GL_COLOR_ARRAY);
             glEnableClientState(GL_NORMAL_ARRAY);
@@ -929,7 +906,7 @@ void DrawIndexedPrimitive(RenderFVF type, void *pVertices, int numVertices, void
         }
 
         case RENDER_FVF_LVERTEX: {
-            LVertex *vertex = (LVertex *)(pVertices);
+            LVertex *vertex = (LVertex *)(vertices);
 
             glDisable(GL_LIGHTING);
 
@@ -945,7 +922,7 @@ void DrawIndexedPrimitive(RenderFVF type, void *pVertices, int numVertices, void
         default: break;
     }
 
-    glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_SHORT, pIndices);
+    glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_SHORT, indices);
 
     if (type == RENDER_FVF_LVERTEX && lightEnabled)
         glEnable(GL_LIGHTING);
@@ -968,7 +945,7 @@ void SetFade(float r, float g, float b, float a)
 
     BeginScene();
     SetRenderTexture(0, NULL);
-    DrawIndexedPrimitive(RENDER_FVF_LVERTEX, vertices, 4, indices, 6);
+    DrawFace(RENDER_FVF_LVERTEX, vertices, 4, indices, 6);
     EndScene();
 }
 

@@ -55,13 +55,19 @@ void ResetTitleScreen()
 
 void ProcessTitleScreen()
 {
+    InputData *input = &TitleInput;
+    TextMenu *menu   = &TitleMenu;
+
     switch (TitleScreenMode) {
-        case 0:
-            ++TtlTime;
+        case TITLE_TAXMAN_PRESENTS:
             CodeCheck();
             ClearScreen(0x000000);
 
-            if (TtlTime == 240) {
+            // Taxman presents!
+            // Unfortunately no graphics are drawn here, but Retro-Sonic'd have this:
+            // DrawSpriteNoKey(0, 0, 320, 240, 0, 0, 0);
+
+            if (++TtlTime == 240) {
                 TtlTime = 0;
                 ++TitleScreenMode;
 
@@ -97,64 +103,67 @@ void ProcessTitleScreen()
                 TxtStyle = 0;
 
                 if (DebugEnabled == true) {
-                    TextMeDo("NEW GAME", &TitleMenu, 4, 0, 8);
-                    SetGameText("CONTINUE GAME", &TitleMenu, 1, 13);
-                    SetGameText("DEBUG OPTIONS", &TitleMenu, 2, 13);
-                    SetGameText("EXIT GAME", &TitleMenu, 3, 9);
+                    TextMeDo("NEW GAME", menu, 4, 0, 8);
+                    SetGameText("CONTINUE GAME", menu, 1, 13);
+                    SetGameText("DEBUG OPTIONS", menu, 2, 13);
+                    SetGameText("EXIT GAME", menu, 3, 9);
                 }
                 else {
-                    TextMeDo("STANDING", &TitleMenu, 3, 0, 8);
-                    SetGameText("WAITING", &TitleMenu, 1, 7);
-                    SetGameText("WALKING", &TitleMenu, 2, 7);
+                    // In Retro-Sonic, this would show the same menu as above, with
+                    // CUSTOM LEVELS instead of DEBUG OPTIONS. Seems like this path
+                    // here is used as a player animation test instead
+                    TextMeDo("STANDING", menu, 3, 0, 8);
+                    SetGameText("WAITING", menu, 1, 7);
+                    SetGameText("WALKING", menu, 2, 7);
                 }
 
-                TitleMenu.alignment      = MENU_ALIGN_CENTER;
-                TitleMenu.selectionCount = 1;
-                TitleMenu.selection1     = 0;
+                menu->alignment      = MENU_ALIGN_CENTER;
+                menu->selectionCount = 1;
+                menu->selection1     = 0;
                 SetFade(1.0f, 1.0f, 1.0f, 0.9f);
             }
             else {
-                SetSceneRenderState(0);
+                SetSceneRenderProperties(0);
 
                 if (TtlTime < 61)
-                    SetFade(0.0f, 0.0f, 0.0f, 1.0f - (double)TtlTime * 0.0166f);
+                    SetFade(0.0f, 0.0f, 0.0f, 1.0f - (TtlTime * 0.0166f));
 
                 if (TtlTime > 179)
-                    SetFade(1.0f, 1.0f, 1.0f, (double)(TtlTime - 180) * 0.0166f);
+                    SetFade(1.0f, 1.0f, 1.0f, (TtlTime - 180) * 0.0166f);
             }
             break;
 
-        case 1:
-            ++TtlTime;
+        case TITLE_LOGO_SCALE:
+            TtlTime++;
 
             TitleScrMovement();
-            SetSceneRenderState(1);
+            SetSceneRenderProperties(1);
 
             DrawTitleScr();
-            SetSceneRenderState(0);
+            SetSceneRenderProperties(0);
 
             if (TtlTime < 61)
-                SetFade(1.0f, 1.0f, 1.0f, 1.0f - (double)TtlTime * 0.0166f);
+                SetFade(1.0f, 1.0f, 1.0f, 1.0f - (TtlTime * 0.0166f));
 
             if (TtlTime == 180) {
                 TtlTime = 0;
-                ++TitleScreenMode;
+                TitleScreenMode++;
             }
             break;
 
-        case 2:
+        case TITLE_MAIN:
             TitleScrMovement();
 
-            SetSceneRenderState(1);
+            SetSceneRenderProperties(1);
             DrawTitleScr();
-            SetSceneRenderState(0);
+            SetSceneRenderProperties(0);
 
-            CheckInput(&TitleInput);
+            CheckInput(input);
 
-            if (TitleInput.left == true)
+            if (input->left == true)
                 SAnimationSpeed -= 0.02f;
 
-            if (TitleInput.right == true)
+            if (input->right == true)
                 SAnimationSpeed += 0.02f;
 
             if (SAnimationSpeed < 0.0f)
@@ -163,63 +172,63 @@ void ProcessTitleScreen()
             if (2 * RSDK_PI < SAnimationSpeed)
                 SAnimationSpeed = 0.0f;
 
-            SetPlayerAnimationID(TitleMenu.selection1 + 2, SAnimationSpeed);
+            SetPlayerAnimation(menu->selection1 + 2, SAnimationSpeed);
+            CheckKeyPress(input, INPUT_LEFT, INPUT_LCONTROL);
 
-            CheckKeyPress(&TitleInput, INPUT_LEFT, INPUT_LCONTROL);
+            if (input->down == true && menu->selection1 < menu->rowCount - 1)
+                menu->selection1++;
 
-            if (TitleInput.down == true && TitleMenu.selection1 < TitleMenu.rowCount - 1)
-                TitleMenu.selection1++;
+            if (input->up == true && menu->selection1 > 0)
+                menu->selection1--;
 
-            if (TitleInput.up == true && TitleMenu.selection1 > 0)
-                TitleMenu.selection1--;
-
-            if (TitleInput.start == true) {
-                switch (TitleMenu.selection1) {
-                    case 0:
-                        LoadCharacterMenu(&TitleMenu);
-                        TitleScreenMode = 3;
+            if (input->start == true) {
+                switch (menu->selection1) {
+                    case OPTION_NEW_GAME:
+                        LoadCharacterMenu(menu);
+                        TitleScreenMode = TITLE_CHARACTER_MENU;
                         break;
 
-                    case 1: TitleScreenMode = 5; break;
+                    case OPTION_CONTINUE_GAME: TitleScreenMode = TITLE_SAVE_MENU; break;
 
-                    case 2:
-                        LoadCharacterMenu(&TitleMenu);
-                        TitleScreenMode = 3;
+                    // Just a bit incorrect, eh
+                    case OPTION_DEBUG_OPTIONS:
+                        LoadCharacterMenu(menu);
+                        TitleScreenMode = TITLE_CHARACTER_MENU;
                         break;
 
-                    case 3:
+                    case OPTION_EXIT_GAME:
                         if (DebugEnabled == true) {
-                            TextMeDo("DEBUG MENU", &TitleMenu, 12, 0, 10);
-                            SetGameText(" ", &TitleMenu, 1, 1);
-                            SetGameText(" ", &TitleMenu, 2, 1);
+                            TextMeDo("DEBUG MENU", menu, 12, 0, 10);
+                            SetGameText(" ", menu, 1, 1);
+                            SetGameText(" ", menu, 2, 1);
 
                             if (AllStages)
-                                SetGameText("ALL ZONES eONe ", &TitleMenu, 3, 15);
+                                SetGameText("ALL ZONES eONe ", menu, 3, 15);
                             else
-                                SetGameText("ALL ZONES eOFFe", &TitleMenu, 3, 15);
+                                SetGameText("ALL ZONES eOFFe", menu, 3, 15);
 
-                            SetGameText(" ", &TitleMenu, 4, 1);
+                            SetGameText(" ", menu, 4, 1);
 
                             if (DebugMode)
-                                SetGameText("DEBUG MODE eONe ", &TitleMenu, 5, 16);
+                                SetGameText("DEBUG MODE eONe ", menu, 5, 16);
                             else
-                                SetGameText("DEBUG MODE eOFFe", &TitleMenu, 5, 16);
+                                SetGameText("DEBUG MODE eOFFe", menu, 5, 16);
 
-                            SetGameText(" ", &TitleMenu, 6, 1);
-                            SetGameText("PLAY SPECIAL STAGE e00e", &TitleMenu, 7, 23);
+                            SetGameText(" ", menu, 6, 1);
+                            SetGameText("PLAY SPECIAL STAGE e00e", menu, 7, 23);
 
-                            SetGameText(" ", &TitleMenu, 8, 1);
-                            SetGameText("SOUND TEST e00e", &TitleMenu, 9, 15);
+                            SetGameText(" ", menu, 8, 1);
+                            SetGameText("SOUND TEST e00e", menu, 9, 15);
 
-                            SetGameText(" ", &TitleMenu, 10, 1);
-                            SetGameText("eEXITe", &TitleMenu, 11, 6);
+                            SetGameText(" ", menu, 10, 1);
+                            SetGameText("eEXITe", menu, 11, 6);
 
-                            TitleMenu.alignment      = MENU_ALIGN_CENTER;
-                            TitleMenu.selectionCount = 2;
-                            TitleMenu.selection1     = 0;
-                            TitleMenu.selection2     = 3;
+                            menu->alignment      = MENU_ALIGN_CENTER;
+                            menu->selectionCount = 2;
+                            menu->selection1     = 0;
+                            menu->selection2     = 3;
 
-                            TitleScreenMode = 6;
+                            TitleScreenMode = TITLE_DEBUG_MENU;
                         }
                         break;
 
@@ -230,137 +239,142 @@ void ProcessTitleScreen()
             DrawGameMenu(TitleMenu, 160, 184);
             break;
 
-        case 3:
+        case TITLE_CHARACTER_MENU:
             ClearScreen(0x000000);
-            SetSceneRenderState(1);
-            SetSceneRenderState(0);
+            SetSceneRenderProperties(1);
+            SetSceneRenderProperties(0);
 
-            CheckKeyPress(&TitleInput, INPUT_UP, INPUT_LCONTROL);
+            CheckKeyPress(input, INPUT_UP, INPUT_LCONTROL);
 
-            if (TitleInput.down == true && TitleMenu.selection1 < TitleMenu.rowCount - 1)
-                TitleMenu.selection1++;
+            if (input->down == true && menu->selection1 < menu->rowCount - 1)
+                menu->selection1++;
 
-            if (TitleInput.up == true && TitleMenu.selection1 > 0)
-                TitleMenu.selection1--;
+            if (input->up == true && menu->selection1 > 0)
+                menu->selection1--;
 
-            if (TitleInput.start == true) {
-                LoadZoneMenu(&TitleMenu);
-                TitleScreenMode = 4;
+            if (input->start == true) {
+                LoadZoneMenu(menu);
+                TitleScreenMode = TITLE_ZONE_MENU;
             }
 
             DrawGameMenu(TitleMenu, 150, 48);
             break;
 
-        case 4:
+        case TITLE_ZONE_MENU:
             ClearScreen(0x000000);
-            SetSceneRenderState(1);
-            SetSceneRenderState(0);
+            SetSceneRenderProperties(1);
+            SetSceneRenderProperties(0);
 
-            CheckKeyPress(&TitleInput, INPUT_UP, INPUT_LCONTROL);
+            CheckKeyPress(input, INPUT_UP, INPUT_LCONTROL);
 
-            if (TitleInput.down == true && TitleMenu.selection1 < TitleMenu.rowCount - 1)
-                ++TitleMenu.selection1;
+            if (input->down == true && menu->selection1 < menu->rowCount - 1)
+                menu->selection1++;
 
-            if (TitleInput.up == true && TitleMenu.selection1 > 0)
-                --TitleMenu.selection1;
+            if (input->up == true && menu->selection1 > 0)
+                menu->selection1--;
 
-            if (TitleInput.start == true) {
-                TitleScreenMode = 4;
+            if (input->start == true) {
+                TitleScreenMode = TITLE_ZONE_MENU;
                 SetGameMode(GAMEMODE_MAINGAME);
             }
 
             DrawMenuBackground();
             break;
 
-        case 6:
+        case TITLE_DEBUG_MENU:
             ClearScreen(0x000000);
-            SetSceneRenderState(1);
-            SetSceneRenderState(0);
+            SetSceneRenderProperties(1);
+            SetSceneRenderProperties(0);
 
-            CheckKeyPress(&TitleInput, INPUT_LEFT, INPUT_LSHIFT);
+            CheckKeyPress(input, INPUT_LEFT, INPUT_LSHIFT);
 
-            if (TitleInput.down == true && TitleMenu.selection2 < TitleMenu.rowCount - 1)
-                TitleMenu.selection2 += 2;
+            if (input->down == true && menu->selection2 < menu->rowCount - 1)
+                menu->selection2 += 2;
 
-            if (TitleInput.up == true && TitleMenu.selection2 > 3)
-                TitleMenu.selection2 -= 2;
+            if (input->up == true && menu->selection2 > 3)
+                menu->selection2 -= 2;
 
-            if (TitleInput.left == true) {
-                switch (TitleMenu.selection2) {
+            if (input->left == true) {
+                TextMenuEntry *entry = &menu->labels[menu->selection2];
+
+                switch (menu->selection2) {
                     case 3:
                         if (AllStages) {
                             AllStages = false;
-                            strcpy(&TitleMenu.labels[3].text[12], "\x06\x06%");
+                            strcpy(&entry->text[12], "\x06\x06%");
                         }
                         else {
                             AllStages = true;
-                            strcpy(&TitleMenu.labels[3].text[12], "\x0E%");
+                            strcpy(&entry->text[12], "\x0E%");
                         }
                         break;
 
                     case 5:
                         if (DebugMode) {
                             DebugMode = false;
-                            strcpy(&TitleMenu.labels[5].text[13], "\x06\x06%");
+                            strcpy(&entry->text[13], "\x06\x06%");
                         }
                         else {
                             DebugMode = true;
-                            strcpy(&TitleMenu.labels[5].text[13], "\x0E%");
+                            strcpy(&entry->text[13], "\x0E%");
                         }
                         break;
 
                     case 7:
                         if (SStageNo > 0) {
-                            TitleMenu.labels[7].text[20] = --SStageNo / 10 + 27;
-                            TitleMenu.labels[7].text[21] = SStageNo + 27 - 10 * (SStageNo / 10);
+                            entry->text[20] = --SStageNo / 10 + 27;
+                            entry->text[21] = SStageNo + 27 - 10 * (SStageNo / 10);
                         }
                         break;
 
                     case 9:
                         if (MusicNo > 0) {
-                            TitleMenu.labels[9].text[12] = --MusicNo / 10 + 27;
-                            TitleMenu.labels[9].text[13] = MusicNo + 27 - 10 * (MusicNo / 10);
+                            entry->text[12] = --MusicNo / 10 + 27;
+                            entry->text[13] = MusicNo + 27 - 10 * (MusicNo / 10);
                         }
                         break;
+
                     default: break;
                 }
             }
 
-            if (TitleInput.right == true) {
-                switch (TitleMenu.selection2) {
+            if (input->right == true) {
+                TextMenuEntry *entry = &menu->labels[menu->selection2];
+
+                switch (menu->selection2) {
                     case 3:
                         if (AllStages) {
-                            AllStages = 0;
-                            strcpy(&TitleMenu.labels[3].text[12], "\x06%");
+                            AllStages = false;
+                            strcpy(&entry->text[12], "\x06%");
                         }
                         else {
-                            AllStages = 1;
-                            strcpy(&TitleMenu.labels[3].text[12], "\x0E%");
+                            AllStages = true;
+                            strcpy(&entry->text[12], "\x0E%");
                         }
                         break;
 
                     case 5:
                         if (DebugMode) {
                             DebugMode = false;
-                            strcpy(&TitleMenu.labels[5].text[13], "\x06%");
+                            strcpy(&entry->text[13], "\x06%");
                         }
                         else {
                             DebugMode = true;
-                            strcpy(&TitleMenu.labels[5].text[13], "\x0E%");
+                            strcpy(&entry->text[13], "\x0E%");
                         }
                         break;
 
                     case 7:
                         if (SStageNo < 99) {
-                            TitleMenu.labels[7].text[20] = ++SStageNo / 10 + 27;
-                            TitleMenu.labels[7].text[21] = SStageNo + 27 - 10 * (SStageNo / 10);
+                            entry->text[20] = ++SStageNo / 10 + 27;
+                            entry->text[21] = SStageNo + 27 - 10 * (SStageNo / 10);
                         }
                         break;
 
                     case 9:
                         if (MusicNo < 99) {
-                            TitleMenu.labels[9].text[12] = ++MusicNo / 10 + 27;
-                            TitleMenu.labels[9].text[13] = MusicNo + 27 - 10 * (MusicNo / 10);
+                            entry->text[12] = ++MusicNo / 10 + 27;
+                            entry->text[13] = MusicNo + 27 - 10 * (MusicNo / 10);
                         }
                         break;
 
@@ -368,8 +382,8 @@ void ProcessTitleScreen()
                 }
             }
 
-            if (TitleInput.start == true) {
-                if (TitleMenu.selection2 == 11)
+            if (input->start == true) {
+                if (menu->selection2 == 11)
                     TitleScreenMode = 0;
             }
 
@@ -406,16 +420,123 @@ void TitleScrMovement()
         ++TAnimation;
 }
 
-void DrawMenuBackground()
+void SetMenuSelMode(TextMenu *menu, int id) { menu->selMode[id] = 1; }
+
+void SetCharacters(int id)
 {
-    for (int i = 0; i < TitleMenu.selection1 + 1; ++i) {
-        if (TitleMenu.selMode[i] == 1)
-            TitleMenu.selection2 = i;
+    FileInfo file;
+    LoadFile(&file, "Data/Title/Characters.mdf");
+
+    char text[0x20];
+    int textLen = 0;
+
+    int row  = 0;
+    int type = 0;
+
+    bool twoPlayers = false;
+
+    for (int i = 0; i < file.size; ++i) {
+        if (file.data[i] == '^') {
+            switch (type) {
+                case 0:
+                    textLen = 0;
+                    type++;
+                    break;
+
+                case 1:
+                    twoPlayers = text[0] == '2';
+                    textLen    = 0;
+                    type++;
+                    break;
+
+                case 2:
+                    if (row == id)
+                        text[textLen] = '\0';
+
+                    textLen = 0;
+                    type++;
+                    break;
+
+                case 3:
+                    if (twoPlayers && row == id)
+                        text[textLen] = '\0';
+
+                    textLen = 0;
+                    type++;
+                    break;
+
+                default: break;
+            }
+        }
+        else if (file.data[i] != '\r' && file.data[i] != '\n') {
+            text[textLen++] = file.data[i];
+        }
+
+        if (file.data[i] == '\r') {
+            row++;
+            type    = 0;
+            textLen = 0;
+        }
     }
 
-    SMenuY1 = 10 * TitleMenu.selection1;
+    delete file.data;
+}
 
-    if (10 * TitleMenu.selection1 > SMenuY2 + 60 && SMenuY2 < 10 * TitleMenu.rowCount - 130)
+void CodeCheck()
+{
+    InputData *input = &TitleInput;
+    CheckKeyPress(input, INPUT_LEFT, INPUT_START);
+
+    if (input->up == true) {
+        if (DebugCode[CodePos] == 2)
+            CodePos++;
+        else
+            CodePos = 0;
+    }
+
+    if (input->down == true) {
+        if (DebugCode[CodePos] == 3)
+            CodePos++;
+        else
+            CodePos = 0;
+    }
+
+    if (input->left == true) {
+        if (DebugCode[CodePos])
+            CodePos = 0;
+        else
+            CodePos++;
+    }
+
+    if (input->right == true) {
+        if (DebugCode[CodePos] == 1)
+            CodePos++;
+        else
+            CodePos = 0;
+    }
+
+    if (DebugCode[CodePos] == 4) {
+        if (DebugEnabled == true)
+            DebugEnabled = false;
+        else if (DebugEnabled == false)
+            DebugEnabled = true;
+
+        CodePos = 0;
+    }
+}
+
+void DrawMenuBackground()
+{
+    TextMenu *menu = &TitleMenu;
+
+    for (int i = 0; i < menu->selection1 + 1; ++i) {
+        if (menu->selMode[i] == 1)
+            menu->selection2 = i;
+    }
+
+    SMenuY1 = 10 * menu->selection1;
+
+    if (10 * menu->selection1 > SMenuY2 + 60 && SMenuY2 < 10 * menu->rowCount - 130)
         SMenuY2++;
 
     if (SMenuY1 < SMenuY2 + 60 && SMenuY1 > 0 && SMenuY2 > 0)
@@ -432,43 +553,45 @@ void DrawTitleScr()
     if (2 * RSDK_PI < BackXRotation)
         BackXRotation = 0.0f;
 
-    SetSceneRenderState(2);
-    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
+    SetSceneRenderProperties(2);
+    memcpy(&MatrixObject, &MatrixIdentity, sizeof(MatrixObject));
 
-    WorldMatrixRotateY(BackXRotation);
-    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
+    MatrixWorldRotateY(BackXRotation);
+    MatrixMultiply(&MatrixObject, &MatrixWorld);
 
-    WorldMatrixTranslateXYZ(0.0f, 0.0f, 20.0f);
-    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
-    SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
+    MatrixWorldTranslateXYZ(0.0f, 0.0f, 20.0f);
+    MatrixMultiply(&MatrixObject, &MatrixWorld);
+    SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixObject);
     DrawTitleModel(0);
 
-    SetSceneRenderState(3);
-    memcpy(&MatrixSonicModel, &MatrixIdentity, sizeof(MatrixSonicModel));
+    SetSceneRenderProperties(3);
+    memcpy(&MatrixObject, &MatrixIdentity, sizeof(MatrixObject));
 
-    WorldMatrixTranslateXYZ(0.0f, 0.0f, SonZ);
-    MatrixMultiply(&MatrixSonicModel, &MatrixWorld);
-    SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixSonicModel);
+    MatrixWorldTranslateXYZ(0.0f, 0.0f, SonZ);
+    MatrixMultiply(&MatrixObject, &MatrixWorld);
+    SetRenderTransform(RENDER_TRANSFORM_WORLD, &MatrixObject);
     DrawTitleModel(1);
 }
 
-void DrawGameMenu(TextMenu TextMenu, int x, int y)
+void DrawGameMenu(TextMenu Menu, int x, int y)
 {
-    for (int i = 0; i < TextMenu.rowCount; ++i) {
-        TextMenuEntry *entry = &TextMenu.labels[i];
+    TextMenu *menu = &Menu;
+
+    for (int i = 0; i < menu->rowCount; ++i) {
+        TextMenuEntry *entry = &menu->labels[i];
 
         int drawX = x;
         int drawY = (10 * i) + y;
 
-        switch (TextMenu.alignment) {
+        switch (menu->alignment) {
             case MENU_ALIGN_RIGHT: drawX -= (10 * entry->length) / 1; break;
             case MENU_ALIGN_CENTER: drawX -= (10 * entry->length) / 2; break;
             default: break;
         }
 
-        switch (TextMenu.selectionCount) {
+        switch (menu->selectionCount) {
             case 1:
-                if (i == TextMenu.selection1)
+                if (i == menu->selection1)
                     DrawMenuText(entry->text, entry->length, drawX, drawY, 8);
 
                 else
@@ -476,19 +599,19 @@ void DrawGameMenu(TextMenu TextMenu, int x, int y)
                 break;
 
             case 2:
-                if (i == TextMenu.selection1 || i == TextMenu.selection2)
+                if (i == menu->selection1 || i == menu->selection2)
                     DrawMenuText(entry->text, entry->length, drawX, drawY, 8);
                 else
                     DrawMenuText(entry->text, entry->length, drawX, drawY, 0);
                 break;
 
             case 3:
-                if (TextMenu.alignment == MENU_ALIGN_LEFT) {
-                    if (i == TextMenu.selection1)
+                if (menu->alignment == MENU_ALIGN_LEFT) {
+                    if (i == menu->selection1)
                         DrawMenuText(entry->text, entry->length, drawX, drawY, 8);
 
-                    if (i != TextMenu.selection1 && i == TextMenu.selection2)
-                        DrawText_2(entry->text, entry->length, drawX, drawY);
+                    if (i != menu->selection1 && i == menu->selection2)
+                        DrawMenuTextFaded(entry->text, entry->length, drawX, drawY);
                 }
                 break;
 
@@ -497,15 +620,17 @@ void DrawGameMenu(TextMenu TextMenu, int x, int y)
     }
 }
 
-void DrawScrollingMenu(TextMenu TextMenu, int x, int y, int clipT, int clipB, int scrollPos)
+void DrawScrollingMenu(TextMenu Menu, int x, int y, int clipT, int clipB, int scrollPos)
 {
-    for (int i = 0; i < TextMenu.rowCount; ++i) {
-        TextMenuEntry *entry = &TextMenu.labels[i];
+    TextMenu *menu = &Menu;
+
+    for (int i = 0; i < menu->rowCount; ++i) {
+        TextMenuEntry *entry = &menu->labels[i];
 
         int drawX = x;
         int drawY = scrollPos + (10 * i) + y;
 
-        switch (TextMenu.alignment) {
+        switch (menu->alignment) {
             case MENU_ALIGN_RIGHT: drawX -= (10 * entry->length) / 1; break;
             case MENU_ALIGN_CENTER: drawX -= (10 * entry->length) / 2; break;
             default: break;
@@ -520,57 +645,80 @@ void DrawScrollingMenu(TextMenu TextMenu, int x, int y, int clipT, int clipB, in
         if (drawY > clipB + 8)
             alphaStrengthB = drawY - (clipB + 8);
 
-        switch (TextMenu.selectionCount) {
+        switch (menu->selectionCount) {
             case 1:
-                if (i == TextMenu.selection1) {
+                if (i == menu->selection1) {
                     if (drawY < clipT || drawY > clipB + 8)
-                        DrawText_3(entry->text, entry->length, drawX, drawY, 8, alphaStrengthT, alphaStrengthB);
+                        DrawMenuTextClipped(entry->text, entry->length, drawX, drawY, 8, alphaStrengthT, alphaStrengthB);
                     else
                         DrawMenuText(entry->text, entry->length, drawX, drawY, 8);
                 }
                 else {
                     if (drawY < clipT || drawY > clipB + 8)
-                        DrawText_3(entry->text, entry->length, drawX, drawY, 0, alphaStrengthT, alphaStrengthB);
+                        DrawMenuTextClipped(entry->text, entry->length, drawX, drawY, 0, alphaStrengthT, alphaStrengthB);
                     else
                         DrawMenuText(entry->text, entry->length, drawX, drawY, 0);
                 }
                 break;
 
             case 2:
-                if (i == TextMenu.selection1 || i == TextMenu.selection2) {
+                if (i == menu->selection1 || i == menu->selection2) {
                     if (drawY < clipT || drawY > clipB + 8)
-                        DrawText_3(entry->text, entry->length, drawX, drawY, 8, alphaStrengthT, alphaStrengthB);
+                        DrawMenuTextClipped(entry->text, entry->length, drawX, drawY, 8, alphaStrengthT, alphaStrengthB);
                     else
                         DrawMenuText(entry->text, entry->length, drawX, drawY, 8);
                 }
                 else {
                     if (drawY < clipT || drawY > clipB + 8)
-                        DrawText_3(entry->text, entry->length, drawX, drawY, 0, alphaStrengthT, alphaStrengthB);
+                        DrawMenuTextClipped(entry->text, entry->length, drawX, drawY, 0, alphaStrengthT, alphaStrengthB);
                     else
                         DrawMenuText(entry->text, entry->length, drawX, drawY, 0);
                 }
                 break;
 
             case 3:
-                if (i == TextMenu.selection1) {
+                if (i == menu->selection1) {
                     if (drawY < clipT || drawY > clipB + 8)
-                        DrawText_3(entry->text, entry->length, drawX, drawY, 8, alphaStrengthT, alphaStrengthB);
+                        DrawMenuTextClipped(entry->text, entry->length, drawX, drawY, 8, alphaStrengthT, alphaStrengthB);
                     else
                         DrawMenuText(entry->text, entry->length, drawX, drawY, 8);
                 }
-                else if (i != TextMenu.selection2) {
+                else if (i != menu->selection2) {
                     if (drawY < clipT || drawY > clipB + 8)
-                        DrawText_3(entry->text, entry->length, drawX, drawY, 0, alphaStrengthT, alphaStrengthB);
+                        DrawMenuTextClipped(entry->text, entry->length, drawX, drawY, 0, alphaStrengthT, alphaStrengthB);
                     else
                         DrawMenuText(entry->text, entry->length, drawX, drawY, 0);
                 }
 
-                if (i != TextMenu.selection1 && i == TextMenu.selection2)
-                    DrawText_2(entry->text, entry->length, drawX, drawY);
+                if (i != menu->selection1 && i == menu->selection2)
+                    DrawMenuTextFaded(entry->text, entry->length, drawX, drawY);
                 break;
 
             default: break;
         }
+    }
+}
+
+void DrawTitleModel(byte type)
+{
+    SetRenderMaterial(&RenderMaterial);
+
+    switch (type) {
+        case 0: {
+            TMF *model = &BGModel;
+            SetRenderTexture(0, BGTexture);
+            DrawFace(RENDER_FVF_VERTEX, model->vertices, model->numVertices, model->indices, model->numIndices);
+            break;
+        }
+
+        case 1: {
+            TMF *model = &LogoModel;
+            SetRenderTexture(0, LogoTexture);
+            DrawFace(RENDER_FVF_VERTEX, model->vertices, model->numVertices, model->indices, model->numIndices);
+            break;
+        }
+
+        default: break;
     }
 }
 
@@ -591,33 +739,33 @@ void LoadCharacterMenu(TextMenu *menu)
     char text[0x20];
     int textLen = 0;
 
-    int menuRow = 0;
-    int rowType = 0;
+    int row  = 0;
+    int type = 0;
 
     for (int i = 0; i < file.size; ++i) {
         if (file.data[i] == '^') {
             text[textLen] = '\0';
 
-            switch (rowType) {
+            switch (type) {
                 case 0:
-                    SetGameText(text, menu, menuRow, textLen);
+                    SetGameText(text, menu, row, textLen);
                     textLen = 0;
-                    rowType++;
+                    type++;
                     break;
 
                 case 1:
                     textLen = 0;
-                    rowType++;
+                    type++;
                     break;
 
                 case 2:
                     textLen = 0;
-                    rowType++;
+                    type++;
                     break;
 
                 case 3:
                     textLen = 0;
-                    rowType++;
+                    type++;
                     break;
 
                 default: break;
@@ -629,8 +777,8 @@ void LoadCharacterMenu(TextMenu *menu)
         }
 
         if (file.data[i] == '\r') {
-            menuRow++;
-            rowType = 0;
+            row++;
+            type    = 0;
             textLen = 0;
         }
     }
@@ -639,110 +787,6 @@ void LoadCharacterMenu(TextMenu *menu)
     menu->selectionCount = 1;
     menu->selection1     = 0;
     menu->selection2     = 0;
-}
-
-void SetMenuSelMode(TextMenu *menu, int id) { menu->selMode[id] = 1; }
-
-void SetCharacters(int row)
-{
-    FileInfo file;
-    LoadFile(&file, "Data/Title/Characters.mdf");
-
-    char text[0x20];
-    int textLen = 0;
-
-    int menuRow = 0;
-    int rowType = 0;
-
-    bool unknown;
-
-    for (int i = 0; i < file.size; ++i) {
-        if (file.data[i] == '^') {
-            switch (rowType) {
-                case 0:
-                    textLen = 0;
-                    ++rowType;
-                    break;
-
-                case 1:
-                    unknown = text[0] == '2';
-                    textLen = 0;
-                    ++rowType;
-                    break;
-
-                case 2:
-                    if (menuRow == row)
-                        text[textLen] = '\0';
-
-                    textLen = 0;
-                    ++rowType;
-                    break;
-
-                case 3:
-                    if (unknown && menuRow == row)
-                        text[textLen] = '\0';
-
-                    textLen = 0;
-                    ++rowType;
-                    break;
-
-                default: break;
-            }
-        }
-        else if (file.data[i] != '\r' && file.data[i] != '\n') {
-            text[textLen++] = file.data[i];
-        }
-
-        if (file.data[i] == '\r') {
-            ++menuRow;
-            rowType = 0;
-            textLen = 0;
-        }
-    }
-
-    delete file.data;
-}
-
-void CodeCheck()
-{
-    CheckKeyPress(&TitleInput, INPUT_LEFT, INPUT_START);
-
-    if (TitleInput.up == true) {
-        if (DebugCode[CodePos] == 2)
-            ++CodePos;
-        else
-            CodePos = 0;
-    }
-
-    if (TitleInput.down == true) {
-        if (DebugCode[CodePos] == 3)
-            ++CodePos;
-        else
-            CodePos = 0;
-    }
-
-    if (TitleInput.left == true) {
-        if (DebugCode[CodePos])
-            CodePos = 0;
-        else
-            ++CodePos;
-    }
-
-    if (TitleInput.right == true) {
-        if (DebugCode[CodePos] == 1)
-            ++CodePos;
-        else
-            CodePos = 0;
-    }
-
-    if (DebugCode[CodePos] == 4) {
-        if (DebugEnabled == true)
-            DebugEnabled = false;
-        else if (DebugEnabled == false)
-            DebugEnabled = true;
-
-        CodePos = 0;
-    }
 }
 
 void LoadZoneMenu(TextMenu *menu)
@@ -762,28 +806,28 @@ void LoadZoneMenu(TextMenu *menu)
     char text[0x20];
     int textLen = 0;
 
-    int menuRow = 0;
-    int rowType = 0;
+    int row  = 0;
+    int type = 0;
 
     for (int i = 0; i < file.size; ++i) {
         if (file.data[i] == '^') {
             text[textLen] = '\0';
 
-            switch (rowType) {
-                case 0: SetGameText(text, menu, menuRow, textLen); break;
-                case 1: SetLevelDirectory(text, textLen, menuRow); break;
-                case 2: SetActNumber(text, textLen, menuRow); break;
+            switch (type) {
+                case 0: SetGameText(text, menu, row, textLen); break;
+                case 1: SetLevelDirectory(text, textLen, row); break;
+                case 2: SetActNumber(text, textLen, row); break;
 
                 case 3:
                     if (text[0] == '1')
-                        SetMenuSelMode(menu, menuRow);
+                        SetMenuSelMode(menu, row);
                     break;
 
                 default: break;
             }
 
             textLen = 0;
-            rowType++;
+            type++;
         }
         else if (file.data[i] != '\r' && file.data[i] != '\n') {
             if (textLen < 0x20 - 1) {
@@ -793,8 +837,8 @@ void LoadZoneMenu(TextMenu *menu)
         }
 
         if (file.data[i] == '\r') {
-            menuRow++;
-            rowType = 0;
+            row++;
+            type    = 0;
             textLen = 0;
         }
     }
@@ -803,18 +847,4 @@ void LoadZoneMenu(TextMenu *menu)
     menu->selectionCount = 3;
     menu->selection1     = 0;
     menu->selection2     = 0;
-}
-
-void DrawTitleModel(char type)
-{
-    SetRenderMaterial(&ObjectMaterial);
-
-    if (type == 1) {
-        SetRenderTexture(0, LogoTexture);
-        DrawIndexedPrimitive(RENDER_FVF_VERTEX, LogoModel.vertices, LogoModel.numVertices, LogoModel.indices, LogoModel.numIndices);
-    }
-    else if (type == 0) {
-        SetRenderTexture(0, BGTexture);
-        DrawIndexedPrimitive(RENDER_FVF_VERTEX, BGModel.vertices, BGModel.numVertices, BGModel.indices, BGModel.numIndices);
-    }
 }

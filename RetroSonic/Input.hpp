@@ -58,7 +58,7 @@ struct InputData {
     int X;
 };
 
-extern int InputEnabled;
+extern bool InputEnabled;
 extern InputData InputPress;
 
 #if RETRO_USE_ORIGINAL_CODE

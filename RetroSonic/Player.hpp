@@ -10,11 +10,6 @@ enum CharacterIDs {
     CHARACTER_COUNT,
 };
 
-enum Gravity {
-    GRAVITY_GROUND,
-    GRAVITY_AIR,
-};
-
 enum PlayerAnimationIDs {
     ANI_STOPPED,
     ANI_WAITING,
@@ -75,7 +70,7 @@ struct PlayerObject {
     int unused29;
 };
 
-extern Matrix3D MatrixSonicModel;
+extern Matrix3D MatrixObject;
 extern Matrix3D MatrixSonicNodeRotation[36];
 extern Matrix3D MatrixSonicNodeTransform[36];
 
@@ -96,14 +91,27 @@ extern int PlayerRotationTimerZ;
 extern byte PNumber;
 extern PlayerObject Player[2];
 
-void ProcessPlayerCamera();
-
+#if RETRO_USE_ORIGINAL_CODE
 void LoadPlayerGfx(const char *textureName, sbyte characterID);
 
-void HandleSonicVertexPositions(int frameID);
-void HandleSonicVertexNormals(int frameID);
-void SetPlayerAnimationID(byte animation, float speed);
+#endif
+
+void ProcessPlayerInput();
+void ProcessPlayerCamera();
+void ProcessPlayerMovement();
+void ProcessDebugMode();
+void ProcessPlayerAnimation();
 void ProcessPlayerAnimationLMC();
-void MightBeSonicAnim_406432();
+
+void SetPlayerVertexPositions(int nodeID);
+void SetPlayerVertexNormals(int nodeID);
+void SetPlayerAnimation(byte animation, float speed);
+
+void DrawModelSonic(float x, float y, float z, float ry);
+
+void HandlePlayerRotation(float *x, float *y, float *z);
+void ResetPlayerRotation();
+
+inline void HandlePlayerRotation(Vector3D *vector) { HandlePlayerRotation(&vector->x, &vector->y, &vector->z); }
 
 #endif // !PLAYER_H

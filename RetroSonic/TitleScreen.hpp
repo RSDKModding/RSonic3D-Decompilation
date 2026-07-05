@@ -3,6 +3,23 @@
 
 #include "RetroEngine.hpp"
 
+enum TitleScreenModes {
+    TITLE_TAXMAN_PRESENTS,
+    TITLE_LOGO_SCALE,
+    TITLE_MAIN,
+    TITLE_CHARACTER_MENU,
+    TITLE_ZONE_MENU,
+    TITLE_SAVE_MENU,
+    TITLE_DEBUG_MENU,
+};
+
+enum TitleOptions {
+    OPTION_NEW_GAME,
+    OPTION_CONTINUE_GAME,
+    OPTION_DEBUG_OPTIONS,
+    OPTION_EXIT_GAME,
+};
+
 extern InputData TitleInput;
 extern TextMenu TitleMenu;
 
@@ -49,15 +66,15 @@ extern byte DebugCode[12];
 void ResetTitleScreen();
 void ProcessTitleScreen();
 void TitleScrMovement();
+void SetMenuSelMode(TextMenu *menu, int id);
+void SetCharacters(int id);
+void CodeCheck();
 void DrawMenuBackground();
 void DrawTitleScr();
-void DrawGameMenu(TextMenu TextMenu, int x, int y);
-void DrawScrollingMenu(TextMenu TextMenu, int x, int y, int clipT, int clipB, int scrollPos);
+void DrawGameMenu(TextMenu Menu, int x, int y);
+void DrawScrollingMenu(TextMenu Menu, int x, int y, int clipT, int clipB, int scrollPos);
+void DrawTitleModel(byte type);
 void LoadCharacterMenu(TextMenu *menu);
-void SetMenuSelMode(TextMenu *menu, int id);
-void SetCharacters(int row);
-void CodeCheck();
 void LoadZoneMenu(TextMenu *menu);
-void DrawTitleModel(char type);
 
 #endif // !TITLESCREEN_H
