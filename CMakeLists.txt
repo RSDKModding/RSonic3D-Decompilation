@@ -100,11 +100,6 @@ target_include_directories(RetroEngine PRIVATE
 )
 
 if(WIN32 AND RETRO_ORIGINAL_CODE)
-    ## i dunno the correct way to check for the DX7SDK's install directory
-    target_include_directories(RetroEngine PRIVATE C:\\DX7SDK\\include)
-    target_link_directories(RetroEngine PRIVATE C:\\DX7SDK\\lib)
-    target_link_libraries(RetroEngine PRIVATE dinput dxguid ddraw winmm)
-
     if(freeimage_FOUND)
         target_link_libraries(RetroEngine PRIVATE freeimage::FreeImage)
     else()
@@ -141,4 +136,10 @@ target_compile_definitions(RetroEngine PRIVATE
     RETRO_USE_ORIGINAL_CODE=$<BOOL:${RETRO_ORIGINAL_CODE}>
     FORCE_CASE_INSENSITIVE=$<BOOL:${RETRO_FORCE_CASE_INSENSITIVE}>
     RETRO_USE_SDL${RETRO_SDL_VERSION}=1
+)
+
+## Required or the game's camera will break
+target_compile_options(RetroEngine PRIVATE
+    $<$<CXX_COMPILER_ID:GNU,Clang>:-ffast-math>
+    $<$<CXX_COMPILER_ID:MSVC>:/fp:fast>
 )

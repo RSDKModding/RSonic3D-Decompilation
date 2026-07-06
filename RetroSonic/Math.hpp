@@ -1,8 +1,8 @@
 #ifndef MATH_H
 #define MATH_H
 
-#define RSDK_PI   (3.1415927)
-#define RSDK_PI_H (RSDK_PI / 2.0)
+#define RSDK_PI   (3.1415927f)
+#define RSDK_PI_H (RSDK_PI / 2.0f)
 
 #define TO_RADIAN(degree)              ((degree) * (RSDK_PI / 180.0f))
 #define CLAMP(value, minimum, maximum) (((value) < (minimum)) ? (minimum) : (((value) > (maximum)) ? (maximum) : (value)))

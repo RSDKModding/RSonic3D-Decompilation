@@ -58,7 +58,7 @@ bool InitGraphicsAPI()
     // Non-original, but this is apparently required for FreeImage's static library to work on Windows
     FreeImage_Initialise();
 
-    return InitDirect3D() >= 0;
+    return SUCCEEDED(InitDirect3D());
 #else
     return InitScreen();
 #endif

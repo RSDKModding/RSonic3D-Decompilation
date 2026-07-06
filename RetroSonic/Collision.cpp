@@ -19,16 +19,10 @@ byte ObjectFloorCollision(float *xpos, float *ypos, float *zpos, float xdir, flo
     float c = (origin.x - level->x) / 50.0f;
     float r = (origin.z - level->z) / 50.0f;
 
-    int minRow = CLAMP(r - 4, 0, level->rows);
-    int maxRow = CLAMP(r + 4, 0, level->rows);
-
-    int minCol = CLAMP(c - 4, 0, level->columns);
-    int maxCol = CLAMP(c + 4, 0, level->columns);
-
     Collided = 0;
 
-    for (int y = minRow; y < maxRow; ++y) {
-        for (int x = minCol; x < maxCol; ++x) {
+    for (int y = CLAMP(r - 4, 0, level->rows); y < CLAMP(r + 4, 0, level->rows); ++y) {
+        for (int x = CLAMP(c - 4, 0, level->columns); x < CLAMP(c + 4, 0, level->columns); ++x) {
             if (LCollision[y][x]->rayCollision(&origin[0], &direction[0], true, 0.0f, magnitude)) {
                 Collided = 1;
 
@@ -44,8 +38,7 @@ byte ObjectFloorCollision(float *xpos, float *ypos, float *zpos, float xdir, flo
 
     switch (Collided) {
         case 0: {
-            PlayerTargetRotationX = 0.0f;
-            PlayerTargetRotationZ = 0.0f;
+            ResetPlayerRotation();
             break;
         }
 

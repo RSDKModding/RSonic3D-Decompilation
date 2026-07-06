@@ -20,7 +20,7 @@ enum PlayerAnimationIDs {
 };
 
 enum PlayerStates {
-    STATE_GROUND,
+    STATE_WALKING,
     STATE_AIR,
     STATE_STATIC,
 };

@@ -195,25 +195,32 @@ void ProcessPlayerCamera()
     }
 
     if (CameraPosition.x == player->position.x) {
-        CameraRotateY = 0.0f;
         if (CameraPosition.z >= player->position.z)
             CameraRotateY = RSDK_PI;
+        else
+            CameraRotateY = 0.0f;
     }
     else {
+        float dz = CameraPosition.z - player->position.z;
+        float dx = CameraPosition.x - player->position.x;
+
+        CameraRotateY = ATan(dz / dx);
         if (CameraPosition.x <= player->position.x)
-            CameraRotateY = ATan((CameraPosition.z - player->position.z) / (CameraPosition.x - player->position.x)) - (RSDK_PI * 0.5f);
+            CameraRotateY -= RSDK_PI_H;
         else
-            CameraRotateY = ATan((CameraPosition.z - player->position.z) / (CameraPosition.x - player->position.x)) + (RSDK_PI * 0.5f);
+            CameraRotateY += RSDK_PI_H;
     }
 
-    if (Fabs((player->position.x - CameraPosition.x) / Sin(CameraRotateY)) < 32.0f) {
+    float dx = player->position.x - CameraPosition.x;
+
+    if (flabs(dx / Sin(CameraRotateY)) < 32.0f) {
         CameraPosition.x = player->position.x - Sin(CameraRotateY) * -32.0f;
-        CameraPosition.z = Cos(CameraRotateY) * -32.0f + player->position.z;
+        CameraPosition.z = player->position.z + Cos(CameraRotateY) * -32.0f;
     }
 
-    if (Fabs((player->position.x - CameraPosition.x) / Sin(CameraRotateY)) > 60.0f) {
+    if (flabs(dx / Sin(CameraRotateY)) > 60.0f) {
         CameraPosition.x = player->position.x - Sin(CameraRotateY) * -60.0f;
-        CameraPosition.z = Cos(CameraRotateY) * -60.0f + player->position.z;
+        CameraPosition.z = player->position.z + Cos(CameraRotateY) * -60.0f;
     }
 }
 
@@ -245,7 +252,7 @@ void ProcessPlayerMovement()
         if (player->speed < 2.4f)
             player->speed += 0.012f;
     }
-    else if (player->state == STATE_GROUND && player->up == true) {
+    else if (player->state == STATE_WALKING && player->up == true) {
         if (player->angle < player->targetAngle) {
             player->angle += 8;
 
@@ -296,7 +303,7 @@ void ProcessPlayerMovement()
             else
                 SetPlayerAnimation(ANI_WALKING, player->speed * 0.4f);
 
-            player->state = STATE_GROUND;
+            player->state = STATE_WALKING;
             if (player->speed == 0.0f)
                 player->unused5 = 0;
 
@@ -318,7 +325,7 @@ void ProcessPlayerMovement()
             if (ObjectFloorCollision(&player->position, { player->velocity.x, -player->velocity.y, player->velocity.z }) == true) {
                 player->velocity.y = 0.0f;
                 player->gravity    = GRAVITY_GROUND;
-                player->state      = STATE_GROUND;
+                player->state      = STATE_WALKING;
             }
         }
     }
@@ -336,7 +343,7 @@ void ProcessPlayerMovement()
             case 1:
             case 2:
                 player->gravity = GRAVITY_GROUND;
-                player->state   = STATE_GROUND;
+                player->state   = STATE_WALKING;
                 break;
 
             case 0:
@@ -354,7 +361,7 @@ void ProcessPlayerMovement()
     ProcessPlayerCamera();
 
     if (player->up == true)
-        player->rotationY = (player->angle * RSDK_PI / 128.0f) + CameraRotateY;
+        player->rotationY = ((player->angle / 128.0f) * RSDK_PI) + CameraRotateY;
 
     if (player->gravity == GRAVITY_AIR) {
         if (CameraAirTimer < 30)

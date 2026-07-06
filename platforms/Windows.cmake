@@ -1,4 +1,6 @@
-if(NOT WIN32 OR NOT RETRO_ORIGINAL_CODE)
+set(DX7SDK_PATH C:\\DX7SDK CACHE STRING "The path to look for the DirectX 7 SDK.")
+
+if(NOT RETRO_ORIGINAL_CODE)
     find_package(GLEW CONFIG)
 
     if(NOT GLEW_FOUND)
@@ -8,4 +10,8 @@ if(NOT WIN32 OR NOT RETRO_ORIGINAL_CODE)
         add_library(glew ALIAS GLEW::GLEW)
         target_link_libraries(RetroEngine PRIVATE glew)
     endif()
+else()
+    target_include_directories(RetroEngine PRIVATE ${DX7SDK_PATH}/include)
+    target_link_directories(RetroEngine PRIVATE ${DX7SDK_PATH}/lib)
+    target_link_libraries(RetroEngine PRIVATE dinput dxguid ddraw winmm)
 endif()

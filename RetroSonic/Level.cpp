@@ -254,22 +254,15 @@ void UpdateCamera(float x, float y, float z, float cx, float cy, float cz, float
 void CameraLook(Matrix3D *matrix, Vector3D &eye, Vector3D &target, Vector3D &rotation)
 {
     Vector3D forward = target - eye;
-
-    float distance = forward.Magnitude();
-    forward /= distance;
+    forward /= forward.Magnitude();
 
     float angle = rotation * forward;
     Vector3D up = rotation - (angle * forward);
 
-    if (distance < epsilon) {
-        up = { 0.0f, 1.0f, 0.0f };
-        up = up - (forward.y * forward);
-
-        // checking again for Z i suppose
-        if (distance < epsilon) {
-            up = { 0.0f, 0.0f, 1.0f };
-            up = up - (forward.z * forward);
-        }
+    if (up.Magnitude() < epsilon) {
+        up = Vector3D(0.0f, 1.0f, 0.0f) - (forward.y * forward);
+        if (up.Magnitude() < epsilon)
+            up = Vector3D(0.0f, 0.0f, 1.0f) - (forward.z * forward);
     }
 
     up /= up.Magnitude();
