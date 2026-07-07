@@ -130,14 +130,14 @@ extern int QuitMessage;
 // ENGINE FUNCTIONS
 // ============================
 
-bool CreateMWindow();
+bool CreateEngineWindow();
 
 #if RETRO_USE_ORIGINAL_CODE
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK DialogProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 
-void UpdateWindowRect(HWND hWnd);
-void ResetWindow(HWND hWnd);
+void UpdateEngineWindowRect(HWND hWnd);
+void ResetEngineWindow(HWND hWnd);
 #else
 void ProcessEvents();
 #endif

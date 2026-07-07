@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     WindowMode = !Settings.startFullScreen;
 #endif
 
-    if (!CreateMWindow()) {
+    if (!CreateEngineWindow()) {
         QuitMessage = EXIT_SUCCESS;
 #if RETRO_USE_ORIGINAL_CODE
         PostQuitMessage(QuitMessage);

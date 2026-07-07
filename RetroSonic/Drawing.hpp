@@ -295,8 +295,9 @@ extern bool GameRunning;
 
 bool InitGraphicsAPI();
 void ReleaseGraphicsAPI();
+
 #if RETRO_USE_ORIGINAL_CODE
-bool InitDirect3D();
+bool InitDirectDraw();
 #endif
 
 bool InitScreen();

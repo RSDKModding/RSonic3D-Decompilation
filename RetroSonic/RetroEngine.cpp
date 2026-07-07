@@ -20,7 +20,7 @@ int QuitMessage = EXIT_FAILURE;
 
 const char *ResolutionOptions[] = { "320x240", "640x480", "800x600", "1024x768" };
 
-bool CreateMWindow()
+bool CreateEngineWindow()
 {
 #if RETRO_USE_ORIGINAL_CODE
     const char *title = "Retro-Sonic 3D: A Taxman Test";
@@ -130,7 +130,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case WM_MOVE:
-        case WM_SIZE: UpdateWindowRect(hWnd); return 0;
+        case WM_SIZE: UpdateEngineWindowRect(hWnd); return 0;
 
         case WM_ACTIVATE:
             if (wParam)
@@ -159,7 +159,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case VK_F4:
-                    ResetWindow(hWnd);
+                    ResetEngineWindow(hWnd);
                     if (GameMode == GAMEMODE_TITLESCREEN)
                         LoadFontAssets();
                     break;
@@ -188,7 +188,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                 case IDM_SET_DISPLAY: DialogBoxParam(HInst, "DMSelect", hWnd, DialogProc, 0); break;
 
                 case IDM_OPT_FULLSCREEN:
-                    ResetWindow(hWnd);
+                    ResetEngineWindow(hWnd);
                     if (GameMode == GAMEMODE_TITLESCREEN)
                         LoadFontAssets();
                     break;
@@ -251,7 +251,7 @@ INT_PTR CALLBACK DialogProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
     }
 }
 
-void UpdateWindowRect(HWND hWnd)
+void UpdateEngineWindowRect(HWND hWnd)
 {
     if (WindowMode == true) {
         GetClientRect(hWnd, &ClientRect);
@@ -261,7 +261,7 @@ void UpdateWindowRect(HWND hWnd)
     }
 }
 
-void ResetWindow(HWND hWnd)
+void ResetEngineWindow(HWND hWnd)
 {
     if (WindowMode == true)
         GetWindowRect(hWnd, &WindowStoreRect);

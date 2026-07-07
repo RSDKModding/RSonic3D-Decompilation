@@ -58,7 +58,7 @@ bool InitGraphicsAPI()
     // Non-original, but this is apparently required for FreeImage's static library to work on Windows
     FreeImage_Initialise();
 
-    return SUCCEEDED(InitDirect3D());
+    return SUCCEEDED(InitDirectDraw());
 #else
     return InitScreen();
 #endif
@@ -108,14 +108,14 @@ void ReleaseGraphicsAPI()
 }
 
 #if RETRO_USE_ORIGINAL_CODE
-bool InitDirect3D()
+bool InitDirectDraw()
 {
     DDSURFACEDESC2 ddsdf;
     DDSURFACEDESC2 ddsdb;
 
     if (WindowMode == true) {
         DDraw->SetCooperativeLevel(HWnd, DDSCL_NORMAL);
-        UpdateWindowRect(HWnd);
+        UpdateEngineWindowRect(HWnd);
 
         MEM_ZERO(&ddsdf, sizeof(ddsdf));
 
@@ -489,7 +489,7 @@ void ToggleScreenMode()
         SetWindowPos(HWnd, HWND_NOTOPMOST, rect->left, rect->top, rect->right - rect->left, rect->bottom - rect->top, SWP_SHOWWINDOW);
     }
 
-    InitDirect3D();
+    InitDirectDraw();
 #elif RETRO_USE_SDL1
     glViewport(0, 0, ResX, ResY);
 
