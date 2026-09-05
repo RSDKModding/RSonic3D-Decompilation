@@ -2,7 +2,7 @@
 
 A complete decompilation of Retro-Sonic 3D: Sky Worlds.
 
-Without assets from the Retro-Sonic 3D 2005 demo, this decompilation will not run.
+Without assets from the Retro-Sonic 3D 2005 demo, this decompilation will not run. You can download the game [here](https://archive.org/details/3dtest_202105).
 
 # Additional Tweaks
 * Added a built in mod loader, allowing to easily create and play mods.
