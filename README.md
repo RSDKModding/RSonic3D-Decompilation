@@ -5,7 +5,7 @@ A complete decompilation of Retro-Sonic 3D: Sky Worlds.
 Without assets from the Retro-Sonic 3D 2005 demo, this decompilation will not run.
 
 # Additional Tweaks
-* Added a mod loader, allowing to easily create and play asset replacement mods.
+* Added a built in mod loader, allowing to easily create and play mods.
 * Added an OpenGL + SDL/2/3 renderer, replacing the original DirectX 7 rendering code.
 
 # How to Build

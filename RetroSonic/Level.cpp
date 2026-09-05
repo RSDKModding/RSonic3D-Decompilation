@@ -14,7 +14,7 @@ byte SmallSeconds;
 byte Seconds;
 byte Minutes;
 
-float RingRotationY;
+float AngleTimer;
 
 Vector3D UnusedVector;
 Vector3D CameraEye;

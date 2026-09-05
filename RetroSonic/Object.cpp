@@ -1,7 +1,7 @@
 #include "RetroEngine.hpp"
 
 int ObjectLoop;
-int TempObjectPos = ENTITY_COUNT - 0x364;
+int TempObjectPos = ENTITY_COUNT - 232;
 Object LevelObjects[ENTITY_COUNT];
 
 void ProcessObjects()
@@ -11,7 +11,7 @@ void ProcessObjects()
 
     for (ObjectLoop = 0; ObjectLoop < ENTITY_COUNT; ++ObjectLoop) {
         Object *entity = &LevelObjects[ObjectLoop];
-        if (entity->enabled > 0) {
+        if (entity->priority > 0) {
             switch (entity->type) {
                 case OBJ_TYPE_RING: {
                     Vector3D position = entity->position - player1->position;
@@ -23,9 +23,9 @@ void ProcessObjects()
                 }
 
                 case OBJ_TYPE_RINGSPARKLE: {
-                    if (++entity->timer > 15) {
-                        entity->timer = 0;
-                        entity->type  = OBJ_TYPE_BLANKOBJECT;
+                    if (++entity->valueA > 15) {
+                        entity->valueA = 0;
+                        entity->type   = OBJ_TYPE_BLANKOBJECT;
                     }
                     break;
                 }
@@ -44,9 +44,9 @@ void ProcessObjects()
         }
     }
 
-    RingRotationY += 0.05f;
-    if (RingRotationY > RSDK_PI * 2)
-        RingRotationY -= RSDK_PI * 2;
+    AngleTimer += 0.05f;
+    if (AngleTimer > RSDK_PI * 2)
+        AngleTimer -= RSDK_PI * 2;
 }
 
 void DrawObjects()
@@ -58,15 +58,15 @@ void DrawObjects()
         float y = entity->position.y;
         float z = entity->position.z;
 
-        if (entity->enabled > 0) {
+        if (entity->priority > 0) {
             switch (entity->type) {
                 case 1:
-                    DrawObjectModel(OBJ_MODEL_RING, x, y, z, RingRotationY, 0.0f, 0.0f);
-                    DrawModelShadow(x, y, z, -30.0f, 2.0f, 1.0f, RingRotationY);
+                    DrawObjectModel(OBJ_MODEL_RING, x, y, z, AngleTimer, 0.0f, 0.0f);
+                    DrawModelShadow(x, y, z, -30.0f, 2.0f, 1.0f, AngleTimer);
                     break;
 
                 case 3:
-                    switch (entity->timer >> 2) {
+                    switch (entity->valueA >> 2) {
                         case 0: DrawObjectModel(OBJ_MODEL_RINGSPARKLE, x, y, z, 0.0, 0.0, 0.0f); break;
                         case 1: DrawObjectModel(OBJ_MODEL_RINGSPARKLE, x, y, z, 0.0, 0.0, 1.57f); break;
                         case 2: DrawObjectModel(OBJ_MODEL_RINGSPARKLE, x, y, z, 0.0f, 0.0f, RSDK_PI); break;
@@ -81,20 +81,27 @@ void DrawObjects()
     }
 }
 
-void CreateObject(byte type, byte unused, float x, float y, float z)
+void CreateObject(byte type, byte propertyValue, float x, float y, float z)
 {
     if (LevelObjects[TempObjectPos].type != OBJ_TYPE_BLANKOBJECT) {
         if (++TempObjectPos >= ENTITY_COUNT)
-            TempObjectPos -= 100;
+            TempObjectPos = ENTITY_COUNT - 100;
     }
 
-    Object *entity = &LevelObjects[TempObjectPos];
-    MEM_ZEROP(entity);
+    LevelObjects[TempObjectPos].type          = type;
+    LevelObjects[TempObjectPos].priority      = 1;
+    LevelObjects[TempObjectPos].propertyValue = propertyValue;
 
-    entity->type     = type;
-    entity->unused1  = unused;
-    entity->position = { x, y, z };
-    entity->enabled  = true;
+    LevelObjects[TempObjectPos].position.x = x;
+    LevelObjects[TempObjectPos].position.y = y;
+    LevelObjects[TempObjectPos].position.z = z;
+
+    LevelObjects[TempObjectPos].valueA = 0;
+    LevelObjects[TempObjectPos].valueB = 0;
+    LevelObjects[TempObjectPos].valueC = 0;
+    LevelObjects[TempObjectPos].valueD = 0;
+    LevelObjects[TempObjectPos].valueE = 0;
+    LevelObjects[TempObjectPos].valueF = 0;
 }
 
 void DrawObjectModel(int object, float x, float y, float z, float ry, float rx, float rz)

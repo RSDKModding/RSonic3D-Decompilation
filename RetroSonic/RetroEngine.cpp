@@ -368,8 +368,8 @@ void ProcessMainGame()
             for (ObjectLoop = 0; ObjectLoop < 6; ++ObjectLoop) {
                 Object *ring = &LevelObjects[ObjectLoop];
 
-                ring->type    = OBJ_TYPE_RING;
-                ring->enabled = true;
+                ring->type     = OBJ_TYPE_RING;
+                ring->priority = 1;
 
                 ring->position.x = -(ObjectLoop * 8.0f) - 10.0f;
                 ring->position.z = -20.0f;
@@ -381,7 +381,7 @@ void ProcessMainGame()
                 Object *ring = &LevelObjects[ObjectLoop];
 
                 ring->type       = OBJ_TYPE_RING;
-                ring->enabled    = true;
+                ring->priority   = 1;
                 ring->position.z = (ObjectLoop * 8.0f) - 60.0f;
                 ring->position.x = -50.0f;
                 ring->position.y = 12.0f;
@@ -392,7 +392,7 @@ void ProcessMainGame()
                 Object *spring = &LevelObjects[ObjectLoop];
 
                 spring->type       = OBJ_TYPE_SPRING;
-                spring->enabled    = true;
+                spring->priority   = 1;
                 spring->position.z = 50.0f;
                 spring->position.x = -80.0f;
                 spring->position.y = 1.5f;

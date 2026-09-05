@@ -5,18 +5,16 @@
 
 struct Object {
     byte type;
-    byte unused1;
+    byte propertyValue;
     Vector3D position;
-    int unused2;
-    int unused3;
-    int unused4;
-    int timer;
-    int unused5;
-    int unused6;
-    int unused7;
-    int unused8;
-    int unused9;
-    int enabled;
+    Vector3D unused;
+    int valueA;
+    int valueB;
+    int valueC;
+    int valueD;
+    int valueE;
+    int valueF;
+    int priority;
 };
 
 enum ObjectTypes {
@@ -43,7 +41,7 @@ extern Object LevelObjects[ENTITY_COUNT];
 
 void ProcessObjects();
 void DrawObjects();
-void CreateObject(byte type, byte unused, float x, float y, float z);
+void CreateObject(byte type, byte propertyValue, float x, float y, float z);
 void DrawObjectModel(int object, float x, float y, float z, float ry, float rx, float rz);
 void DrawModelShadow(float x, float y, float z, float magnitude, float sx, float sy, float ry);
 

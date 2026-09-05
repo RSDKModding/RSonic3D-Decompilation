@@ -18,7 +18,7 @@ extern byte SmallSeconds;
 extern byte Seconds;
 extern byte Minutes;
 
-extern float RingRotationY;
+extern float AngleTimer;
 
 extern Vector3D UnusedVector;
 extern Vector3D CameraEye;

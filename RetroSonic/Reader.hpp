@@ -47,8 +47,8 @@ struct FileInfo {
 struct LevelDirectoryEntry {
     char levelName[4];
     char actNum[4];
-    uint levelNameLen;
-    uint actNumLen;
+    int levelNameLen;
+    int actNumLen;
 };
 
 extern LevelDirectoryEntry *LDirectory;
