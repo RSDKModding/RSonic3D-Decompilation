@@ -914,7 +914,7 @@ void DrawFace(RenderFVF type, void *vertices, int numVertices, void *indices, in
             glDisableClientState(GL_NORMAL_ARRAY);
 
             glVertexPointer(3, GL_FLOAT, sizeof(*vertex), &vertex->x);
-            glColorPointer(GL_BGRA, GL_UNSIGNED_BYTE, sizeof(*vertex), &vertex->color);
+            glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(*vertex), &vertex->color);
             glTexCoordPointer(2, GL_FLOAT, sizeof(*vertex), &vertex->tu);
             break;
         }
