@@ -3,6 +3,30 @@
 bool InputEnabled = true;
 InputData InputPress;
 
+#if !RETRO_USE_ORIGINAL_CODE && RETRO_USE_SDL1
+int KEYBOARD_SCANCODE_LEFT   = SDLK_LEFT;
+int KEYBOARD_SCANCODE_RIGHT  = SDLK_RIGHT;
+int KEYBOARD_SCANCODE_UP     = SDLK_UP;
+int KEYBOARD_SCANCODE_DOWN   = SDLK_DOWN;
+int KEYBOARD_SCANCODE_RETURN = SDLK_RETURN;
+int KEYBOARD_SCANCODE_LCTRL  = SDLK_LCTRL;
+int KEYBOARD_SCANCODE_LSHIFT = SDLK_LSHIFT;
+int KEYBOARD_SCANCODE_A      = SDLK_z;
+int KEYBOARD_SCANCODE_B      = SDLK_x;
+#endif
+
+#if !RETRO_USE_ORIGINAL_CODE && (RETRO_USE_SDL2 || RETRO_USE_SDL3)
+int KEYBOARD_SCANCODE_LEFT   = SDL_SCANCODE_LEFT;
+int KEYBOARD_SCANCODE_RIGHT  = SDL_SCANCODE_RIGHT;
+int KEYBOARD_SCANCODE_UP     = SDL_SCANCODE_UP;
+int KEYBOARD_SCANCODE_DOWN   = SDL_SCANCODE_DOWN;
+int KEYBOARD_SCANCODE_RETURN = SDL_SCANCODE_RETURN;
+int KEYBOARD_SCANCODE_LCTRL  = SDL_SCANCODE_LCTRL;
+int KEYBOARD_SCANCODE_LSHIFT = SDL_SCANCODE_LSHIFT;
+int KEYBOARD_SCANCODE_A      = SDL_SCANCODE_Z;
+int KEYBOARD_SCANCODE_B      = SDL_SCANCODE_X;
+#endif
+
 #if RETRO_USE_ORIGINAL_CODE
 IDirectInputA *DirectInput;
 IDirectInputDeviceA *DirectInputDevice;
@@ -76,29 +100,29 @@ void CheckInput(InputData *input)
 #if RETRO_USE_ORIGINAL_CODE
     DirectInputDevice->GetDeviceState(sizeof(keys), keys);
 
-    input->left    = keys[INPUT_SCANCODE_LEFT] < 0;
-    input->right   = keys[INPUT_SCANCODE_RIGHT] < 0;
-    input->up      = keys[INPUT_SCANCODE_UP] < 0;
-    input->down    = keys[INPUT_SCANCODE_DOWN] < 0;
-    input->start   = keys[INPUT_SCANCODE_RETURN] < 0;
-    input->control = keys[INPUT_SCANCODE_LCTRL] < 0;
-    input->shift   = keys[INPUT_SCANCODE_LSHIFT] < 0;
-    input->Z       = keys[INPUT_SCANCODE_Z] < 0;
-    input->X       = keys[INPUT_SCANCODE_X] < 0;
+    input->left    = keys[KEYBOARD_SCANCODE_LEFT] < 0;
+    input->right   = keys[KEYBOARD_SCANCODE_RIGHT] < 0;
+    input->up      = keys[KEYBOARD_SCANCODE_UP] < 0;
+    input->down    = keys[KEYBOARD_SCANCODE_DOWN] < 0;
+    input->start   = keys[KEYBOARD_SCANCODE_RETURN] < 0;
+    input->control = keys[KEYBOARD_SCANCODE_LCTRL] < 0;
+    input->shift   = keys[KEYBOARD_SCANCODE_LSHIFT] < 0;
+    input->Z       = keys[KEYBOARD_SCANCODE_A] < 0;
+    input->X       = keys[KEYBOARD_SCANCODE_B] < 0;
 #else
     SDL_PumpEvents();
     if (keys == NULL)
         return;
 
-    input->left    = keys[INPUT_SCANCODE_LEFT] != 0;
-    input->right   = keys[INPUT_SCANCODE_RIGHT] != 0;
-    input->up      = keys[INPUT_SCANCODE_UP] != 0;
-    input->down    = keys[INPUT_SCANCODE_DOWN] != 0;
-    input->start   = keys[INPUT_SCANCODE_RETURN] != 0;
-    input->control = keys[INPUT_SCANCODE_LCTRL] != 0;
-    input->shift   = keys[INPUT_SCANCODE_LSHIFT] != 0;
-    input->Z       = keys[INPUT_SCANCODE_Z] != 0;
-    input->X       = keys[INPUT_SCANCODE_X] != 0;
+    input->left    = keys[KEYBOARD_SCANCODE_LEFT] != 0;
+    input->right   = keys[KEYBOARD_SCANCODE_RIGHT] != 0;
+    input->up      = keys[KEYBOARD_SCANCODE_UP] != 0;
+    input->down    = keys[KEYBOARD_SCANCODE_DOWN] != 0;
+    input->start   = keys[KEYBOARD_SCANCODE_RETURN] != 0;
+    input->control = keys[KEYBOARD_SCANCODE_LCTRL] != 0;
+    input->shift   = keys[KEYBOARD_SCANCODE_LSHIFT] != 0;
+    input->Z       = keys[KEYBOARD_SCANCODE_A] != 0;
+    input->X       = keys[KEYBOARD_SCANCODE_B] != 0;
 #endif
 }
 
@@ -118,9 +142,9 @@ void CheckKeyPress(InputData *input, byte start, byte end)
         switch (ids[i]) {
             case 1:
 #if RETRO_USE_ORIGINAL_CODE
-                if (keys[INPUT_SCANCODE_LEFT] & 0x80) {
+                if (keys[KEYBOARD_SCANCODE_LEFT] & 0x80) {
 #else
-                if (keys[INPUT_SCANCODE_LEFT] != 0) {
+                if (keys[KEYBOARD_SCANCODE_LEFT] != 0) {
 #endif
                     if (InputPress.left) {
                         input->left = false;
@@ -138,9 +162,9 @@ void CheckKeyPress(InputData *input, byte start, byte end)
 
             case 2:
 #if RETRO_USE_ORIGINAL_CODE
-                if (keys[INPUT_SCANCODE_RIGHT] & 0x80) {
+                if (keys[KEYBOARD_SCANCODE_RIGHT] & 0x80) {
 #else
-                if (keys[INPUT_SCANCODE_RIGHT] != 0) {
+                if (keys[KEYBOARD_SCANCODE_RIGHT] != 0) {
 #endif
                     if (InputPress.right) {
                         input->right = false;
@@ -158,9 +182,9 @@ void CheckKeyPress(InputData *input, byte start, byte end)
 
             case 3:
 #if RETRO_USE_ORIGINAL_CODE
-                if (keys[INPUT_SCANCODE_UP] & 0x80) {
+                if (keys[KEYBOARD_SCANCODE_UP] & 0x80) {
 #else
-                if (keys[INPUT_SCANCODE_UP] != 0) {
+                if (keys[KEYBOARD_SCANCODE_UP] != 0) {
 #endif
                     if (InputPress.up) {
                         input->up = false;
@@ -178,9 +202,9 @@ void CheckKeyPress(InputData *input, byte start, byte end)
 
             case 4:
 #if RETRO_USE_ORIGINAL_CODE
-                if (keys[INPUT_SCANCODE_DOWN] & 0x80) {
+                if (keys[KEYBOARD_SCANCODE_DOWN] & 0x80) {
 #else
-                if (keys[INPUT_SCANCODE_DOWN] != 0) {
+                if (keys[KEYBOARD_SCANCODE_DOWN] != 0) {
 #endif
                     if (InputPress.down) {
                         input->down = false;
@@ -198,9 +222,9 @@ void CheckKeyPress(InputData *input, byte start, byte end)
 
             case 5:
 #if RETRO_USE_ORIGINAL_CODE
-                if (keys[INPUT_SCANCODE_RETURN] & 0x80) {
+                if (keys[KEYBOARD_SCANCODE_RETURN] & 0x80) {
 #else
-                if (keys[INPUT_SCANCODE_RETURN] != 0) {
+                if (keys[KEYBOARD_SCANCODE_RETURN] != 0) {
 #endif
                     if (InputPress.start) {
                         input->start = false;
@@ -218,9 +242,9 @@ void CheckKeyPress(InputData *input, byte start, byte end)
 
             case 6:
 #if RETRO_USE_ORIGINAL_CODE
-                if (keys[INPUT_SCANCODE_LCTRL] & 0x80) {
+                if (keys[KEYBOARD_SCANCODE_LCTRL] & 0x80) {
 #else
-                if (keys[INPUT_SCANCODE_LCTRL] != 0) {
+                if (keys[KEYBOARD_SCANCODE_LCTRL] != 0) {
 #endif
                     if (InputPress.control) {
                         input->control = false;
@@ -238,9 +262,9 @@ void CheckKeyPress(InputData *input, byte start, byte end)
 
             case 7:
 #if RETRO_USE_ORIGINAL_CODE
-                if (keys[INPUT_SCANCODE_LSHIFT] & 0x80) {
+                if (keys[KEYBOARD_SCANCODE_LSHIFT] & 0x80) {
 #else
-                if (keys[INPUT_SCANCODE_LSHIFT] != 0) {
+                if (keys[KEYBOARD_SCANCODE_LSHIFT] != 0) {
 #endif
                     if (InputPress.shift) {
                         input->shift = false;
@@ -258,9 +282,9 @@ void CheckKeyPress(InputData *input, byte start, byte end)
 
             case 8:
 #if RETRO_USE_ORIGINAL_CODE
-                if (keys[INPUT_SCANCODE_Z] & 0x80) {
+                if (keys[KEYBOARD_SCANCODE_A] & 0x80) {
 #else
-                if (keys[INPUT_SCANCODE_Z] != 0) {
+                if (keys[KEYBOARD_SCANCODE_A] != 0) {
 #endif
                     if (InputPress.Z) {
                         input->Z = false;
@@ -278,9 +302,9 @@ void CheckKeyPress(InputData *input, byte start, byte end)
 
             case 9:
 #if RETRO_USE_ORIGINAL_CODE
-                if (keys[INPUT_SCANCODE_X] & 0x80) {
+                if (keys[KEYBOARD_SCANCODE_B] & 0x80) {
 #else
-                if (keys[INPUT_SCANCODE_X] != 0) {
+                if (keys[KEYBOARD_SCANCODE_B] != 0) {
 #endif
                     if (InputPress.X) {
                         input->X = false;

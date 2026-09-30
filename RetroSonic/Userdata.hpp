@@ -2,7 +2,6 @@
 #define USERDATA_H
 
 #if !RETRO_USE_ORIGINAL_CODE
-extern char gamePath[0x100];
 extern char modsPath[0x100];
 
 struct SettingsData {
